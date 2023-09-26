@@ -5,7 +5,7 @@ trait Io {
     fn open(&mut self, path: &str) -> io::Result<Self::File>;
     fn read_to_string(&mut self, path: &str) -> io::Result<String> {
         let mut file = self.open(path)?;
-        let mut result = String::new();
+        let mut result = String::default();
         file.read_to_string(&mut result)?;
         Ok(result)
     }
