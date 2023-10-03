@@ -168,7 +168,7 @@ mod tests {
     }
 
     const fn static_assert(v: bool) -> () {
-        [0][1 - v as usize];
+        [0][!v as usize];
     }
 
     const _: () = static_assert(eq(
@@ -180,10 +180,15 @@ mod tests {
 
     #[test]
     fn test() {
+        assert!(eq(
+            A,
+            [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
+        ));
         assert_eq!(
             A,
             [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
         );
+        static_assert(true);
     }
 
     #[test]
