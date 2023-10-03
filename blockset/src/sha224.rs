@@ -16,15 +16,6 @@ impl SmallSigma {
     }
 }
 
-pub type Digest224 = [u32; 7];
-
-pub type Digest256 = [u32; 8];
-
-const BIG_S0: BigSigma = BigSigma(2, 13, 22);
-const BIG_S1: BigSigma = BigSigma(6, 11, 25);
-const SMALL_S0: SmallSigma = SmallSigma(7, 18, 3);
-const SMALL_S1: SmallSigma = SmallSigma(17, 19, 10);
-
 #[inline(always)]
 const fn add(a: u32, b: u32) -> u32 {
     a.overflowing_add(b).0
@@ -45,11 +36,22 @@ const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
     add2(add2(a, b, c), d, e)
 }
 
-const INIT: Digest256 = [
-    0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4,
-];
+pub type Digest224 = [u32; 7];
+
+pub type Digest256 = [u32; 8];
+
+const BIG_S0: BigSigma = BigSigma(2, 13, 22);
+const BIG_S1: BigSigma = BigSigma(6, 11, 25);
+const SMALL_S0: SmallSigma = SmallSigma(7, 18, 3);
+const SMALL_S1: SmallSigma = SmallSigma(17, 19, 10);
 
 type Buffer = [u32; 16];
+
+const fn round([a, b, c, d, e, f, g, h]: Digest256, i: usize, w: &Buffer, k: &Buffer) -> Digest256 {
+    let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
+    let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
+    [add(t1, t2), a, b, c, add(d, t1), e, f, g]
+}
 
 const K: [Buffer; 4] = [
     [
@@ -77,12 +79,6 @@ const K: [Buffer; 4] = [
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2, //
     ],
 ];
-
-const fn round([a, b, c, d, e, f, g, h]: Digest256, i: usize, w: &Buffer, k: &Buffer) -> Digest256 {
-    let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
-    let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
-    [add(t1, t2), a, b, c, add(d, t1), e, f, g]
-}
 
 const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
     let k = &K[j];
@@ -134,8 +130,12 @@ const fn next_w(
     ]
 }
 
+const SHA224_INIT: Digest256 = [
+    0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4,
+];
+
 pub const fn compress(mut w: Buffer) -> Digest224 {
-    let mut x: Digest256 = INIT;
+    let mut x: Digest256 = SHA224_INIT;
     x = round16(x, &w, 0);
     w = next_w(w);
     x = round16(x, &w, 1);
@@ -144,13 +144,13 @@ pub const fn compress(mut w: Buffer) -> Digest224 {
     w = next_w(w);
     x = round16(x, &w, 3);
     [
-        add(x[0], INIT[0]),
-        add(x[1], INIT[1]),
-        add(x[2], INIT[2]),
-        add(x[3], INIT[3]),
-        add(x[4], INIT[4]),
-        add(x[5], INIT[5]),
-        add(x[6], INIT[6]),
+        add(x[0], SHA224_INIT[0]),
+        add(x[1], SHA224_INIT[1]),
+        add(x[2], SHA224_INIT[2]),
+        add(x[3], SHA224_INIT[3]),
+        add(x[4], SHA224_INIT[4]),
+        add(x[5], SHA224_INIT[5]),
+        add(x[6], SHA224_INIT[6]),
     ]
 }
 
