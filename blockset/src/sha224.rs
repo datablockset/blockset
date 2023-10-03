@@ -78,21 +78,7 @@ const K: [Buffer; 4] = [
     ],
 ];
 
-const A: usize = 0;
-const B: usize = 1;
-const C: usize = 2;
-const D: usize = 3;
-const E: usize = 4;
-const F: usize = 5;
-const G: usize = 6;
-const H: usize = 7;
-
-const fn round(
-    [a, b, c, d, e, f, g, mut h]: Digest256,
-    i: usize,
-    w: &Buffer,
-    k: &Buffer,
-) -> Digest256 {
+const fn round([a, b, c, d, e, f, g, h]: Digest256, i: usize, w: &Buffer, k: &Buffer) -> Digest256 {
     let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
     let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
     [add(t1, t2), a, b, c, add(d, t1), e, f, g]
@@ -146,7 +132,7 @@ const fn next_w(
     ]
 }
 
-const fn compress(mut w: Buffer) -> Digest224 {
+pub const fn compress(mut w: Buffer) -> Digest224 {
     let mut x: Digest256 = INIT;
     x = round16(x, &w, 0);
     w = next_w(w);
@@ -156,13 +142,13 @@ const fn compress(mut w: Buffer) -> Digest224 {
     w = next_w(w);
     x = round16(x, &w, 3);
     [
-        add(x[A], INIT[A]),
-        add(x[B], INIT[B]),
-        add(x[C], INIT[C]),
-        add(x[D], INIT[D]),
-        add(x[E], INIT[E]),
-        add(x[F], INIT[F]),
-        add(x[G], INIT[G]),
+        add(x[0], INIT[0]),
+        add(x[1], INIT[1]),
+        add(x[2], INIT[2]),
+        add(x[3], INIT[3]),
+        add(x[4], INIT[4]),
+        add(x[5], INIT[5]),
+        add(x[6], INIT[6]),
     ]
 }
 
