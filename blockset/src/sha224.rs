@@ -110,7 +110,8 @@ const fn wi(a: u32, b: u32, c: u32, d: u32) -> u32 {
 }
 
 const fn next_w(
-    [mut w0, mut w1, mut w2, mut w3, mut w4, mut w5, mut w6, mut w7, mut w8, mut w9, mut wa, mut wb, mut wc, mut wd, mut we, mut wf]: Buffer,
+    [mut w0, mut w1, mut w2, mut w3, mut w4, mut w5, mut w6, mut w7,
+     mut w8, mut w9, mut wa, mut wb, mut wc, mut wd, mut we, mut wf]: Buffer,
 ) -> Buffer {
     w0 = wi(we, w9, w1, w0);
     w1 = wi(wf, wa, w2, w1);
@@ -158,6 +159,24 @@ mod tests {
     use super::{compress, Digest224};
 
     const A: Digest224 = compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    const fn eq(
+        [a0, a1, a2, a3, a4, a5, a6]: Digest224,
+        [b0, b1, b2, b3, b4, b5, b6]: Digest224,
+    ) -> bool {
+        a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6
+    }
+
+    const fn static_assert(v: bool) -> () {
+        [0][1 - v as usize];
+    }
+
+    const _: () = static_assert(eq(
+        A,
+        [
+            0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f,
+        ],
+    ));
 
     #[test]
     fn test() {
