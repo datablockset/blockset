@@ -101,33 +101,33 @@ const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
 }
 
 #[inline(always)]
-const fn wi(a: u32, b: u32, c: u32, d: u32) -> u32 {
-    add3(SMALL_S1.get(a), b, SMALL_S0.get(c), d)
+const fn wi(w: &Buffer, i: usize) -> u32 {
+    add3(
+        SMALL_S1.get(w[(i + 0xE) & 0xF]),
+        w[(i + 9) & 0xF],
+        SMALL_S0.get(w[(i + 1) & 0xF]),
+        w[i],
+    )
 }
 
-const fn next_w(
-    [mut w0, mut w1, mut w2, mut w3, mut w4, mut w5, mut w6, mut w7,
-     mut w8, mut w9, mut wa, mut wb, mut wc, mut wd, mut we, mut wf]: Buffer,
-) -> Buffer {
-    w0 = wi(we, w9, w1, w0);
-    w1 = wi(wf, wa, w2, w1);
-    w2 = wi(w0, wb, w3, w2);
-    w3 = wi(w1, wc, w4, w3);
-    w4 = wi(w2, wd, w5, w4);
-    w5 = wi(w3, we, w6, w5);
-    w6 = wi(w4, wf, w7, w6);
-    w7 = wi(w5, w0, w8, w7);
-    w8 = wi(w6, w1, w9, w8);
-    w9 = wi(w7, w2, wa, w9);
-    wa = wi(w8, w3, wb, wa);
-    wb = wi(w9, w4, wc, wb);
-    wc = wi(wa, w5, wd, wc);
-    wd = wi(wb, w6, we, wd);
-    we = wi(wc, w7, wf, we);
-    wf = wi(wd, w8, w0, wf);
-    [
-        w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, wa, wb, wc, wd, we, wf,
-    ]
+const fn next_w(mut w: Buffer) -> Buffer {
+    w[0] = wi(&w, 0);
+    w[1] = wi(&w, 1);
+    w[2] = wi(&w, 2);
+    w[3] = wi(&w, 3);
+    w[4] = wi(&w, 4);
+    w[5] = wi(&w, 5);
+    w[6] = wi(&w, 6);
+    w[7] = wi(&w, 7);
+    w[8] = wi(&w, 8);
+    w[9] = wi(&w, 9);
+    w[0xA] = wi(&w, 0xA);
+    w[0xB] = wi(&w, 0xB);
+    w[0xC] = wi(&w, 0xC);
+    w[0xD] = wi(&w, 0xD);
+    w[0xE] = wi(&w, 0xE);
+    w[0xF] = wi(&w, 0xF);
+    w
 }
 
 const SHA224_INIT: Digest256 = [
