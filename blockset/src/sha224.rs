@@ -104,6 +104,7 @@ const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
     round(x, 15, w, k)
 }
 
+#[inline(always)]
 const fn wi(a: u32, b: u32, c: u32, d: u32) -> u32 {
     add3(SMALL_S1.get(a), b, SMALL_S0.get(c), d)
 }
