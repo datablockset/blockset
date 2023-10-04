@@ -1,3 +1,4 @@
 [alias]
 t = "test --release"
 c = "tarpaulin --out html --release --lib --fail-under 100"
+n = "nextest run --release"

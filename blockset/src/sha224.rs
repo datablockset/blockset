@@ -111,16 +111,16 @@ const fn wi(w: &Buffer, i: usize) -> u32 {
 }
 
 const fn next_w(mut w: Buffer) -> Buffer {
-    w[0] = wi(&w, 0);
-    w[1] = wi(&w, 1);
-    w[2] = wi(&w, 2);
-    w[3] = wi(&w, 3);
-    w[4] = wi(&w, 4);
-    w[5] = wi(&w, 5);
-    w[6] = wi(&w, 6);
-    w[7] = wi(&w, 7);
-    w[8] = wi(&w, 8);
-    w[9] = wi(&w, 9);
+    w[0x0] = wi(&w, 0x0);
+    w[0x1] = wi(&w, 0x1);
+    w[0x2] = wi(&w, 0x2);
+    w[0x3] = wi(&w, 0x3);
+    w[0x4] = wi(&w, 0x4);
+    w[0x5] = wi(&w, 0x5);
+    w[0x6] = wi(&w, 0x6);
+    w[0x7] = wi(&w, 0x7);
+    w[0x8] = wi(&w, 0x8);
+    w[0x9] = wi(&w, 0x9);
     w[0xA] = wi(&w, 0xA);
     w[0xB] = wi(&w, 0xB);
     w[0xC] = wi(&w, 0xC);
@@ -156,6 +156,8 @@ pub const fn compress(mut w: Buffer) -> Digest224 {
 
 #[cfg(test)]
 mod tests {
+    use crate::static_assert::static_assert;
+
     use super::{compress, Digest224};
 
     const A: Digest224 = compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
@@ -167,12 +169,8 @@ mod tests {
         a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6
     }
 
-    const fn static_assert(v: bool) -> () {
-        [0][!v as usize];
-    }
-
     const _: () = static_assert(eq(
-        A,
+        compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
         [
             0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f,
         ],
@@ -188,7 +186,6 @@ mod tests {
             A,
             [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
         );
-        static_assert(true);
     }
 
     #[test]
