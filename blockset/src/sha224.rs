@@ -1,3 +1,5 @@
+use super::digest224::Digest224;
+
 struct BigSigma(u32, u32, u32);
 
 impl BigSigma {
@@ -35,8 +37,6 @@ const fn add3(a: u32, b: u32, c: u32, d: u32) -> u32 {
 const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
     add2(add2(a, b, c), d, e)
 }
-
-pub type Digest224 = [u32; 7];
 
 pub type Digest256 = [u32; 8];
 
