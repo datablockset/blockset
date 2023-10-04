@@ -16,15 +16,6 @@ impl SmallSigma {
     }
 }
 
-pub type Digest224 = [u32; 7];
-
-pub type Digest256 = [u32; 8];
-
-const BIG_S0: BigSigma = BigSigma(2, 13, 22);
-const BIG_S1: BigSigma = BigSigma(6, 11, 25);
-const SMALL_S0: SmallSigma = SmallSigma(7, 18, 3);
-const SMALL_S1: SmallSigma = SmallSigma(17, 19, 10);
-
 #[inline(always)]
 const fn add(a: u32, b: u32) -> u32 {
     a.overflowing_add(b).0
@@ -45,11 +36,22 @@ const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
     add2(add2(a, b, c), d, e)
 }
 
-const INIT: Digest256 = [
-    0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4,
-];
+pub type Digest224 = [u32; 7];
+
+pub type Digest256 = [u32; 8];
+
+const BIG_S0: BigSigma = BigSigma(2, 13, 22);
+const BIG_S1: BigSigma = BigSigma(6, 11, 25);
+const SMALL_S0: SmallSigma = SmallSigma(7, 18, 3);
+const SMALL_S1: SmallSigma = SmallSigma(17, 19, 10);
 
 type Buffer = [u32; 16];
+
+const fn round([a, b, c, d, e, f, g, h]: Digest256, i: usize, w: &Buffer, k: &Buffer) -> Digest256 {
+    let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
+    let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
+    [add(t1, t2), a, b, c, add(d, t1), e, f, g]
+}
 
 const K: [Buffer; 4] = [
     [
@@ -78,12 +80,6 @@ const K: [Buffer; 4] = [
     ],
 ];
 
-const fn round([a, b, c, d, e, f, g, h]: Digest256, i: usize, w: &Buffer, k: &Buffer) -> Digest256 {
-    let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
-    let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
-    [add(t1, t2), a, b, c, add(d, t1), e, f, g]
-}
-
 const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
     let k = &K[j];
     x = round(x, 0, w, k);
@@ -105,36 +101,41 @@ const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
 }
 
 #[inline(always)]
-const fn wi(a: u32, b: u32, c: u32, d: u32) -> u32 {
-    add3(SMALL_S1.get(a), b, SMALL_S0.get(c), d)
+const fn wi(w: &Buffer, i: usize) -> u32 {
+    add3(
+        SMALL_S1.get(w[(i + 0xE) & 0xF]),
+        w[(i + 9) & 0xF],
+        SMALL_S0.get(w[(i + 1) & 0xF]),
+        w[i],
+    )
 }
 
-const fn next_w(
-    [mut w0, mut w1, mut w2, mut w3, mut w4, mut w5, mut w6, mut w7, mut w8, mut w9, mut wa, mut wb, mut wc, mut wd, mut we, mut wf]: Buffer,
-) -> Buffer {
-    w0 = wi(we, w9, w1, w0);
-    w1 = wi(wf, wa, w2, w1);
-    w2 = wi(w0, wb, w3, w2);
-    w3 = wi(w1, wc, w4, w3);
-    w4 = wi(w2, wd, w5, w4);
-    w5 = wi(w3, we, w6, w5);
-    w6 = wi(w4, wf, w7, w6);
-    w7 = wi(w5, w0, w8, w7);
-    w8 = wi(w6, w1, w9, w8);
-    w9 = wi(w7, w2, wa, w9);
-    wa = wi(w8, w3, wb, wa);
-    wb = wi(w9, w4, wc, wb);
-    wc = wi(wa, w5, wd, wc);
-    wd = wi(wb, w6, we, wd);
-    we = wi(wc, w7, wf, we);
-    wf = wi(wd, w8, w0, wf);
-    [
-        w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, wa, wb, wc, wd, we, wf,
-    ]
+const fn next_w(mut w: Buffer) -> Buffer {
+    w[0x0] = wi(&w, 0x0);
+    w[0x1] = wi(&w, 0x1);
+    w[0x2] = wi(&w, 0x2);
+    w[0x3] = wi(&w, 0x3);
+    w[0x4] = wi(&w, 0x4);
+    w[0x5] = wi(&w, 0x5);
+    w[0x6] = wi(&w, 0x6);
+    w[0x7] = wi(&w, 0x7);
+    w[0x8] = wi(&w, 0x8);
+    w[0x9] = wi(&w, 0x9);
+    w[0xA] = wi(&w, 0xA);
+    w[0xB] = wi(&w, 0xB);
+    w[0xC] = wi(&w, 0xC);
+    w[0xD] = wi(&w, 0xD);
+    w[0xE] = wi(&w, 0xE);
+    w[0xF] = wi(&w, 0xF);
+    w
 }
+
+const SHA224_INIT: Digest256 = [
+    0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4,
+];
 
 pub const fn compress(mut w: Buffer) -> Digest224 {
-    let mut x: Digest256 = INIT;
+    let mut x: Digest256 = SHA224_INIT;
     x = round16(x, &w, 0);
     w = next_w(w);
     x = round16(x, &w, 1);
@@ -143,24 +144,44 @@ pub const fn compress(mut w: Buffer) -> Digest224 {
     w = next_w(w);
     x = round16(x, &w, 3);
     [
-        add(x[0], INIT[0]),
-        add(x[1], INIT[1]),
-        add(x[2], INIT[2]),
-        add(x[3], INIT[3]),
-        add(x[4], INIT[4]),
-        add(x[5], INIT[5]),
-        add(x[6], INIT[6]),
+        add(x[0], SHA224_INIT[0]),
+        add(x[1], SHA224_INIT[1]),
+        add(x[2], SHA224_INIT[2]),
+        add(x[3], SHA224_INIT[3]),
+        add(x[4], SHA224_INIT[4]),
+        add(x[5], SHA224_INIT[5]),
+        add(x[6], SHA224_INIT[6]),
     ]
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::static_assert::static_assert;
+
     use super::{compress, Digest224};
 
     const A: Digest224 = compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
+    const fn eq(
+        [a0, a1, a2, a3, a4, a5, a6]: Digest224,
+        [b0, b1, b2, b3, b4, b5, b6]: Digest224,
+    ) -> bool {
+        a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6
+    }
+
+    const _: () = static_assert(eq(
+        compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        [
+            0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f,
+        ],
+    ));
+
     #[test]
     fn test() {
+        assert!(eq(
+            A,
+            [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
+        ));
         assert_eq!(
             A,
             [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
