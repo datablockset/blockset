@@ -1,8 +1,9 @@
 mod base32;
-mod digest224;
+mod name;
 mod io;
 mod sha224;
 mod div_rem;
+mod digest224;
 
 #[cfg(test)]
 mod static_assert;

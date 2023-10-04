@@ -1,4 +1,4 @@
-use super::digest224::Digest224;
+use crate::digest224::Digest224;
 
 struct BigSigma(u32, u32, u32);
 
@@ -38,7 +38,7 @@ const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
     add2(add2(a, b, c), d, e)
 }
 
-pub type Digest256 = [u32; 8];
+type Digest256 = [u32; 8];
 
 const BIG_S0: BigSigma = BigSigma(2, 13, 22);
 const BIG_S1: BigSigma = BigSigma(6, 11, 25);
@@ -161,18 +161,11 @@ pub const fn compress(mut w: Buffer) -> Digest224 {
 
 #[cfg(test)]
 mod tests {
-    use crate::static_assert::static_assert;
+    use crate::{static_assert::static_assert, digest224::eq};
 
     use super::{compress, Digest224};
 
     const A: Digest224 = compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-
-    const fn eq(
-        [a0, a1, a2, a3, a4, a5, a6]: Digest224,
-        [b0, b1, b2, b3, b4, b5, b6]: Digest224,
-    ) -> bool {
-        a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6
-    }
 
     const _: () = static_assert(eq(
         compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
