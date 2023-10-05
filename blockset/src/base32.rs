@@ -1,20 +1,12 @@
-use crate::bit_vec32::BitVec32;
+use crate::{ascii::to_ascii, bit_vec32::BitVec32};
 
-pub const fn to_base32(v: u8) -> char {
+const fn to_base32(v: u8) -> char {
     //0               1
     //0123456789ABCDEF0123456789ABCDEF
     b"0123456789abcdefghjkmnpqrstvwxyz"[v as usize & 0x1F] as char
 }
 
-const fn to_ascii(x: char) -> Option<u8> {
-    if x <= '\u{7F}' {
-        Some(x as u8)
-    } else {
-        None
-    }
-}
-
-pub const fn from_base32(x: char) -> Option<u8> {
+const fn from_base32(x: char) -> Option<u8> {
     if let Some(mut b) = to_ascii(x) {
         b = b.to_ascii_lowercase();
         Some(match b {
@@ -35,28 +27,57 @@ pub const fn from_base32(x: char) -> Option<u8> {
     }
 }
 
-pub fn encode(i: &mut impl Iterator<Item = BitVec32>) -> (String, BitVec32) {
-    let mut result = String::default();
-    let mut a = BitVec32::default();
-    for b in i {
-        a.push(&mut |v| result.push(to_base32(v as u8)), 5, b)
-    }
-    (result, a)
+pub trait ToBase32 {
+    fn to_base32(self) -> String;
 }
 
-pub fn decode(i: &mut impl Iterator<Item = char>) -> Option<(Vec<u32>, BitVec32)> {
-    let mut result = Vec::default();
-    let mut a = BitVec32::default();
-    for b in i {
-        let v5 = from_base32(b)?;
-        a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
+pub trait BitsToBase32 {
+    fn bits_to_base32(self) -> (String, BitVec32);
+}
+
+impl<T: Iterator<Item = BitVec32>> BitsToBase32 for T {
+    fn bits_to_base32(self) -> (String, BitVec32) {
+        let mut result = String::default();
+        let mut a = BitVec32::default();
+        for b in self {
+            a.push(&mut |v| result.push(to_base32(v as u8)), 5, b)
+        }
+        (result, a)
     }
-    Some((result, a))
+}
+
+pub trait FromBase32: Sized {
+    fn from_base32(i: &str) -> Option<Self>;
+}
+
+pub trait StrEx {
+    #[allow(clippy::wrong_self_convention)]
+    fn from_base32<T: FromBase32>(&self) -> Option<T>;
+}
+
+impl StrEx for str {
+    fn from_base32<T: FromBase32>(&self) -> Option<T> {
+        T::from_base32(self)
+    }
+}
+
+impl FromBase32 for (Vec<u32>, BitVec32) {
+    fn from_base32(i: &str) -> Option<Self> {
+        let mut result = Vec::default();
+        let mut a = BitVec32::default();
+        for b in i.chars() {
+            let v5 = from_base32(b)?;
+            a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
+        }
+        Some((result, a))
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use super::{from_base32, to_base32};
+    use crate::base32::to_base32;
+
+    use super::from_base32;
 
     #[test]
     fn test() {

@@ -1,13 +1,18 @@
+mod app;
+mod ascii;
 mod base32;
 mod bit_vec32;
 mod digest224;
 mod io;
-mod name;
 mod sha224;
 
 #[cfg(test)]
 mod static_assert;
+#[cfg(test)]
+mod virtual_io;
+
+pub use app::run;
+pub use io::Io;
 
 //
-pub use name::{to_digest224, to_name};
 pub use sha224::compress;
