@@ -3,7 +3,7 @@ use std::iter::once;
 use crate::{
     base32::{decode, encode},
     bit_vec32::BitVec32,
-    digest224::{Digest224, parity_bit},
+    digest224::{parity_bit, Digest224},
 };
 
 pub fn to_name(h: &Digest224) -> String {
@@ -27,7 +27,7 @@ pub fn to_digest224(h: &str) -> Option<Digest224> {
     assert_eq!(a.v | 1, 1);
     let mut result = Digest224::default();
     result.copy_from_slice(&vec);
-    if a.v as u8 != parity_bit(&result)  {
+    if a.v as u8 != parity_bit(&result) {
         return None;
     }
     Some(result)
@@ -89,7 +89,15 @@ mod tests {
             "ghjkmn00000000000000000000000000000000000000g",
         );
         f(
-            [0b10101_10100_10011_10010_10001_10000, 0, 0, 0, 0, 0, 0x1000_0000],
+            [
+                0b10101_10100_10011_10010_10001_10000,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0x1000_0000,
+            ],
             "ghjkmn000000000000000000000000000000000000001",
         );
         f(
@@ -97,7 +105,15 @@ mod tests {
             "pqrstv00000000000000000000000000000000000000g",
         );
         f(
-            [0b11011_11010_11001_11000_10111_10110, 0, 0, 0, 0, 0, 0x8000_0000],
+            [
+                0b11011_11010_11001_11000_10111_10110,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0x8000_0000,
+            ],
             "pqrstv000000000000000000000000000000000000008",
         );
         f(
