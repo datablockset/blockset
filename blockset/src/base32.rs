@@ -1,4 +1,4 @@
-use crate::{bit_vec32::BitVec32, ascii::to_ascii};
+use crate::{ascii::to_ascii, bit_vec32::BitVec32};
 
 const fn to_base32(v: u8) -> char {
     //0               1

@@ -37,7 +37,7 @@ pub fn to_digest224(h: &str) -> Option<Digest224> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{name::to_digest224, base32::ToBase32};
+    use crate::{base32::ToBase32, name::to_digest224};
 
     #[test]
     fn test() {
