@@ -36,8 +36,7 @@ jobs:
     runs-on: macos-13
     steps:
     - uses: actions/checkout@v3
-    - run: cargo install cargo-quickinstall
-    - run: cargo quickinstall cargo-tarpaulin
+    - run: cargo install cargo-tarpaulin
     - run: cargo c
     - uses: actions/upload-artifact@v3
       with:
