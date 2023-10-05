@@ -16,6 +16,11 @@ pub const fn to_u128([w0, w1, w2, w3]: [u32; 4]) -> u128 {
 }
 
 #[inline(always)]
+pub const fn get_u32(v: u128, i: usize) -> u32 {
+    (v >> (i << 5)) as u32
+}
+
+#[inline(always)]
 pub const fn u32x4_add(a: u128, b: u128) -> u128 {
     let [a0, a1, a2, a3] = to_u32x4(a);
     let [b0, b1, b2, b3] = to_u32x4(b);

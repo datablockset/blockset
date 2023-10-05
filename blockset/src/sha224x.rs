@@ -1,15 +1,10 @@
 use crate::{
     overflow32::{add, add3, add4},
-    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::{to_u32x4, to_u128}, u32x8::u32x8_add,
+    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::{to_u32x4, to_u128, get_u32}, u32x8::u32x8_add,
 };
 
 type Buffer256 = [u128; 2];
 type Buffer512 = [u128; 4];
-
-#[inline(always)]
-const fn get_u32(v: u128, i: usize) -> u32 {
-    (v >> (i << 5)) as u32
-}
 
 const fn round([s0, s1]: Buffer256, i: usize, w: u128, k: u128) -> Buffer256 {
     let (a, e) = {

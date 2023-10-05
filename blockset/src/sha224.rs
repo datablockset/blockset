@@ -1,17 +1,15 @@
-use crate::{digest224::Digest224, overflow32::{add4, add, add3}, sigma32::{BIG1, BIG0, SMALL1, SMALL0}, u32x8::{to_u32x8, to_u256, u32x8_add, U256}, sha224x::{INIT, self}, u32x16::to_u32x16};
+use crate::{digest224::Digest224, overflow32::{add4, add, add3}, sigma32::{BIG1, BIG0, SMALL1, SMALL0}, u32x8::{to_u32x8, to_u256, u32x8_add, U256}, sha224x::{INIT, self}, u32x16::{to_u32x16, U512, to_u512}, u32x4::get_u32};
 
 type Buffer512 = [u32; 16];
 
 const fn round(
     x: &U256,
-    mut i: usize,
-    j: usize,
-    w: &Buffer512,
-    k: &Buffer512,
+    i: usize,
+    w: &u128,
+    k: &u128,
 ) -> U256 {
-    i = (i << 2) | j;
     let [a, b, c, d, e, f, g, h] = to_u32x8(x);
-    let t1 = add4(h, BIG1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
+    let t1 = add4(h, BIG1.get(e), (e & f) ^ (!e & g), get_u32(*k, i), get_u32(*w, i));
     let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
     to_u256(&[add(t1, t2), a, b, c, add(d, t1), e, f, g])
 }
@@ -23,19 +21,22 @@ const K: [Buffer512; 4] = [
     to_u32x16(&sha224x::K[3]),
 ];
 
-const fn round4(mut x: U256, w: &Buffer512, k: &Buffer512, i: usize) -> U256 {
-    x = round(&x, i, 0, w, k);
-    x = round(&x, i, 1, w, k);
-    x = round(&x, i, 2, w, k);
-    round(&x, i, 3, w, k)
+const fn round4(mut x: U256, w: &U512, k: &U512, i: usize) -> U256 {
+    let w = w[i];
+    let k = k[i];
+    x = round(&x, 0, &w, &k);
+    x = round(&x, 1, &w, &k);
+    x = round(&x, 2, &w, &k);
+    round(&x, 3, &w, &k)
 }
 
 const fn round16(mut x: U256, w: &Buffer512, j: usize) -> U256 {
-    let k = &K[j];
-    x = round4(x, w, k, 0);
-    x = round4(x, w, k, 1);
-    x = round4(x, w, k, 2);
-    round4(x, w, k, 3)
+    let k = &sha224x::K[j];
+    let w = to_u512(w);
+    x = round4(x, &w, k, 0);
+    x = round4(x, &w, k, 1);
+    x = round4(x, &w, k, 2);
+    round4(x, &w, k, 3)
 }
 
 #[inline(always)]
