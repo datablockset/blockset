@@ -33,17 +33,26 @@ pub const fn from_base32(x: char) -> Option<u8> {
     }
 }
 
-pub fn decode(a: &mut BitVec32, f: &mut impl FnMut(char) -> (), b: BitVec32) {
-    a.push(&mut |v| f(to_base32(v as u8)), 5, b)
+pub fn encode(i: &mut impl Iterator<Item = BitVec32>) -> (String, BitVec32) {
+    let mut result = String::default();
+    let mut a = BitVec32::default();
+    for b in i {
+        a.push(&mut |v| result.push(to_base32(v as u8)), 5, b)
+    }
+    (result, a)
 }
 
-pub fn encode(a: &mut BitVec32, f: &mut impl FnMut(u32) -> (), c: char) -> bool {
-    if let Some(v5) = from_base32(c) {
-        a.push(f, 32, BitVec32::new(v5 as u32, 5));
-        true
-    } else {
-        false
+pub fn decode(i: &mut impl Iterator<Item = char>) -> Option<(Vec<u32>, BitVec32)> {
+    let mut result = Vec::default();
+    let mut a = BitVec32::default();
+    for b in i {
+        if let Some(v5) = from_base32(b) {
+            a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
+        } else {
+            return None;
+        }
     }
+    Some((result, a))
 }
 
 #[cfg(test)]

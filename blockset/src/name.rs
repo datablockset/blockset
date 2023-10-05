@@ -1,3 +1,5 @@
+use std::iter::once;
+
 use crate::{
     base32::{decode, encode},
     bit_vec32::BitVec32,
@@ -5,34 +7,30 @@ use crate::{
 };
 
 fn to_name(h: &Digest224) -> String {
-    let mut a = BitVec32::default();
-    let mut result = String::default();
-    let mut f = |b| decode(&mut a, &mut |c| result.push(c), b);
-    for i in h {
-        f(BitVec32::new(*i, 32));
-    }
-    f(BitVec32::new(0, 1));
+    let mut i = h
+        .iter()
+        .map(|x| BitVec32::new(*x, 32))
+        .chain(once(BitVec32::new(0, 1)));
+    let (result, a) = encode(&mut i);
     assert_eq!(a.len, 0);
     assert_eq!(a.v, 0);
+    assert_eq!(result.len(), 45);
     result
 }
 
 fn to_digest224(h: &str) -> Option<Digest224> {
-    let mut a = BitVec32::default();
-    let mut vec = Vec::default();
-    for i in h.chars() {
-        if !encode(&mut a, &mut |c| vec.push(c), i) {
+    if let Some((vec, a)) = decode(&mut h.chars()) {
+        if vec.len() != 7 {
             return None;
         }
+        assert_eq!(a.len, 1);
+        assert_eq!(a.v, 0);
+        let mut result = Digest224::default();
+        result.copy_from_slice(&vec);
+        Some(result)
+    } else {
+        None
     }
-    if vec.len() != 7 {
-        return None;
-    }
-    assert_eq!(a.len, 1);
-    assert_eq!(a.v, 0);
-    let mut result = Digest224::default();
-    result.copy_from_slice(&vec);
-    Some(result)
 }
 
 #[cfg(test)]
