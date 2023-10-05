@@ -1,142 +1,78 @@
-use core::panic;
+use crate::{
+    base32::{decode, encode},
+    bit_vec32::BitVec32,
+    digest224::Digest224,
+};
 
-use crate::digest224::Digest224;
-
-use super::{div_rem::div_rem, from_base32, to_base32};
-
-pub type Name = [u8; 45];
-
-pub const fn to_name(h: &Digest224) -> Name {
-    const fn f(h: &Digest224, i: usize) -> u8 {
-        let (d, r) = div_rem(i * 5, 32);
-        let mut x = h[d] >> r;
-        let size = 32 - r;
-        if size < 5 && d < 6 {
-            x |= h[d + 1] << size
-        }
-        to_base32(x as u8)
+fn to_name(h: &Digest224) -> String {
+    let mut a = BitVec32::default();
+    let mut result = String::default();
+    let mut f = |b| decode(&mut a, &mut |c| result.push(c), b);
+    for i in h {
+        f(BitVec32::new(*i, 32));
     }
-    [
-        f(h, 0),
-        f(h, 1),
-        f(h, 2),
-        f(h, 3),
-        f(h, 4),
-        f(h, 5),
-        f(h, 6),
-        f(h, 7),
-        f(h, 8),
-        f(h, 9),
-        //
-        f(h, 10),
-        f(h, 11),
-        f(h, 12),
-        f(h, 13),
-        f(h, 14),
-        f(h, 15),
-        f(h, 16),
-        f(h, 17),
-        f(h, 18),
-        f(h, 19),
-        //
-        f(h, 20),
-        f(h, 21),
-        f(h, 22),
-        f(h, 23),
-        f(h, 24),
-        f(h, 25),
-        f(h, 26),
-        f(h, 27),
-        f(h, 28),
-        f(h, 29),
-        //
-        f(h, 30),
-        f(h, 31),
-        f(h, 32),
-        f(h, 33),
-        f(h, 34),
-        f(h, 35),
-        f(h, 36),
-        f(h, 37),
-        f(h, 38),
-        f(h, 39),
-        //
-        f(h, 40),
-        f(h, 41),
-        f(h, 42),
-        f(h, 43),
-        f(h, 44),
-    ]
+    f(BitVec32::new(0, 1));
+    assert_eq!(a.len, 0);
+    assert_eq!(a.v, 0);
+    result
 }
 
-pub const fn from_name(b: &Name) -> Digest224 {
-    const fn f(b: &Name, i: usize) -> u32 {
-        const fn g(b: &Name, d: usize, i: usize) -> u64 {
-            if let Some(result) = from_base32(b[d + i]) {
-                (result as u64) << (i * 5)
-            } else {
-                panic!("invalid base32")
-            }
+fn to_digest224(h: &str) -> Option<Digest224> {
+    let mut a = BitVec32::default();
+    let mut vec = Vec::default();
+    for i in h.chars() {
+        if !encode(&mut a, &mut |c| vec.push(c), i) {
+            return None;
         }
-        let (d, r) = div_rem(i << 5, 5);
-        let x = g(b, d, 0)
-            | g(b, d, 1)
-            | g(b, d, 2)
-            | g(b, d, 3)
-            | g(b, d, 4)
-            | g(b, d, 5)
-            | g(b, d, 6);
-        (x >> r) as u32
     }
-    [
-        f(b, 0),
-        f(b, 1),
-        f(b, 2),
-        f(b, 3),
-        f(b, 4),
-        f(b, 5),
-        f(b, 6),
-    ]
+    if vec.len() != 7 {
+        return None;
+    }
+    assert_eq!(a.len, 1);
+    assert_eq!(a.v, 0);
+    let mut result = Digest224::default();
+    result.copy_from_slice(&vec);
+    Some(result)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{from_name, to_name};
+    use crate::name::{to_digest224, to_name};
 
     #[test]
     fn test() {
-        fn f(a: [u32; 7], b: &[u8; 45]) {
+        fn f(a: [u32; 7], b: &str) {
             assert_eq!(to_name(&a), *b);
-            assert_eq!(from_name(b), a);
+            assert_eq!(to_digest224(b), Some(a));
         }
-        f([0; 7], &[b'0'; 45]);
+        f([0; 7], "000000000000000000000000000000000000000000000");
         f(
             [1, 0, 0, 0, 0, 0, 0],
-            b"100000000000000000000000000000000000000000000",
+            "100000000000000000000000000000000000000000000",
         );
         f(
             [0b11_00010, 0, 0, 0, 0, 0, 0],
-            b"230000000000000000000000000000000000000000000",
+            "230000000000000000000000000000000000000000000",
         );
         f(
             [0b110_00101_00100, 0, 0, 0, 0, 0, 0],
-            b"456000000000000000000000000000000000000000000",
+            "456000000000000000000000000000000000000000000",
         );
         f(
             [0b1010_01001_01000_00111, 0, 0, 0, 0, 0, 0],
-            b"789a00000000000000000000000000000000000000000",
+            "789a00000000000000000000000000000000000000000",
         );
         f(
             [0b1111_01110_01101_01100_01011, 0, 0, 0, 0, 0, 0],
-            b"bcdef0000000000000000000000000000000000000000",
+            "bcdef0000000000000000000000000000000000000000",
         );
         f(
             [0b10101_10100_10011_10010_10001_10000, 0, 0, 0, 0, 0, 0],
-            b"ghjkmn000000000000000000000000000000000000000",
+            "ghjkmn000000000000000000000000000000000000000",
         );
         f(
             [0b11011_11010_11001_11000_10111_10110, 0, 0, 0, 0, 0, 0],
-            b"pqrstv000000000000000000000000000000000000000",
+            "pqrstv000000000000000000000000000000000000000",
         );
         f(
             [
@@ -148,7 +84,7 @@ mod tests {
                 0,
                 0,
             ],
-            b"wxyzyxw00000000000000000000000000000000000000",
+            "wxyzyxw00000000000000000000000000000000000000",
         );
         f(
             [
@@ -160,7 +96,7 @@ mod tests {
                 0,
                 0,
             ],
-            b"000000vtsrqpn00000000000000000000000000000000",
+            "000000vtsrqpn00000000000000000000000000000000",
         );
         f(
             [
@@ -172,7 +108,7 @@ mod tests {
                 0b_11_01100_01101_10101_01011_01111_10101, // NFBNDC
                 0b_0011_01100_01010_00001_00111_01001_100, // K971AC3
             ],
-            b"1v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac3",
+            "1v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac3",
         );
     }
 }

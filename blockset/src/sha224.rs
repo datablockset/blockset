@@ -161,7 +161,7 @@ pub const fn compress(mut w: Buffer) -> Digest224 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{static_assert::static_assert, digest224::eq};
+    use crate::{digest224::eq, static_assert::static_assert};
 
     use super::{compress, Digest224};
 
