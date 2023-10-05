@@ -6,7 +6,7 @@ use crate::{
     digest224::Digest224,
 };
 
-fn to_name(h: &Digest224) -> String {
+pub fn to_name(h: &Digest224) -> String {
     let mut i = h
         .iter()
         .map(|x| BitVec32::new(*x, 32))
@@ -18,19 +18,16 @@ fn to_name(h: &Digest224) -> String {
     result
 }
 
-fn to_digest224(h: &str) -> Option<Digest224> {
-    if let Some((vec, a)) = decode(&mut h.chars()) {
-        if vec.len() != 7 {
-            return None;
-        }
-        assert_eq!(a.len, 1);
-        assert_eq!(a.v, 0);
-        let mut result = Digest224::default();
-        result.copy_from_slice(&vec);
-        Some(result)
-    } else {
-        None
+pub fn to_digest224(h: &str) -> Option<Digest224> {
+    let (vec, a) = decode(&mut h.chars())?;
+    if vec.len() != 7 {
+        return None;
     }
+    assert_eq!(a.len, 1);
+    assert_eq!(a.v, 0);
+    let mut result = Digest224::default();
+    result.copy_from_slice(&vec);
+    Some(result)
 }
 
 #[cfg(test)]

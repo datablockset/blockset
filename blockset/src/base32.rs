@@ -46,11 +46,8 @@ pub fn decode(i: &mut impl Iterator<Item = char>) -> Option<(Vec<u32>, BitVec32)
     let mut result = Vec::default();
     let mut a = BitVec32::default();
     for b in i {
-        if let Some(v5) = from_base32(b) {
-            a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
-        } else {
-            return None;
-        }
+        let v5 = from_base32(b)?;
+        a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
     }
     Some((result, a))
 }

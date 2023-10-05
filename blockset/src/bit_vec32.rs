@@ -8,7 +8,7 @@ impl BitVec32 {
     pub const fn new(v: u32, len: u8) -> Self {
         Self { v: v as u64, len }
     }
-    pub fn push(&mut self, f: &mut impl FnMut(u32) -> (), size: u8, b: BitVec32) {
+    pub fn push(&mut self, f: &mut impl FnMut(u32), size: u8, b: BitVec32) {
         assert!(size <= 32);
         self.v |= b.v << self.len;
         self.len += b.len;

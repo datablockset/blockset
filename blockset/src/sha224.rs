@@ -161,9 +161,16 @@ pub const fn compress(mut w: Buffer) -> Digest224 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{digest224::eq, static_assert::static_assert};
+    use crate::static_assert::static_assert;
 
     use super::{compress, Digest224};
+
+    pub const fn eq(
+        [a0, a1, a2, a3, a4, a5, a6]: Digest224,
+        [b0, b1, b2, b3, b4, b5, b6]: Digest224,
+    ) -> bool {
+        a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6
+    }
 
     const A: Digest224 = compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
