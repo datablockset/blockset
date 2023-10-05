@@ -46,7 +46,7 @@ const fn round4(mut x: Buffer256, i: usize, w: &Buffer512, k: &Buffer512) -> Buf
     round(x, 3, w, k)
 }
 
-const K: [Buffer512; 4] = [
+pub const K: [Buffer512; 4] = [
     [
         0xe9b5dba5_b5c0fbcf_71374491_428a2f98,
         0xab1c5ed5_923f82a4_59f111f1_3956c25b,
