@@ -4,16 +4,6 @@ use crate::{
     io::Io,
 };
 
-trait ToResult {
-    fn to_result(self, e: &str) -> Result<(), &str>;
-}
-
-impl ToResult for Option<()> {
-    fn to_result(self, e: &str) -> Result<(), &str> {
-        self.ok_or(e)
-    }
-}
-
 pub fn run(io: &mut impl Io) -> Result<(), &str> {
     let mut a = io.args();
     a.next().unwrap();
