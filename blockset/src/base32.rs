@@ -46,26 +46,6 @@ pub fn encode(a: &mut BitVec32, f: &mut impl FnMut(u32) -> (), c: char) -> bool 
     }
 }
 
-/*
-struct ToBase32(BitVec32);
-
-impl ToBase32 {
-    pub fn push32(&mut self, f: &mut impl FnMut(char) -> (), v32: u32) {
-        self.0
-            .push(&mut |v| f(to_base32(v as u8)), 5, BitVec32::new(v32, 32))
-    }
-
-    pub fn push_char(&mut self, f: &mut impl FnMut(u32) -> (), c: char) -> bool {
-        if let Some(v5) = from_base32(c) {
-            self.0.push(f, 32, BitVec32::new(v5 as u32, 5));
-            true
-        } else {
-            false
-        }
-    }
-}
-*/
-
 #[cfg(test)]
 mod test {
     use super::{from_base32, to_base32};
