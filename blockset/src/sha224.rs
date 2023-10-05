@@ -1,4 +1,4 @@
-use crate::digest224::Digest224;
+use crate::{digest224::Digest224, digest256::Digest256};
 
 struct BigSigma(u32, u32, u32);
 
@@ -37,8 +37,6 @@ const fn add3(a: u32, b: u32, c: u32, d: u32) -> u32 {
 const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
     add2(add2(a, b, c), d, e)
 }
-
-type Digest256 = [u32; 8];
 
 const BIG_S0: BigSigma = BigSigma(2, 13, 22);
 const BIG_S1: BigSigma = BigSigma(6, 11, 25);

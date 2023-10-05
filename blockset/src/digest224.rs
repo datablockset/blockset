@@ -2,7 +2,7 @@ use std::iter::once;
 
 use crate::{
     base32::{BitsToBase32, FromBase32, StrEx, ToBase32},
-    bit_vec::BitVec,
+    bit_vec64::BitVec64,
 };
 
 pub type Digest224 = [u32; 7];
@@ -19,10 +19,10 @@ impl Digest224Ex for &Digest224 {
 
 impl ToBase32 for &Digest224 {
     fn to_base32(self) -> String {
-        let (result, BitVec { value, len }) = self
+        let (result, BitVec64 { value, len }) = self
             .iter()
-            .map(|x| BitVec::new(*x, 32))
-            .chain(once(BitVec::new(self.parity_bit() as u32, 1)))
+            .map(|x| BitVec64::new(*x, 32))
+            .chain(once(BitVec64::new(self.parity_bit() as u32, 1)))
             .bits_to_base32();
         assert_eq!(len, 0);
         assert_eq!(value, 0);
@@ -33,7 +33,7 @@ impl ToBase32 for &Digest224 {
 
 impl FromBase32 for Digest224 {
     fn from_base32(i: &str) -> Option<Self> {
-        let (vec, BitVec { value, len }) = i.from_base32()?;
+        let (vec, BitVec64 { value, len }) = i.from_base32()?;
         if vec.len() != 7 {
             return None;
         }

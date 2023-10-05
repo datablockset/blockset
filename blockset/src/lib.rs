@@ -1,8 +1,9 @@
 mod app;
 mod ascii;
 mod base32;
-mod bit_vec;
+mod bit_vec64;
 mod digest224;
+mod digest256;
 mod io;
 mod sha224;
 

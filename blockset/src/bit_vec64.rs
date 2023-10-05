@@ -1,17 +1,17 @@
 #[derive(Default)]
-pub struct BitVec {
+pub struct BitVec64 {
     pub value: u64,
     pub len: u8,
 }
 
-impl BitVec {
+impl BitVec64 {
     pub const fn new(v: u32, len: u8) -> Self {
         Self {
             value: v as u64,
             len,
         }
     }
-    pub fn push(&mut self, f: &mut impl FnMut(u32), size: u8, b: BitVec) {
+    pub fn push(&mut self, f: &mut impl FnMut(u32), size: u8, b: BitVec64) {
         assert!(size <= 32);
         self.value |= b.value << self.len;
         self.len += b.len;
