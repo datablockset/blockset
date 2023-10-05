@@ -1,80 +1,18 @@
-use crate::digest224::Digest224;
-
-struct BigSigma(u32, u32, u32);
-
-impl BigSigma {
-    #[inline(always)]
-    const fn get(&self, v: u32) -> u32 {
-        v.rotate_right(self.0) ^ v.rotate_right(self.1) ^ v.rotate_right(self.2)
-    }
-}
-
-struct SmallSigma(u32, u32, u8);
-
-impl SmallSigma {
-    #[inline(always)]
-    const fn get(&self, v: u32) -> u32 {
-        v.rotate_right(self.0) ^ v.rotate_right(self.1) ^ (v >> self.2)
-    }
-}
-
-#[inline(always)]
-const fn add(a: u32, b: u32) -> u32 {
-    a.overflowing_add(b).0
-}
-
-#[inline(always)]
-const fn add2(a: u32, b: u32, c: u32) -> u32 {
-    add(add(a, b), c)
-}
-
-#[inline(always)]
-const fn add3(a: u32, b: u32, c: u32, d: u32) -> u32 {
-    add(add(a, b), add(c, d))
-}
-
-#[inline(always)]
-const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
-    add2(add2(a, b, c), d, e)
-}
+use crate::{digest224::Digest224, overflow32::{add4, add, add3}, sigma32::{BIG1, BIG0, SMALL1, SMALL0}};
 
 type Buffer256 = [u32; 8];
 
-const BIG_S0: BigSigma = BigSigma(2, 13, 22);
-const BIG_S1: BigSigma = BigSigma(6, 11, 25);
-const SMALL_S0: SmallSigma = SmallSigma(7, 18, 3);
-const SMALL_S1: SmallSigma = SmallSigma(17, 19, 10);
-
 type Buffer512 = [u32; 16];
 
-const fn round([a, b, c, d, e, f, g, h]: Buffer256, i: usize, w: &Buffer512, k: &Buffer512) -> Buffer256 {
-    let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
-    let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
+const fn round(
+    [a, b, c, d, e, f, g, h]: Buffer256,
+    i: usize,
+    w: &Buffer512,
+    k: &Buffer512,
+) -> Buffer256 {
+    let t1 = add4(h, BIG1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
+    let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
     [add(t1, t2), a, b, c, add(d, t1), e, f, g]
-}
-
-const fn to_u32(v: u128) -> [u32; 4] {
-    [
-        v as u32,
-        (v >> 32) as u32,
-        (v >> 64) as u32,
-        (v >> 96) as u32,
-    ]
-}
-
-type Buffer256x = [u128; 2];
-
-const fn roundx([s0, s1]: Buffer256x, i: usize, w: &Buffer512, k: &Buffer512) -> Buffer256x {
-    let (v0, v1) = {
-        let t1 = {
-            let [e, f, g, h] = to_u32(s1);
-            add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i])
-        };
-        let [a, b, c, d] = to_u32(s1);
-        let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
-        (add(t1, t2), add(d, t1))
-    };
-    [v0 as u128 | (s0 << 32), v1 as u128 | (s1 << 32)]
 }
 
 const K: [Buffer512; 4] = [
@@ -132,9 +70,9 @@ const fn w_get(w: &Buffer512, i: usize) -> u32 {
 #[inline(always)]
 const fn wi(w: &Buffer512, i: usize) -> u32 {
     add3(
-        SMALL_S1.get(w_get(w, i + 0xE)),
+        SMALL1.get(w_get(w, i + 0xE)),
         w_get(w, i + 9),
-        SMALL_S0.get(w_get(w, i + 1)),
+        SMALL0.get(w_get(w, i + 1)),
         w[i],
     )
 }
