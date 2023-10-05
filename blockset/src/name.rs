@@ -106,4 +106,9 @@ mod tests {
             "1v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac3",
         );
     }
+
+    #[test]
+    fn invalid_str_test() {
+        assert_eq!(to_digest224("01"), None);
+    }
 }
