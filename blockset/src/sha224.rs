@@ -23,24 +23,19 @@ const K: [Buffer512; 4] = [
     to_u32x16(&sha224x::K[3]),
 ];
 
+const fn round4(mut x: U256, w: &Buffer512, k: &Buffer512, i: usize) -> U256 {
+    x = round(&x, i, 0, w, k);
+    x = round(&x, i, 1, w, k);
+    x = round(&x, i, 2, w, k);
+    round(&x, i, 3, w, k)
+}
+
 const fn round16(mut x: U256, w: &Buffer512, j: usize) -> U256 {
     let k = &K[j];
-    x = round(&x, 0, 0, w, k);
-    x = round(&x, 0, 1, w, k);
-    x = round(&x, 0, 2, w, k);
-    x = round(&x, 0, 3, w, k);
-    x = round(&x, 1, 0, w, k);
-    x = round(&x, 1, 1, w, k);
-    x = round(&x, 1, 2, w, k);
-    x = round(&x, 1, 3, w, k);
-    x = round(&x, 2, 0, w, k);
-    x = round(&x, 2, 1, w, k);
-    x = round(&x, 2, 2, w, k);
-    x = round(&x, 2, 3, w, k);
-    x = round(&x, 3, 0, w, k);
-    x = round(&x, 3, 1, w, k);
-    x = round(&x, 3, 2, w, k);
-    round(&x, 3, 3, w, k)
+    x = round4(x, w, k, 0);
+    x = round4(x, w, k, 1);
+    x = round4(x, w, k, 2);
+    round4(x, w, k, 3)
 }
 
 #[inline(always)]
