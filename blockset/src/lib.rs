@@ -5,7 +5,6 @@ mod bit_vec;
 mod digest224;
 mod io;
 mod sha224;
-mod sha224x;
 mod overflow32;
 mod sigma32;
 mod u32x4;
