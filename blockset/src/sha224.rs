@@ -8,12 +8,6 @@ const fn round(
     w: u128,
     k: u128,
 ) -> U256 {
-    /*
-    let [a, b, c, d, e, f, g, h] = to_u32x8(x);
-    let t1 = add4(h, BIG1.get(e), (e & f) ^ (!e & g), get_u32(*k, i), get_u32(*w, i));
-    let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
-    to_u256(&[add(t1, t2), a, b, c, add(d, t1), e, f, g])
-    */
     let (a, e) = {
         let t1 = {
             let [e, f, g, h] = to_u32x4(s1);
