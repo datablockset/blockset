@@ -1,4 +1,4 @@
-use crate::{ascii::to_ascii, bit_vec32::BitVec32};
+use crate::{ascii::to_ascii, bit_vec::BitVec};
 
 const fn to_base32(v: u8) -> char {
     //0               1
@@ -32,13 +32,13 @@ pub trait ToBase32 {
 }
 
 pub trait BitsToBase32 {
-    fn bits_to_base32(self) -> (String, BitVec32);
+    fn bits_to_base32(self) -> (String, BitVec);
 }
 
-impl<T: Iterator<Item = BitVec32>> BitsToBase32 for T {
-    fn bits_to_base32(self) -> (String, BitVec32) {
+impl<T: Iterator<Item = BitVec>> BitsToBase32 for T {
+    fn bits_to_base32(self) -> (String, BitVec) {
         let mut result = String::default();
-        let mut a = BitVec32::default();
+        let mut a = BitVec::default();
         for b in self {
             a.push(&mut |v| result.push(to_base32(v as u8)), 5, b)
         }
@@ -61,13 +61,13 @@ impl StrEx for str {
     }
 }
 
-impl FromBase32 for (Vec<u32>, BitVec32) {
+impl FromBase32 for (Vec<u32>, BitVec) {
     fn from_base32(i: &str) -> Option<Self> {
         let mut result = Vec::default();
-        let mut a = BitVec32::default();
+        let mut a = BitVec::default();
         for b in i.chars() {
             let v5 = from_base32(b)?;
-            a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
+            a.push(&mut |v| result.push(v), 32, BitVec::new(v5 as u32, 5));
         }
         Some((result, a))
     }
