@@ -1,12 +1,12 @@
 use crate::{
     overflow32::{add, add3, add4},
-    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::{to_u32x4, to_u128, get_u32}, u32x8::u32x8_add,
+    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::{to_u32x4, to_u128, get_u32}, u32x8::{u32x8_add, U256},
 };
 
 type Buffer256 = [u128; 2];
 type Buffer512 = [u128; 4];
 
-const fn round([s0, s1]: Buffer256, i: usize, w: u128, k: u128) -> Buffer256 {
+const fn round([s0, s1]: U256, i: usize, w: u128, k: u128) -> Buffer256 {
     let (a, e) = {
         let t1 = {
             let [e, f, g, h] = to_u32x4(s1);
@@ -18,7 +18,7 @@ const fn round([s0, s1]: Buffer256, i: usize, w: u128, k: u128) -> Buffer256 {
                 get_u32(w, i),
             )
         };
-        let [a, b, c, d] = to_u32x4(s1);
+        let [a, b, c, d] = to_u32x4(s0);
         let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
         (add(t1, t2), add(d, t1))
     };
@@ -146,7 +146,7 @@ mod test {
     #[test]
     fn test() {
         println!("{:x?}", A);
-        /*
+
         assert_eq!(
             A,
             [
@@ -154,6 +154,6 @@ mod test {
                 0xFFFFFFFF_c5b3e42f_828ea62a_15a2b01f
             ]
         );
-        */
+        
     }
 }
