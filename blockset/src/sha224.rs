@@ -53,6 +53,30 @@ const fn round([a, b, c, d, e, f, g, h]: Buffer256, i: usize, w: &Buffer512, k: 
     [add(t1, t2), a, b, c, add(d, t1), e, f, g]
 }
 
+const fn to_u32(v: u128) -> [u32; 4] {
+    [
+        v as u32,
+        (v >> 32) as u32,
+        (v >> 64) as u32,
+        (v >> 96) as u32,
+    ]
+}
+
+type Buffer256x = [u128; 2];
+
+const fn roundx([s0, s1]: Buffer256x, i: usize, w: &Buffer512, k: &Buffer512) -> Buffer256x {
+    let (v0, v1) = {
+        let t1 = {
+            let [e, f, g, h] = to_u32(s1);
+            add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i])
+        };
+        let [a, b, c, d] = to_u32(s1);
+        let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
+        (add(t1, t2), add(d, t1))
+    };
+    [v0 as u128 | (s0 << 32), v1 as u128 | (s1 << 32)]
+}
+
 const K: [Buffer512; 4] = [
     [
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, //
