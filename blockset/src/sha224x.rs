@@ -1,8 +1,6 @@
-use std::vec;
-
 use crate::{
     overflow32::{add, add3, add4},
-    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::to_u32x4,
+    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::{to_u32x4, to_u128}, u32x8::u32x8_add,
 };
 
 type Buffer256 = [u128; 2];
@@ -11,11 +9,6 @@ type Buffer512 = [u128; 4];
 #[inline(always)]
 const fn get_u32(v: u128, i: usize) -> u32 {
     (v >> (i << 5)) as u32
-}
-
-#[inline(always)]
-const fn to_u128([w0, w1, w2, w3]: [u32; 4]) -> u128 {
-    w0 as u128 | ((w1 as u128) << 32) | ((w2 as u128) << 64) | ((w3 as u128) << 96)
 }
 
 const fn round([s0, s1]: Buffer256, i: usize, w: u128, k: u128) -> Buffer256 {
@@ -129,7 +122,7 @@ pub const INIT: Buffer256 = [
 ];
 
 #[inline(always)]
-const fn vec32x4_add(a: u128, b: u128) -> u128 {
+const fn u32x4_add(a: u128, b: u128) -> u128 {
     let [a0, a1, a2, a3] = to_u32x4(a);
     let [b0, b1, b2, b3] = to_u32x4(b);
     to_u128([add(a0, b0), add(a1, b1), add(a2, b2), add(a3, b3)])
@@ -144,10 +137,9 @@ pub const fn compress(mut w: Buffer512) -> Buffer256 {
     x = round16(x, &w, 2);
     w = w_round16(w);
     x = round16(x, &w, 3);
-    [
-        vec32x4_add(x[0], INIT[0]),
-        vec32x4_add(x[1], INIT[1]) | (0xFFFF_FFFF << 96),
-    ]
+    x = u32x8_add(&x, &INIT);
+    x[1] |= 0xFFFF_FFFF << 96;
+    x
 }
 
 #[cfg(test)]

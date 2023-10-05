@@ -1,4 +1,4 @@
-use crate::{digest224::Digest224, overflow32::{add4, add, add3}, sigma32::{BIG1, BIG0, SMALL1, SMALL0}, u32x8::to_u32x8, sha224x::{INIT, self}, u32x16::to_u32x16};
+use crate::{digest224::Digest224, overflow32::{add4, add, add3}, sigma32::{BIG1, BIG0, SMALL1, SMALL0}, u32x8::{to_u32x8, to_u256, u32x8_add, U256}, sha224x::{INIT, self}, u32x16::to_u32x16};
 
 type Buffer256 = [u32; 8];
 
@@ -22,7 +22,8 @@ const K: [Buffer512; 4] = [
     to_u32x16(&sha224x::K[3]),
 ];
 
-const fn round16(mut x: Buffer256, w: &Buffer512, j: usize) -> Buffer256 {
+const fn round16(x: &U256, w: &Buffer512, j: usize) -> U256 {
+    let mut x = to_u32x8(&x);
     let k = &K[j];
     x = round(x, 0, w, k);
     x = round(x, 1, w, k);
@@ -39,7 +40,7 @@ const fn round16(mut x: Buffer256, w: &Buffer512, j: usize) -> Buffer256 {
     x = round(x, 12, w, k);
     x = round(x, 13, w, k);
     x = round(x, 14, w, k);
-    round(x, 15, w, k)
+    to_u256(&round(x, 15, w, k))
 }
 
 #[inline(always)]
@@ -80,22 +81,17 @@ const fn next_w(mut w: Buffer512) -> Buffer512 {
 const SHA224_INIT: Buffer256 = to_u32x8(&INIT);
 
 pub const fn compress(mut w: Buffer512) -> Digest224 {
-    let mut x: Buffer256 = SHA224_INIT;
-    x = round16(x, &w, 0);
+    let mut x: U256 =INIT;
+    x = round16(&x, &w, 0);
     w = next_w(w);
-    x = round16(x, &w, 1);
+    x = round16(&x, &w, 1);
     w = next_w(w);
-    x = round16(x, &w, 2);
+    x = round16(&x, &w, 2);
     w = next_w(w);
-    x = round16(x, &w, 3);
+    x = round16(&x, &w, 3);
+    let x = to_u32x8(&u32x8_add(&x, &INIT));
     [
-        add(x[0], SHA224_INIT[0]),
-        add(x[1], SHA224_INIT[1]),
-        add(x[2], SHA224_INIT[2]),
-        add(x[3], SHA224_INIT[3]),
-        add(x[4], SHA224_INIT[4]),
-        add(x[5], SHA224_INIT[5]),
-        add(x[6], SHA224_INIT[6]),
+        x[0], x[1], x[2], x[3], x[4], x[5], x[6],
     ]
 }
 
