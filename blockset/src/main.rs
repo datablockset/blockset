@@ -1,5 +1,10 @@
-use std::{process::ExitCode, env::{Args, args}, fs::File, io};
-use blockset::{Io, run};
+use blockset::{run, Io};
+use std::{
+    env::{args, Args},
+    fs::File,
+    io,
+    process::ExitCode,
+};
 
 #[derive(Default)]
 struct RealIo();
@@ -22,6 +27,6 @@ impl Io for RealIo {
     }
 }
 
-fn main() -> ExitCode {
-    run(&mut RealIo::default())
+fn main() -> Result<(), String> {
+    run(&mut RealIo::default()).map_err(str::to_string)
 }

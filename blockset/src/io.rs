@@ -20,44 +20,13 @@ pub trait Io {
 
 #[cfg(test)]
 mod test {
-    use std::{
-        collections::HashMap,
-        io::{self, Cursor},
-        vec,
-    };
+    use crate::virtual_io::VirtualIo;
 
     use super::Io;
 
-    struct MockIo {
-        args: Vec<String>,
-        file_map: HashMap<String, Vec<u8>>,
-        stdout: String,
-    }
-
-    impl Io for MockIo {
-        type File = Cursor<Vec<u8>>;
-        type Args = vec::IntoIter<String>;
-        fn args(&self) -> Self::Args {
-            self.args.clone().into_iter()
-        }
-        fn print(&mut self, s: &str) {
-            self.stdout.push_str(s);
-        }
-        fn open(&mut self, path: &str) -> io::Result<Self::File> {
-            self.file_map
-                .get(path)
-                .map(|data| Cursor::new(data.clone()))
-                .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
-        }
-    }
-
     #[test]
     fn test() {
-        let mut io = MockIo {
-            args: Vec::default(),
-            file_map: HashMap::default(),
-            stdout: String::default(),
-        };
+        let mut io = VirtualIo::new(&[]);
         io.file_map
             .insert("test.txt".to_string(), "Hello, world!".as_bytes().to_vec());
         let result = io.read_to_string("test.txt").unwrap();

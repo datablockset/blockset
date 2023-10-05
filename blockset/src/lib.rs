@@ -8,9 +8,11 @@ mod sha224;
 
 #[cfg(test)]
 mod static_assert;
+#[cfg(test)]
+mod virtual_io;
 
-pub use io::Io;
 pub use app::run;
+pub use io::Io;
 
 //
 pub use sha224::compress;
