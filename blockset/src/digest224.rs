@@ -1,11 +1,7 @@
 pub type Digest224 = [u32; 7];
 
 pub fn parity_bit(d: &Digest224) -> u8 {
-    let mut result = 0;
-    for i in 0..7 {
-        result += d[i].count_ones()
-    }
-    result as u8 & 1
+    d.iter().fold(0, |a, b| a ^ b.count_ones()) as u8 & 1
 }
 
 #[cfg(test)]
