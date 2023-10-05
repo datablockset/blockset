@@ -1,6 +1,9 @@
 use crate::{
     overflow32::{add, add3, add4},
-    sigma32::{BIG0, BIG1, SMALL0, SMALL1}, u32x4::{to_u32x4, to_u128, get_u32}, u32x8::{u32x8_add, U256}, u32x16::U512,
+    sigma32::{BIG0, BIG1, SMALL0, SMALL1},
+    u32x16::U512,
+    u32x4::{get_u32, to_u128, to_u32x4},
+    u32x8::{u32x8_add, U256},
 };
 
 const fn round([s0, s1]: U256, i: usize, w: u128, k: u128) -> U256 {
@@ -129,10 +132,19 @@ mod test {
 
     #[test]
     fn test() {
-        println!("{:x?}", A);
-
         assert_eq!(
             A,
+            [
+                0x288234c4_476102bb_2a3a2bc9_d14a028c,
+                0xFFFFFFFF_c5b3e42f_828ea62a_15a2b01f
+            ]
+        );
+    }
+
+    #[test]
+    fn runtime_test() {
+        assert_eq!(
+            compress([0x8000_0000, 0, 0, 0]),
             [
                 0x288234c4_476102bb_2a3a2bc9_d14a028c,
                 0xFFFFFFFF_c5b3e42f_828ea62a_15a2b01f
