@@ -1,6 +1,8 @@
 use crate::bit_vec32::BitVec32;
 
 pub const fn to_base32(v: u8) -> char {
+    //0               1
+    //0123456789ABCDEF0123456789ABCDEF
     b"0123456789abcdefghjkmnpqrstvwxyz"[v as usize & 0x1F] as char
 }
 
