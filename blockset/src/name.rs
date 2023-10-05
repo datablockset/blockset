@@ -177,5 +177,7 @@ mod tests {
     #[test]
     fn invalid_str_test() {
         assert_eq!(to_digest224("01"), None);
+        assert!(to_digest224("3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac0").is_none());
+        assert!(!to_digest224("1v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac0").is_none());
     }
 }
