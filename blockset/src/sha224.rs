@@ -38,22 +38,22 @@ const fn add4(a: u32, b: u32, c: u32, d: u32, e: u32) -> u32 {
     add2(add2(a, b, c), d, e)
 }
 
-type Digest256 = [u32; 8];
+type Buffer256 = [u32; 8];
 
 const BIG_S0: BigSigma = BigSigma(2, 13, 22);
 const BIG_S1: BigSigma = BigSigma(6, 11, 25);
 const SMALL_S0: SmallSigma = SmallSigma(7, 18, 3);
 const SMALL_S1: SmallSigma = SmallSigma(17, 19, 10);
 
-type Buffer = [u32; 16];
+type Buffer512 = [u32; 16];
 
-const fn round([a, b, c, d, e, f, g, h]: Digest256, i: usize, w: &Buffer, k: &Buffer) -> Digest256 {
+const fn round([a, b, c, d, e, f, g, h]: Buffer256, i: usize, w: &Buffer512, k: &Buffer512) -> Buffer256 {
     let t1 = add4(h, BIG_S1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
     let t2 = add(BIG_S0.get(a), (a & b) ^ (a & c) ^ (b & c));
     [add(t1, t2), a, b, c, add(d, t1), e, f, g]
 }
 
-const K: [Buffer; 4] = [
+const K: [Buffer512; 4] = [
     [
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, //
         0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, //
@@ -80,7 +80,7 @@ const K: [Buffer; 4] = [
     ],
 ];
 
-const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
+const fn round16(mut x: Buffer256, w: &Buffer512, j: usize) -> Buffer256 {
     let k = &K[j];
     x = round(x, 0, w, k);
     x = round(x, 1, w, k);
@@ -101,12 +101,12 @@ const fn round16(mut x: Digest256, w: &Buffer, j: usize) -> Digest256 {
 }
 
 #[inline(always)]
-const fn w_get(w: &Buffer, i: usize) -> u32 {
+const fn w_get(w: &Buffer512, i: usize) -> u32 {
     w[i & 0xF]
 }
 
 #[inline(always)]
-const fn wi(w: &Buffer, i: usize) -> u32 {
+const fn wi(w: &Buffer512, i: usize) -> u32 {
     add3(
         SMALL_S1.get(w_get(w, i + 0xE)),
         w_get(w, i + 9),
@@ -115,7 +115,7 @@ const fn wi(w: &Buffer, i: usize) -> u32 {
     )
 }
 
-const fn next_w(mut w: Buffer) -> Buffer {
+const fn next_w(mut w: Buffer512) -> Buffer512 {
     w[0x0] = wi(&w, 0x0);
     w[0x1] = wi(&w, 0x1);
     w[0x2] = wi(&w, 0x2);
@@ -135,12 +135,12 @@ const fn next_w(mut w: Buffer) -> Buffer {
     w
 }
 
-const SHA224_INIT: Digest256 = [
+const SHA224_INIT: Buffer256 = [
     0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4,
 ];
 
-pub const fn compress(mut w: Buffer) -> Digest224 {
-    let mut x: Digest256 = SHA224_INIT;
+pub const fn compress(mut w: Buffer512) -> Digest224 {
+    let mut x: Buffer256 = SHA224_INIT;
     x = round16(x, &w, 0);
     w = next_w(w);
     x = round16(x, &w, 1);
