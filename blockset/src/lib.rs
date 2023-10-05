@@ -8,6 +8,8 @@ mod sha224;
 mod sha224x;
 mod overflow32;
 mod sigma32;
+mod u32x4;
+mod u32x8;
 
 #[cfg(test)]
 mod static_assert;
