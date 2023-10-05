@@ -4,10 +4,12 @@ type Buffer512 = [u32; 16];
 
 const fn round(
     x: &U256,
-    i: usize,
+    mut i: usize,
+    j: usize,
     w: &Buffer512,
     k: &Buffer512,
 ) -> U256 {
+    i = (i << 2) | j;
     let [a, b, c, d, e, f, g, h] = to_u32x8(x);
     let t1 = add4(h, BIG1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
     let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
@@ -23,22 +25,22 @@ const K: [Buffer512; 4] = [
 
 const fn round16(mut x: U256, w: &Buffer512, j: usize) -> U256 {
     let k = &K[j];
-    x = round(&x, 0, w, k);
-    x = round(&x, 1, w, k);
-    x = round(&x, 2, w, k);
-    x = round(&x, 3, w, k);
-    x = round(&x, 4, w, k);
-    x = round(&x, 5, w, k);
-    x = round(&x, 6, w, k);
-    x = round(&x, 7, w, k);
-    x = round(&x, 8, w, k);
-    x = round(&x, 9, w, k);
-    x = round(&x, 10, w, k);
-    x = round(&x, 11, w, k);
-    x = round(&x, 12, w, k);
-    x = round(&x, 13, w, k);
-    x = round(&x, 14, w, k);
-    round(&x, 15, w, k)
+    x = round(&x, 0, 0, w, k);
+    x = round(&x, 0, 1, w, k);
+    x = round(&x, 0, 2, w, k);
+    x = round(&x, 0, 3, w, k);
+    x = round(&x, 1, 0, w, k);
+    x = round(&x, 1, 1, w, k);
+    x = round(&x, 1, 2, w, k);
+    x = round(&x, 1, 3, w, k);
+    x = round(&x, 2, 0, w, k);
+    x = round(&x, 2, 1, w, k);
+    x = round(&x, 2, 2, w, k);
+    x = round(&x, 2, 3, w, k);
+    x = round(&x, 3, 0, w, k);
+    x = round(&x, 3, 1, w, k);
+    x = round(&x, 3, 2, w, k);
+    round(&x, 3, 3, w, k)
 }
 
 #[inline(always)]
