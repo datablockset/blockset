@@ -46,14 +46,31 @@ impl<T: Iterator<Item = BitVec32>> BitsToBase32 for T {
     }
 }
 
-pub fn decode(i: &str) -> Option<(Vec<u32>, BitVec32)> {
-    let mut result = Vec::default();
-    let mut a = BitVec32::default();
-    for b in i.chars() {
-        let v5 = from_base32(b)?;
-        a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
+pub trait FromBase32: Sized {
+    fn from_base32(i: &str) -> Option<Self>;
+}
+
+pub trait StrEx {
+    #[allow(clippy::wrong_self_convention)]
+    fn from_base32<T: FromBase32>(&self) -> Option<T>;
+}
+
+impl StrEx for str {
+    fn from_base32<T: FromBase32>(&self) -> Option<T> {
+        T::from_base32(self)
     }
-    Some((result, a))
+}
+
+impl FromBase32 for (Vec<u32>, BitVec32) {
+    fn from_base32(i: &str) -> Option<Self> {
+        let mut result = Vec::default();
+        let mut a = BitVec32::default();
+        for b in i.chars() {
+            let v5 = from_base32(b)?;
+            a.push(&mut |v| result.push(v), 32, BitVec32::new(v5 as u32, 5));
+        }
+        Some((result, a))
+    }
 }
 
 #[cfg(test)]
