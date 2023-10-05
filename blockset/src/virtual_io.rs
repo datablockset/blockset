@@ -1,4 +1,9 @@
-use std::{collections::HashMap, io::{Cursor, self}, vec, iter::once};
+use std::{
+    collections::HashMap,
+    io::{self, Cursor},
+    iter::once,
+    vec,
+};
 
 use crate::Io;
 

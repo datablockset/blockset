@@ -3,7 +3,6 @@ use std::{
     env::{args, Args},
     fs::File,
     io,
-    process::ExitCode,
 };
 
 #[derive(Default)]
