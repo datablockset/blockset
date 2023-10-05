@@ -5,14 +5,15 @@ type Buffer256 = [u32; 8];
 type Buffer512 = [u32; 16];
 
 const fn round(
-    [a, b, c, d, e, f, g, h]: Buffer256,
+    x: &U256,
     i: usize,
     w: &Buffer512,
     k: &Buffer512,
-) -> Buffer256 {
+) -> U256 {
+    let [a, b, c, d, e, f, g, h] = to_u32x8(x);
     let t1 = add4(h, BIG1.get(e), (e & f) ^ (!e & g), k[i], w[i]);
     let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
-    [add(t1, t2), a, b, c, add(d, t1), e, f, g]
+    to_u256(&[add(t1, t2), a, b, c, add(d, t1), e, f, g])
 }
 
 const K: [Buffer512; 4] = [
@@ -22,25 +23,24 @@ const K: [Buffer512; 4] = [
     to_u32x16(&sha224x::K[3]),
 ];
 
-const fn round16(x: &U256, w: &Buffer512, j: usize) -> U256 {
-    let mut x = to_u32x8(&x);
+const fn round16(mut x: U256, w: &Buffer512, j: usize) -> U256 {
     let k = &K[j];
-    x = round(x, 0, w, k);
-    x = round(x, 1, w, k);
-    x = round(x, 2, w, k);
-    x = round(x, 3, w, k);
-    x = round(x, 4, w, k);
-    x = round(x, 5, w, k);
-    x = round(x, 6, w, k);
-    x = round(x, 7, w, k);
-    x = round(x, 8, w, k);
-    x = round(x, 9, w, k);
-    x = round(x, 10, w, k);
-    x = round(x, 11, w, k);
-    x = round(x, 12, w, k);
-    x = round(x, 13, w, k);
-    x = round(x, 14, w, k);
-    to_u256(&round(x, 15, w, k))
+    x = round(&x, 0, w, k);
+    x = round(&x, 1, w, k);
+    x = round(&x, 2, w, k);
+    x = round(&x, 3, w, k);
+    x = round(&x, 4, w, k);
+    x = round(&x, 5, w, k);
+    x = round(&x, 6, w, k);
+    x = round(&x, 7, w, k);
+    x = round(&x, 8, w, k);
+    x = round(&x, 9, w, k);
+    x = round(&x, 10, w, k);
+    x = round(&x, 11, w, k);
+    x = round(&x, 12, w, k);
+    x = round(&x, 13, w, k);
+    x = round(&x, 14, w, k);
+    round(&x, 15, w, k)
 }
 
 #[inline(always)]
@@ -82,13 +82,13 @@ const SHA224_INIT: Buffer256 = to_u32x8(&INIT);
 
 pub const fn compress(mut w: Buffer512) -> Digest224 {
     let mut x: U256 =INIT;
-    x = round16(&x, &w, 0);
+    x = round16(x, &w, 0);
     w = next_w(w);
-    x = round16(&x, &w, 1);
+    x = round16(x, &w, 1);
     w = next_w(w);
-    x = round16(&x, &w, 2);
+    x = round16(x, &w, 2);
     w = next_w(w);
-    x = round16(&x, &w, 3);
+    x = round16(x, &w, 3);
     let x = to_u32x8(&u32x8_add(&x, &INIT));
     [
         x[0], x[1], x[2], x[3], x[4], x[5], x[6],
