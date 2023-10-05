@@ -101,7 +101,7 @@ pub const fn compress(mut w: Buffer512) -> Digest224 {
 
 #[cfg(test)]
 mod tests {
-    use crate::static_assert::static_assert;
+    use crate::{static_assert::static_assert, u32x16::to_u32x16};
 
     use super::{compress, Digest224};
 
@@ -112,7 +112,7 @@ mod tests {
         a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6
     }
 
-    const A: Digest224 = compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const A: Digest224 = compress(to_u32x16(&[0x8000_0000, 0, 0, 0]));
 
     const _: () = static_assert(eq(
         compress([0x8000_0000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
