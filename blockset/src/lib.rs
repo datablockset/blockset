@@ -1,3 +1,4 @@
+mod ascii;
 mod base32;
 mod bit_vec32;
 mod digest224;
@@ -9,5 +10,5 @@ mod sha224;
 mod static_assert;
 
 //
-pub use name::{to_digest224, to_name};
+pub use name::to_digest224;
 pub use sha224::compress;

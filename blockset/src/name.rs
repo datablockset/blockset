@@ -1,25 +1,27 @@
 use std::iter::once;
 
 use crate::{
-    base32::{decode, encode},
+    base32::{decode, BitsToBase32, ToBase32},
     bit_vec32::BitVec32,
     digest224::{parity_bit, Digest224},
 };
 
-pub fn to_name(h: &Digest224) -> String {
-    let mut i = h
-        .iter()
-        .map(|x| BitVec32::new(*x, 32))
-        .chain(once(BitVec32::new(parity_bit(h) as u32, 1)));
-    let (result, a) = encode(&mut i);
-    assert_eq!(a.len, 0);
-    assert_eq!(a.v, 0);
-    assert_eq!(result.len(), 45);
-    result
+impl ToBase32 for &Digest224 {
+    fn to_base32(self) -> String {
+        let (result, a) = self
+            .iter()
+            .map(|x| BitVec32::new(*x, 32))
+            .chain(once(BitVec32::new(parity_bit(self) as u32, 1)))
+            .bits_to_base32();
+        assert_eq!(a.len, 0);
+        assert_eq!(a.v, 0);
+        assert_eq!(result.len(), 45);
+        result
+    }
 }
 
 pub fn to_digest224(h: &str) -> Option<Digest224> {
-    let (vec, a) = decode(&mut h.chars())?;
+    let (vec, a) = decode(h)?;
     if vec.len() != 7 {
         return None;
     }
@@ -35,12 +37,12 @@ pub fn to_digest224(h: &str) -> Option<Digest224> {
 
 #[cfg(test)]
 mod tests {
-    use crate::name::{to_digest224, to_name};
+    use crate::{name::to_digest224, base32::ToBase32};
 
     #[test]
     fn test() {
         fn f(a: [u32; 7], b: &str) {
-            assert_eq!(to_name(&a), *b);
+            assert_eq!(a.to_base32(), *b);
             assert_eq!(to_digest224(b), Some(a));
         }
         f([0; 7], "000000000000000000000000000000000000000000000");
