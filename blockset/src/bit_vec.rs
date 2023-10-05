@@ -6,7 +6,10 @@ pub struct BitVec {
 
 impl BitVec {
     pub const fn new(v: u32, len: u8) -> Self {
-        Self { value: v as u64, len }
+        Self {
+            value: v as u64,
+            len,
+        }
     }
     pub fn push(&mut self, f: &mut impl FnMut(u32), size: u8, b: BitVec) {
         assert!(size <= 32);

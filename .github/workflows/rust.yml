@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: cargo clippy -- -D warnings      
+    - run: cargo clippy -- -D warnings
 
   test:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-github-hosted-runners
         os: [windows-latest, ubuntu-latest, macos-13]
-    runs-on: ${{ matrix.os }}    
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - run: cargo t
@@ -36,7 +36,8 @@ jobs:
     runs-on: macos-13
     steps:
     - uses: actions/checkout@v3
-    - run: cargo install cargo-tarpaulin
+    - run: cargo install cargo-quickinstall
+    - run: cargo quickinstall --dry-run cargo-tarpaulin
     - run: cargo c
     - uses: actions/upload-artifact@v3
       with:
