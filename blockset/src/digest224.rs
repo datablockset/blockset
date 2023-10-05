@@ -2,7 +2,7 @@ use std::iter::once;
 
 use crate::{
     base32::{BitsToBase32, FromBase32, StrEx, ToBase32},
-    bit_vec32::BitVec32,
+    bit_vec::BitVec,
 };
 
 pub type Digest224 = [u32; 7];
@@ -19,13 +19,13 @@ impl Digest224Ex for &Digest224 {
 
 impl ToBase32 for &Digest224 {
     fn to_base32(self) -> String {
-        let (result, a) = self
+        let (result, BitVec { value, len }) = self
             .iter()
-            .map(|x| BitVec32::new(*x, 32))
-            .chain(once(BitVec32::new(self.parity_bit() as u32, 1)))
+            .map(|x| BitVec::new(*x, 32))
+            .chain(once(BitVec::new(self.parity_bit() as u32, 1)))
             .bits_to_base32();
-        assert_eq!(a.len, 0);
-        assert_eq!(a.v, 0);
+        assert_eq!(len, 0);
+        assert_eq!(value, 0);
         assert_eq!(result.len(), 45);
         result
     }
@@ -33,15 +33,15 @@ impl ToBase32 for &Digest224 {
 
 impl FromBase32 for Digest224 {
     fn from_base32(i: &str) -> Option<Self> {
-        let (vec, a) = i.from_base32()?;
+        let (vec, BitVec { value, len }) = i.from_base32()?;
         if vec.len() != 7 {
             return None;
         }
-        assert_eq!(a.len, 1);
-        assert_eq!(a.v | 1, 1);
+        assert_eq!(len, 1);
+        assert_eq!(value | 1, 1);
         let mut result = Digest224::default();
         result.copy_from_slice(&vec);
-        if a.v as u8 != result.parity_bit() {
+        if value != result.parity_bit() as u64 {
             return None;
         }
         Some(result)
