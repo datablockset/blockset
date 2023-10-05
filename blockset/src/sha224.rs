@@ -14,13 +14,6 @@ const fn round(
     to_u256(&[add(t1, t2), a, b, c, add(d, t1), e, f, g])
 }
 
-const K: [Buffer512; 4] = [
-    to_u32x16(&sha224x::K[0]),
-    to_u32x16(&sha224x::K[1]),
-    to_u32x16(&sha224x::K[2]),
-    to_u32x16(&sha224x::K[3]),
-];
-
 const fn round4(mut x: U256, w: &U512, k: &U512, i: usize) -> U256 {
     let w = w[i];
     let k = k[i];
