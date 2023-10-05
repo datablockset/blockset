@@ -1,7 +1,5 @@
 use crate::{digest224::Digest224, overflow32::{add4, add, add3}, sigma32::{BIG1, BIG0, SMALL1, SMALL0}, u32x8::{to_u32x8, to_u256, u32x8_add, U256}, sha224x::{INIT, self}, u32x16::to_u32x16};
 
-type Buffer256 = [u32; 8];
-
 type Buffer512 = [u32; 16];
 
 const fn round(
@@ -77,8 +75,6 @@ const fn next_w(mut w: Buffer512) -> Buffer512 {
     w[0xF] = wi(&w, 0xF);
     w
 }
-
-const SHA224_INIT: Buffer256 = to_u32x8(&INIT);
 
 pub const fn compress(mut w: Buffer512) -> Digest224 {
     let mut x: U256 =INIT;
