@@ -2,12 +2,12 @@ mod app;
 mod ascii;
 mod base32;
 mod bit_vec;
-mod digest224;
 mod io;
 mod overflow32;
 mod sha224;
 mod sigma32;
 mod u128;
+mod u224;
 mod u256;
 mod u512;
 

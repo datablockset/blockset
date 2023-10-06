@@ -1,7 +1,7 @@
 use crate::{
     base32::{StrEx, ToBase32},
-    digest224::Digest224,
     io::Io,
+    u224::U224,
 };
 
 pub fn run(io: &mut impl Io) -> Result<(), &str> {
@@ -11,7 +11,7 @@ pub fn run(io: &mut impl Io) -> Result<(), &str> {
     match command.as_str() {
         "validate" => {
             let b32 = a.next().ok_or("missing address")?;
-            let d = b32.from_base32::<Digest224>().ok_or("invalid address")?;
+            let d = b32.from_base32::<U224>().ok_or("invalid address")?;
             io.print("valid: ");
             io.println(&d.to_base32());
             Ok(())
