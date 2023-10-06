@@ -1,4 +1,4 @@
-use crate::u128::{to_u32x4, u32x4_add};
+use crate::{u128::{to_u32x4, u32x4_add}, u512::U512};
 
 pub type U256 = [u128; 2];
 
@@ -11,4 +11,8 @@ pub const fn to_u32x8([a, b]: &U256) -> [u32; 8] {
     let [a0, a1, a2, a3] = to_u32x4(*a);
     let [b0, b1, b2, b3] = to_u32x4(*b);
     [a0, a1, a2, a3, b0, b1, b2, b3]
+}
+
+pub const fn to_u512(&[a, b]: &U256) -> U512 {
+    [a, b, 0, 0]
 }
