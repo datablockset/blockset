@@ -4,12 +4,12 @@ mod base32;
 mod bit_vec;
 mod digest;
 mod io;
-mod u32;
 mod sha224;
 mod sigma32;
 mod u128;
 mod u224;
 mod u256;
+mod u32;
 mod u512;
 
 #[cfg(test)]

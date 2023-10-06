@@ -7,7 +7,11 @@ const LEN_MAX: usize = 31;
 // - 32 - hash
 const fn len(&[_, b]: &U256) -> usize {
     let result = (b >> 120) as usize;
-    if result == 0xFF { LEN_MAX + 1 } else { result >> 3 }
+    if result == 0xFF {
+        LEN_MAX + 1
+    } else {
+        result >> 3
+    }
 }
 
 const DATA_MASK: u128 = (1 << 120) - 1;
