@@ -18,7 +18,7 @@ cargo uninstall blockset
 
 ### Commands
 
-- hash validation:
+- address validation:
   ```
   blockset validate 3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ack
   ```
