@@ -15,3 +15,10 @@ Uninstallation:
 ```
 cargo uninstall blockset
 ```
+
+### Commands
+
+- hash validation:
+  ```
+  blockset validate 
+  ```
