@@ -5,19 +5,19 @@ use crate::{
     bit_vec::BitVec,
 };
 
-pub type Digest224 = [u32; 7];
+pub type U224 = [u32; 7];
 
-pub trait Digest224Ex {
+pub trait U224Ex {
     fn parity_bit(self) -> u8;
 }
 
-impl Digest224Ex for &Digest224 {
+impl U224Ex for &U224 {
     fn parity_bit(self) -> u8 {
         self.iter().fold(0, |a, b| a ^ b.count_ones()) as u8 & 1
     }
 }
 
-impl ToBase32 for &Digest224 {
+impl ToBase32 for &U224 {
     fn to_base32(self) -> String {
         let (result, BitVec { value, len }) = self
             .iter()
@@ -31,7 +31,7 @@ impl ToBase32 for &Digest224 {
     }
 }
 
-impl FromBase32 for Digest224 {
+impl FromBase32 for U224 {
     fn from_base32(i: &str) -> Option<Self> {
         let (vec, BitVec { value, len }) = i.from_base32()?;
         if vec.len() != 7 {
@@ -39,7 +39,7 @@ impl FromBase32 for Digest224 {
         }
         assert_eq!(len, 1);
         assert_eq!(value | 1, 1);
-        let mut result = Digest224::default();
+        let mut result = U224::default();
         result.copy_from_slice(&vec);
         if value != result.parity_bit() as u64 {
             return None;
@@ -52,7 +52,7 @@ impl FromBase32 for Digest224 {
 mod tests {
     use crate::{
         base32::{StrEx, ToBase32},
-        digest224::{Digest224, Digest224Ex},
+        u224::{U224Ex, U224},
     };
 
     #[test]
@@ -219,12 +219,12 @@ mod tests {
 
     #[test]
     fn invalid_str_test() {
-        assert_eq!("01".from_base32::<Digest224>(), None);
+        assert_eq!("01".from_base32::<U224>(), None);
         assert!("3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac0"
-            .from_base32::<Digest224>()
+            .from_base32::<U224>()
             .is_none());
         assert!("1v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ac0"
-            .from_base32::<Digest224>()
+            .from_base32::<U224>()
             .is_some());
     }
 }
