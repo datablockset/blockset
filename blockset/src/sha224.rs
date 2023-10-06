@@ -1,9 +1,9 @@
 use crate::{
     overflow32::{add, add3, add4},
     sigma32::{BIG0, BIG1, SMALL0, SMALL1},
-    u32x16::U512,
-    u32x4::{get_u32, to_u128, to_u32x4},
-    u32x8::{u32x8_add, U256},
+    u128::{from_u32x4, get_u32, to_u32x4},
+    u256::{u32x8_add, U256},
+    u512::U512,
 };
 
 const fn round([s0, s1]: U256, i: usize, w: u128, k: u128) -> U256 {
@@ -94,7 +94,7 @@ const fn w_round4(w: &U512, i: usize) -> u128 {
     w0[1] = w_round(w0[1], w0[2], w22, w33);
     w0[2] = w_round(w0[2], w0[3], w23, w0[0]);
     w0[3] = w_round(w0[3], w10, w30, w0[1]);
-    to_u128(w0)
+    from_u32x4(w0)
 }
 
 const fn w_round16(mut w: U512) -> U512 {

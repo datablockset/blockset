@@ -7,9 +7,9 @@ mod io;
 mod overflow32;
 mod sha224;
 mod sigma32;
-mod u32x16;
-mod u32x4;
-mod u32x8;
+mod u128;
+mod u256;
+mod u512;
 
 #[cfg(test)]
 mod static_assert;
