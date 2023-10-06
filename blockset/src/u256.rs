@@ -30,12 +30,16 @@ pub const fn shl(&[a, b]: &U256, i: usize) -> U256 {
     }
 }
 
+pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
+    [a0 | b0, a1 | b1]
+}
+
 #[cfg(test)]
 mod test {
     use crate::u256::{shl, U256};
 
     #[test]
-    fn test() {
+    fn shl_test() {
         const X: U256 = [
             0x100F_0E0D_0C0B_0A09_0807_0605_0403_0201,
             0x201F_1E1D_1C1B_1A19_1817_1615_1413_1211,
