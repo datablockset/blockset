@@ -1,4 +1,7 @@
-use crate::{u256::{bitor, shl, U256}, compress};
+use crate::{
+    compress,
+    u256::{bitor, shl, U256},
+};
 
 const LEN_MAX: usize = 0xF8;
 
@@ -38,7 +41,10 @@ const fn to_digest(a: u8) -> U256 {
 
 #[cfg(test)]
 mod test {
-    use crate::{u256::{U256, shl}, digest::{to_digest, len, merge, remove_len, set_len, LEN_HI_POS}};
+    use crate::{
+        digest::{len, merge, remove_len, to_digest, LEN_HI_POS},
+        u256::{shl, U256},
+    };
 
     #[test]
     fn bit_test() {
@@ -66,7 +72,30 @@ mod test {
         assert_eq!(len(&B), 8);
         let C: U256 = merge(&A, &B);
         // println!("{:x?}", C);
-        // assert_eq!(C, [0x3412, 0x1000_0000_0000_0000_0000_0000_0000_0000]);
+        assert_eq!(C, [0x3412, 0x1000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&C), 16);
+        let C2 = merge(&C, &C);
+        assert_eq!(C2, [0x3412_3412, 0x2000_0000_0000_0000_0000_0000_0000_0000]);
+        assert_eq!(len(&C2), 0x20);
+        let C4 = merge(&C2, &C2);
+        assert_eq!(
+            C4,
+            [
+                0x3412_3412_3412_3412,
+                0x4000_0000_0000_0000_0000_0000_0000_0000
+            ]
+        );
+        assert_eq!(len(&C4), 0x40);
+        let C8 = merge(&C4, &C4);
+        assert_eq!(
+            C8,
+            [
+                0x3412_3412_3412_3412_3412_3412_3412_3412,
+                0x8000_0000_0000_0000_0000_0000_0000_0000
+            ]
+        );
+        assert_eq!(len(&C8), 0x80);
+        let C16 = merge(&C8, &C8);
+        assert_eq!(len(&C16), 0xFF);
     }
 }
