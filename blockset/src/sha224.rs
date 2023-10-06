@@ -118,7 +118,7 @@ pub const INIT: U256 = [
     0xbefa4fa4_64f98fa7_68581511_ffc00b31,
 ];
 
-pub const fn compress(mut w: U512) -> U224 {
+pub const fn compress(mut w: U512) -> U256 {
     let mut x: U256 = INIT;
     x = round16(x, &w, 0);
     w = w_round16(w);
@@ -128,23 +128,26 @@ pub const fn compress(mut w: U512) -> U224 {
     w = w_round16(w);
     x = round16(x, &w, 3);
     x = u32x8_add(&x, &INIT);
-    let [x0, x1, x2, x3, x4, x5, x6, _] = to_u32x8(&x);
-    [x0, x1, x2, x3, x4, x5, x6]
+    x[1] |= 0xFFFF_FFFF << 96;
+    x
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{u224::U224, u512::new};
+    use crate::{u256::U256, u512::new};
 
     use super::compress;
 
-    const A: U224 = compress(new(0x8000_0000, 0, 0, 0));
+    const A: U256 = compress(new(0x8000_0000, 0, 0, 0));
 
     #[test]
     fn test() {
         assert_eq!(
             A,
-            [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
+            [
+                0x288234c4_476102bb_2a3a2bc9_d14a028c,
+                0xFFFFFFFF_c5b3e42f_828ea62a_15a2b01f,
+            ]
         );
     }
 
@@ -152,7 +155,10 @@ mod test {
     fn runtime_test() {
         assert_eq!(
             compress(new(0x8000_0000, 0, 0, 0)),
-            [0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4, 0x15a2b01f, 0x828ea62a, 0xc5b3e42f]
+            [
+                0x288234c4_476102bb_2a3a2bc9_d14a028c,
+                0xFFFFFFFF_c5b3e42f_828ea62a_15a2b01f,
+            ]
         );
     }
 }

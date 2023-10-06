@@ -1,4 +1,4 @@
-use crate::u256::{U256, shl, bitor};
+use crate::u256::{bitor, shl, U256};
 
 const LEN_MAX: usize = 31;
 
