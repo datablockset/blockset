@@ -20,5 +20,5 @@ cargo uninstall blockset
 
 - hash validation:
   ```
-  blockset validate 
+  blockset validate 3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ack
   ```
