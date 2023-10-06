@@ -1,5 +1,5 @@
 use crate::{
-    overflow32::{add, add3, add4},
+    u32::{add, add3, add4},
     sigma32::{BIG0, BIG1, SMALL0, SMALL1},
     u128::{from_u32x4, get_u32, to_u32x4},
     u224::U224,
@@ -80,13 +80,19 @@ const fn wi(w: &U512, i: usize) -> u128 {
     w[i & 3]
 }
 
-//   0   |1   |2   |3
-//   0123|0123|0123|0123
-//   0123|4567|89AB|CDEF
-// 0:WR  |    | R  |  R
-// 1: WR |    |  R |   R
-// 2:R WR|    |   R|
-// 3: R W|R   |    |R
+// ```
+// | |0   |1   |2   |3   |
+// | |0123|0123|0123|0123|
+// | |0123|4567|89AB|CDEF|
+// |-|----|----|----|----|
+// |0|WR  |    | R  |  R |
+// |1| WR |    |  R |   R|
+// |2|R WR|    |   R|    |
+// |3| R W|R   |    |R   |
+// ```
+//
+// - `R` - read
+// - `W` - read and write.
 const fn w_round4(w: &U512, i: usize) -> u128 {
     let [mut w00, mut w01, mut w02, mut w03] = to_u32x4(w[i]);
     let w10 = wi(w, i + 1) as u32;

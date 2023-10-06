@@ -3,7 +3,7 @@ mod ascii;
 mod base32;
 mod bit_vec;
 mod io;
-mod overflow32;
+mod u32;
 mod sha224;
 mod sigma32;
 mod u128;
