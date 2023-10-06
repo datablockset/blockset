@@ -90,12 +90,12 @@ const fn w_round4(w: &U512, i: usize) -> u128 {
     let w10 = wi(w, i + 1) as u32;
     let [_, w21, w22, w23] = to_u32x4(wi(w, i + 2));
     let [w30, _, w32, w33] = to_u32x4(wi(w, i + 3));
-    let mut w0 = to_u32x4(w[i]);
-    w0[0] = w_round(w0[0], w0[1], w21, w32);
-    w0[1] = w_round(w0[1], w0[2], w22, w33);
-    w0[2] = w_round(w0[2], w0[3], w23, w0[0]);
-    w0[3] = w_round(w0[3], w10, w30, w0[1]);
-    from_u32x4(w0)
+    let [mut w00, mut w01, mut w02, mut w03] = to_u32x4(w[i]);
+    w00 = w_round(w00, w01, w21, w32);
+    w01 = w_round(w01, w02, w22, w33);
+    w02 = w_round(w02, w03, w23, w00);
+    w03 = w_round(w03, w10, w30, w01);
+    from_u32x4([w00, w01, w02, w03])
 }
 
 const fn w_round16(mut w: U512) -> U512 {
