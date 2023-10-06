@@ -1,0 +1,1 @@
+type Digest224 = [u64; 4];
