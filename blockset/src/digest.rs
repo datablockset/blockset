@@ -10,28 +10,27 @@ const LEN_HI_POS: usize = 0x78;
 // in bits
 // - 0..0xF8 - data
 // - 0xFF - hash
-const fn len(&[_, b]: &U256) -> usize {
-    (b >> LEN_HI_POS) as usize
+const fn len(&[_, hi]: &U256) -> usize {
+    (hi >> LEN_HI_POS) as usize
 }
 
 const DATA_MASK: u128 = (1 << LEN_HI_POS) - 1;
 
-const fn remove_len(&[a, b]: &U256) -> U256 {
-    [a, b & DATA_MASK]
+const fn remove_len(&[lo, hi]: &U256) -> U256 {
+    [lo, hi & DATA_MASK]
 }
 
 const fn set_len(&[a, b]: &U256, len: usize) -> U256 {
     [a, b | ((len as u128) << LEN_HI_POS)]
 }
 
-const fn merge(a: &U256, b: &U256) -> U256 {
-    let a_len = len(a);
-    let b_len = len(b);
-    let len = a_len + b_len;
+const fn merge(lo: &U256, hi: &U256) -> U256 {
+    let a_len = len(lo);
+    let len = a_len + len(hi);
     if len <= LEN_MAX {
-        set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len)), len)
+        set_len(&bitor(&remove_len(lo), &shl(&remove_len(hi), a_len)), len)
     } else {
-        compress([*a, *b])
+        compress([*lo, *hi])
     }
 }
 
@@ -97,5 +96,37 @@ mod test {
         assert_eq!(len(&C8), 0x80);
         let C16 = merge(&C8, &C8);
         assert_eq!(len(&C16), 0xFF);
+        let C12 = merge(&C8, &C4);
+        assert_eq!(
+            C12,
+            [
+                0x3412_3412_3412_3412_3412_3412_3412_3412,
+                0xC000_0000_0000_0000_3412_3412_3412_3412
+            ]
+        );
+        let C14 = merge(&C12, &C2);
+        assert_eq!(
+            C14,
+            [
+                0x3412_3412_3412_3412_3412_3412_3412_3412,
+                0xE000_0000_3412_3412_3412_3412_3412_3412
+            ]
+        );
+        let C15 = merge(&C14, &C);
+        assert_eq!(
+            C15,
+            [
+                0x3412_3412_3412_3412_3412_3412_3412_3412,
+                0xF000_3412_3412_3412_3412_3412_3412_3412
+            ]
+        );
+        let C151 = merge(&C15, &to_digest(0x56));
+        assert_eq!(
+            C151,
+            [
+                0x3412_3412_3412_3412_3412_3412_3412_3412,
+                0xF856_3412_3412_3412_3412_3412_3412_3412
+            ]
+        );
     }
 }

@@ -1,8 +1,7 @@
 use crate::{
     sigma32::{BIG0, BIG1, SMALL0, SMALL1},
     u128::{from_u32x4, get_u32, to_u32x4},
-    u224::U224,
-    u256::{to_u32x8, u32x8_add, U256},
+    u256::{u32x8_add, U256},
     u32::{add, add3, add4},
     u512::{get_u128, new, U512},
 };
