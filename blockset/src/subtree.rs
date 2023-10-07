@@ -20,6 +20,7 @@ mod test {
     #[test]
     fn test() {
         //assert_eq!(0u32.leading_zeros(), 32);
-        // assert_eq!(dif(&[0, 0], &[0, 0]), 256);
+        assert_eq!(dif(&[0, 0], &[0, 0]), 256);
+        assert_eq!(dif(&[0, 0], &[0, 1]), 255);
     }
 }
