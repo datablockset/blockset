@@ -24,13 +24,13 @@ const fn set_len(&[a, b]: &U256, len: usize) -> U256 {
     [a, b | ((len as u128) << LEN_HI_POS)]
 }
 
-const fn merge(lo: &U256, hi: &U256) -> U256 {
-    let a_len = len(lo);
-    let len = a_len + len(hi);
+const fn merge(a: &U256, b: &U256) -> U256 {
+    let a_len = len(a);
+    let len = a_len + len(b);
     if len <= LEN_MAX {
-        set_len(&bitor(&remove_len(lo), &shl(&remove_len(hi), a_len)), len)
+        set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len)), len)
     } else {
-        compress([*lo, *hi])
+        compress([*a, *b])
     }
 }
 
@@ -62,21 +62,21 @@ mod test {
     }
 
     #[test]
-    fn test() {
+    fn const_test() {
         const A: U256 = to_digest(0x12);
         assert_eq!(A, [0x12, 0x0800_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&A), 8);
         const B: U256 = to_digest(0x34);
         assert_eq!(B, [0x34, 0x0800_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&B), 8);
-        let C: U256 = merge(&A, &B);
+        const C: U256 = merge(&A, &B);
         // println!("{:x?}", C);
         assert_eq!(C, [0x3412, 0x1000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&C), 16);
-        let C2 = merge(&C, &C);
+        const C2: U256 = merge(&C, &C);
         assert_eq!(C2, [0x3412_3412, 0x2000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&C2), 0x20);
-        let C4 = merge(&C2, &C2);
+        const C4: U256 = merge(&C2, &C2);
         assert_eq!(
             C4,
             [
@@ -85,7 +85,7 @@ mod test {
             ]
         );
         assert_eq!(len(&C4), 0x40);
-        let C8 = merge(&C4, &C4);
+        const C8: U256 = merge(&C4, &C4);
         assert_eq!(
             C8,
             [
@@ -94,9 +94,9 @@ mod test {
             ]
         );
         assert_eq!(len(&C8), 0x80);
-        let C16 = merge(&C8, &C8);
+        const C16: U256 = merge(&C8, &C8);
         assert_eq!(len(&C16), 0xFF);
-        let C12 = merge(&C8, &C4);
+        const C12: U256 = merge(&C8, &C4);
         assert_eq!(
             C12,
             [
@@ -104,7 +104,7 @@ mod test {
                 0xC000_0000_0000_0000_3412_3412_3412_3412
             ]
         );
-        let C14 = merge(&C12, &C2);
+        const C14: U256 = merge(&C12, &C2);
         assert_eq!(
             C14,
             [
@@ -112,7 +112,7 @@ mod test {
                 0xE000_0000_3412_3412_3412_3412_3412_3412
             ]
         );
-        let C15 = merge(&C14, &C);
+        const C15: U256 = merge(&C14, &C);
         assert_eq!(
             C15,
             [
@@ -120,13 +120,116 @@ mod test {
                 0xF000_3412_3412_3412_3412_3412_3412_3412
             ]
         );
-        let C151 = merge(&C15, &to_digest(0x56));
+        const C151: U256 = merge(&C15, &to_digest(0x56));
         assert_eq!(
             C151,
             [
                 0x3412_3412_3412_3412_3412_3412_3412_3412,
                 0xF856_3412_3412_3412_3412_3412_3412_3412
             ]
+        );
+    }
+
+    #[test]
+    fn runtime_test() {
+        let check_len = |a, l| {
+            assert_eq!(len(&a), l);
+            a
+        };
+        let check = |a, l, e: U256| {
+            check_len(a, l);
+            assert_eq!(a, e);
+            a
+        };
+        let a = check(
+            to_digest(0xEF),
+            8,
+            [0xEF, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let b = check(
+            to_digest(0xCD),
+            8,
+            [0xCD, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let ab = check(
+            merge(&a, &b),
+            16,
+            [0xCDEF, 0x1000_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let c = check(
+            to_digest(0xAB),
+            8,
+            [0xAB, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let abc = check(
+            merge(&ab, &c),
+            24,
+            [0xAB_CDEF, 0x1800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let d = check(
+            to_digest(0x89),
+            8,
+            [0x89, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let e = check(
+            to_digest(0x67),
+            8,
+            [0x67, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let de = check(
+            merge(&d, &e),
+            16,
+            [0x6789, 0x1000_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let abcde = check(
+            merge(&abc, &de),
+            40,
+            [0x67_89AB_CDEF, 0x2800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let f = check(
+            to_digest(0x45),
+            8,
+            [0x45, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let g = check(
+            to_digest(0x23),
+            8,
+            [0x23, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let h = check(
+            to_digest(0x01),
+            8,
+            [0x01, 0x0800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let gh = check(
+            merge(&g, &h),
+            16,
+            [0x0123, 0x1000_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let fgh = check(
+            merge(&f, &gh),
+            24,
+            [0x01_2345, 0x1800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let abcdefgh = check(
+            merge(&abcde, &fgh),
+            64,
+            [0x0123_4567_89AB_CDEF, 0x4000_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let abcdefghabcde = check(
+            merge(&abcdefgh, &abcde),
+            104,
+            [0x67_89AB_CDEF_0123_4567_89AB_CDEF, 0x6800_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let abcdefghabcdea = check(
+            merge(&abcdefghabcde, &a),
+            112,
+            [0xEF67_89AB_CDEF_0123_4567_89AB_CDEF, 0x7000_0000_0000_0000_0000_0000_0000_0000],
+        );
+        let abcdefghabcdea2 = check(
+            merge(&abcdefghabcdea, &abcdefghabcdea),
+            224,
+            [0xCDEF_EF67_89AB_CDEF_0123_4567_89AB_CDEF, 0xE000_0000_EF67_89AB_CDEF_0123_4567_89AB],
         );
     }
 }
