@@ -214,22 +214,35 @@ mod test {
         let abcdefgh = check(
             merge(&abcde, &fgh),
             64,
-            [0x0123_4567_89AB_CDEF, 0x4000_0000_0000_0000_0000_0000_0000_0000],
+            [
+                0x0123_4567_89AB_CDEF,
+                0x4000_0000_0000_0000_0000_0000_0000_0000,
+            ],
         );
         let abcdefghabcde = check(
             merge(&abcdefgh, &abcde),
             104,
-            [0x67_89AB_CDEF_0123_4567_89AB_CDEF, 0x6800_0000_0000_0000_0000_0000_0000_0000],
+            [
+                0x67_89AB_CDEF_0123_4567_89AB_CDEF,
+                0x6800_0000_0000_0000_0000_0000_0000_0000,
+            ],
         );
         let abcdefghabcdea = check(
             merge(&abcdefghabcde, &a),
             112,
-            [0xEF67_89AB_CDEF_0123_4567_89AB_CDEF, 0x7000_0000_0000_0000_0000_0000_0000_0000],
+            [
+                0xEF67_89AB_CDEF_0123_4567_89AB_CDEF,
+                0x7000_0000_0000_0000_0000_0000_0000_0000,
+            ],
         );
         let abcdefghabcdea2 = check(
             merge(&abcdefghabcdea, &abcdefghabcdea),
             224,
-            [0xCDEF_EF67_89AB_CDEF_0123_4567_89AB_CDEF, 0xE000_0000_EF67_89AB_CDEF_0123_4567_89AB],
+            [
+                0xCDEF_EF67_89AB_CDEF_0123_4567_89AB_CDEF,
+                0xE000_0000_EF67_89AB_CDEF_0123_4567_89AB,
+            ],
         );
+        check_len(merge(&abcdefghabcdea2, &abcdefghabcdea2), 255);
     }
 }
