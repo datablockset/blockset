@@ -20,8 +20,8 @@ const fn remove_len(&[lo, hi]: &U256) -> U256 {
     [lo, hi & DATA_MASK]
 }
 
-const fn set_len(&[a, b]: &U256, len: usize) -> U256 {
-    [a, b | ((len as u128) << LEN_HI_POS)]
+const fn set_len(&[lo, hi]: &U256, len: usize) -> U256 {
+    [lo, hi | ((len as u128) << LEN_HI_POS)]
 }
 
 pub const fn merge(a: &U256, b: &U256) -> U256 {
