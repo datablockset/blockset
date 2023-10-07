@@ -7,18 +7,17 @@ pub const fn u32x8_add(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [u32x4_add(a0, b0), u32x4_add(a1, b1)]
 }
 
-pub const fn shl(x: &U256, i: usize) -> U256 {
-    if i == 0 {
-        return *x;
-    }
-    if i >= 256 {
-        return [0; 2];
-    }
-    let [a, b] = *x;
+pub const fn shl(&[lo, hi]: &U256, i: usize) -> U256 {
     if i < 128 {
-        [a << i, (b << i) | ((a >> (128 - i)) & ((1 << i) - 1))]
+        if i == 0 {
+            [lo, hi]
+        } else {
+            [lo << i, (hi << i) | ((lo >> (128 - i)) & ((1 << i) - 1))]
+        }
     } else {
-        [0, a << (i - 128)]
+        // If i >=256, a standard `<<` function should panic in debug mode and return the original
+        // value in release mode. Our function returns 0 in this case.
+        [0, if i >= 256 { 0 } else { lo << (i - 128) }]
     }
 }
 

@@ -54,7 +54,7 @@ mod test {
 
     #[test]
     fn test_valid_address() {
-        let mut io = VirtualIo::new(&["validate", "3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ack"]);
+        let mut io = VirtualIo::new(&["validate", "3Vld4j94scaseqgcyzrOha5dxa9rx6ppnfbndck97iack"]);
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
     }
