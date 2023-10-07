@@ -6,6 +6,7 @@ mod digest;
 mod io;
 mod sha224;
 mod sigma32;
+mod subtree;
 mod u128;
 mod u224;
 mod u256;
