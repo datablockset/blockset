@@ -27,10 +27,11 @@ jobs:
       matrix:
         # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-github-hosted-runners
         os: [windows-latest, ubuntu-latest, macos-13]
+        type: ['', '--release']
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
-    - run: cargo t
+    - run: cargo test ${{ matrix.type }}
 
   coverage:
     runs-on: macos-13

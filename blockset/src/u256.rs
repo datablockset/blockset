@@ -7,25 +7,18 @@ pub const fn u32x8_add(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [u32x4_add(a0, b0), u32x4_add(a1, b1)]
 }
 
-/*
-pub const fn to_u32x8([a, b]: &U256) -> [u32; 8] {
-    let [a0, a1, a2, a3] = to_u32x4(*a);
-    let [b0, b1, b2, b3] = to_u32x4(*b);
-    [a0, a1, a2, a3, b0, b1, b2, b3]
-}
-
-pub const fn to_u512(a: &U256) -> U512 {
-    [*a, [0, 0]]
-}
-*/
-
-pub const fn shl(&[a, b]: &U256, i: usize) -> U256 {
+pub const fn shl(x: &U256, i: usize) -> U256 {
+    if i == 0 {
+        return *x;
+    }
+    if i >= 256 {
+        return [0; 2];
+    }
+    let [a, b] = *x;
     if i < 128 {
         [a << i, (b << i) | ((a >> (128 - i)) & ((1 << i) - 1))]
-    } else if i < 256 {
-        [0, a << (i - 128)]
     } else {
-        [a, b]
+        [0, a << (i - 128)]
     }
 }
 
@@ -80,7 +73,6 @@ mod test {
         assert_eq!(shl(&X, 136), [0, 0x0F_0E0D_0C0B_0A09_0807_0605_0403_020100]);
         assert_eq!(shl(&X, 248), [0, 0x0100_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 255), [0, 0x8000_0000_0000_0000_0000_0000_0000_0000]);
-        assert_eq!(shl(&X, 256), X);
-        assert_eq!(3u128 << 256, 3u128);
+        assert_eq!(shl(&X, 256), [0; 2]);
     }
 }

@@ -6,6 +6,7 @@ mod digest;
 mod io;
 mod sha224;
 mod sigma32;
+mod subtree;
 mod u128;
 mod u224;
 mod u256;
@@ -23,3 +24,4 @@ pub use io::Io;
 //
 pub use digest::{merge, to_digest};
 pub use sha224::compress;
+pub use subtree::dif;

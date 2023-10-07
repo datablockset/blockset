@@ -20,8 +20,8 @@ const fn remove_len(&[lo, hi]: &U256) -> U256 {
     [lo, hi & DATA_MASK]
 }
 
-const fn set_len(&[a, b]: &U256, len: usize) -> U256 {
-    [a, b | ((len as u128) << LEN_HI_POS)]
+const fn set_len(&[lo, hi]: &U256, len: usize) -> U256 {
+    [lo, hi | ((len as u128) << LEN_HI_POS)]
 }
 
 pub const fn merge(a: &U256, b: &U256) -> U256 {
@@ -70,7 +70,6 @@ mod test {
         assert_eq!(B, [0x34, 0x0800_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&B), 8);
         const C: U256 = merge(&A, &B);
-        // println!("{:x?}", C);
         assert_eq!(C, [0x3412, 0x1000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&C), 16);
         const C2: U256 = merge(&C, &C);
