@@ -24,7 +24,7 @@ const fn set_len(&[a, b]: &U256, len: usize) -> U256 {
     [a, b | ((len as u128) << LEN_HI_POS)]
 }
 
-const fn merge(a: &U256, b: &U256) -> U256 {
+pub const fn merge(a: &U256, b: &U256) -> U256 {
     let a_len = len(a);
     let len = a_len + len(b);
     if len <= LEN_MAX {
@@ -34,7 +34,7 @@ const fn merge(a: &U256, b: &U256) -> U256 {
     }
 }
 
-const fn to_digest(a: u8) -> U256 {
+pub const fn to_digest(a: u8) -> U256 {
     set_len(&[a as u128, 0], 8)
 }
 

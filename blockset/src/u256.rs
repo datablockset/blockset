@@ -1,7 +1,4 @@
-use crate::{
-    u128::{to_u32x4, u32x4_add},
-    u512::U512,
-};
+use crate::u128::u32x4_add;
 
 pub type U256 = [u128; 2];
 
