@@ -1,5 +1,3 @@
-use core::panic;
-
 use crate::u128::u32x4_add;
 
 pub type U256 = [u128; 2];
@@ -30,8 +28,6 @@ pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
 
 #[cfg(test)]
 mod test {
-    use std::panic::catch_unwind;
-
     use crate::u256::{shl, U256};
 
     #[test]
