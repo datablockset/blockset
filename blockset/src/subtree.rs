@@ -19,8 +19,11 @@ mod test {
 
     #[test]
     fn test() {
-        //assert_eq!(0u32.leading_zeros(), 32);
         assert_eq!(dif(&[0, 0], &[0, 0]), 256);
         assert_eq!(dif(&[0, 0], &[0, 1]), 255);
+        assert_eq!(dif(&[1, 0], &[1, 0]), 256);
+        assert_eq!(dif(&[0, 0], &[1, 458]), 127);
+        assert_eq!(dif(&[0b111, 0], &[0b100, 458]), 126);
+        assert_eq!(dif(&[0, 0], &[0x80000000_00000000_00000000_00000000, 458]), 0);
     }
 }
