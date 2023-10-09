@@ -26,7 +26,14 @@ const fn set_len(&[lo, hi]: &U256, len: usize) -> U256 {
 
 pub const fn merge(a: &U256, b: &U256) -> U256 {
     let a_len = len(a);
-    let len = a_len + len(b);
+    if a_len == 0 {
+        return *b;
+    }
+    let b_len = len(b);
+    if b_len == 0 {
+        return *a;
+    }
+    let len = a_len + b_len;
     if len <= LEN_MAX {
         set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len)), len)
     } else {
@@ -59,6 +66,12 @@ mod test {
         assert_eq!(b, [0x34, 0]);
         b = shl(&b, a_len);
         assert_eq!(b, [0x3400, 0]);
+    }
+
+    #[test]
+    fn merge_empty_test() {
+        assert_eq!(merge(&to_digest(0x12), &U256::default()), to_digest(0x12));
+        assert_eq!(merge(&U256::default(), &to_digest(0x34)), to_digest(0x34));
     }
 
     #[test]

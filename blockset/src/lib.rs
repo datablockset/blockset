@@ -24,4 +24,4 @@ pub use io::Io;
 //
 pub use digest::{merge, to_digest};
 pub use sha224::compress;
-pub use subtree::dif;
+pub use subtree::SubTree;
