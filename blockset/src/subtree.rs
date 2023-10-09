@@ -21,6 +21,13 @@ struct Node {
     height: u32,
 }
 
+impl Node {
+    fn new(&root: &U256, &last: &U256, height: u32) -> Self {
+        Node { root, last, height }
+    }
+}
+
+#[derive(Default)]
 pub struct SubTree(Vec<Node>);
 
 impl SubTree {
@@ -29,11 +36,16 @@ impl SubTree {
         if let Some(mut y) = self.0.pop() {
             // z >= y.last
             if !less(z, &y.last) {
-                let mut root = merge(&y.root, z);
-                while let Some(y) = self.0.pop() {
-                    root = merge(&y.root, &root);
+                let mut y = y.root;
+                let mut root = *z;
+                loop {
+                    root = merge(&y, &root);
+                    if let Some(x) = self.0.pop() {
+                        y = x.root;
+                    } else {
+                        return Some(root);
+                    }
                 }
-                return Some(root);
             }
             yz = diff(&y.last, z);
             loop {
@@ -50,11 +62,7 @@ impl SubTree {
             }
             self.0.push(y);
         };
-        self.0.push(Node {
-            root: *z,
-            last: *z,
-            height: yz,
-        });
+        self.0.push(Node::new(z, z, yz));
         None
     }
 }
@@ -89,14 +97,7 @@ mod test {
         {
             let mut t = SubTree(Vec::default());
             assert_eq!(t.push(&a), None);
-            assert_eq!(
-                t.0,
-                [Node {
-                    root: a,
-                    last: a,
-                    height: 0
-                }]
-            );
+            assert_eq!(t.0, [Node::new(&a, &a, 0)]);
             assert_eq!(t.push(&b), Some(merge(&a, &b)));
             assert!(t.0.is_empty());
         }
@@ -112,37 +113,46 @@ mod test {
                 }]
             );
             assert_eq!(t.push(&b), None);
-            assert_eq!(
-                t.0,
-                [
-                    Node {
-                        root: c,
-                        last: c,
-                        height: 0
-                    },
-                    Node {
-                        root: b,
-                        last: b,
-                        height: 255
-                    }
-                ]
-            );
+            assert_eq!(t.0, [Node::new(&c, &c, 0), Node::new(&b, &b, 255),]);
             assert_eq!(t.push(&a), None);
-            assert_eq!(
-                t.0,
-                [
-                    Node {
-                        root: merge(&c, &b),
-                        last: b,
-                        height: 0
-                    },
-                    Node {
-                        root: a,
-                        last: a,
-                        height: 254
-                    }
-                ],
-            );
+            let cb = merge(&c, &b);
+            assert_eq!(t.0, [Node::new(&cb, &b, 0), Node::new(&a, &a, 254)],);
+            let r = t.push(&a);
+            assert_eq!(r, Some(merge(&cb, &merge(&a, &a))));
         }
+    }
+
+    #[test]
+    fn subtree2_test() {
+        let ff = to_digest(0b1111_1111);
+        let fe = to_digest(0b1111_1110);
+        let fd = to_digest(0b1111_1101);
+        let fc = to_digest(0b1111_1100);
+        let fb = to_digest(0b1111_1011);
+        let mut t = SubTree::default();
+        assert_eq!(t.push(&ff), None);
+        assert_eq!(t.0, [Node::new(&ff, &ff, 0)]);
+        assert_eq!(t.push(&fe), None);
+        assert_eq!(t.0, [Node::new(&ff, &ff, 0), Node::new(&fe, &fe, 255)]);
+        assert_eq!(t.push(&fd), None);
+        let ff_fe = merge(&ff, &fe);
+        assert_eq!(t.0, [Node::new(&ff_fe, &fe, 0), Node::new(&fd, &fd, 254)]);
+        assert_eq!(t.push(&fc), None);
+        assert_eq!(
+            t.0,
+            [
+                Node::new(&ff_fe, &fe, 0),
+                Node::new(&fd, &fd, 254),
+                Node::new(&fc, &fc, 255)
+            ]
+        );
+        assert_eq!(t.push(&fb), None);
+        assert_eq!(
+            t.0,
+            [
+                Node::new(&merge(&ff_fe, &merge(&fd, &fc)), &fc, 0),
+                Node::new(&fb, &fb, 253),
+            ]
+        );
     }
 }
