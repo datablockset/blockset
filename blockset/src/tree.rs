@@ -1,5 +1,6 @@
 use crate::{to_digest, u256::U256, SubTree};
 
+#[derive(Default)]
 struct Tree(Vec<SubTree>);
 
 impl Tree {
@@ -27,10 +28,28 @@ impl Tree {
         }
         last0
     }
+    fn push_all(s: &str) -> U256 {
+        let mut t = Self::default();
+        for c in s.bytes() {
+            t.push(c);
+        }
+        t.end()
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use super::Tree;
+
     #[test]
-    fn test() {}
+    fn empty_test() {
+        let mut t = Tree::default();
+        assert_eq!(t.end(), [0, 0]);
+    }
+
+    #[test]
+    fn hello_world() {
+        let x = Tree::push_all("Hello, world!");
+        println!("{:x?}", x);
+    }
 }

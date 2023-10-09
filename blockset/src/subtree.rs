@@ -100,8 +100,8 @@ mod test {
         let b = to_digest(0b10);
         let c = to_digest(0b11);
         {
-            let mut t = SubTree(Vec::default());
-            assert_eq!(t.push(&a), None);
+            let mut t = SubTree::new(&a);
+            // assert_eq!(t.push(&a), None);
             assert_eq!(t.0, [Node::new2(&a, 0)]);
             assert_eq!(t.push(&b), Some(merge(&a, &b)));
             assert!(t.0.is_empty());
