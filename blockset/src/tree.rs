@@ -50,6 +50,6 @@ mod test {
     #[test]
     fn hello_world() {
         let x = Tree::push_all("Hello, world!");
-        println!("{:x?}", x);
+        // println!("{:x?}", x);
     }
 }
