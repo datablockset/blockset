@@ -34,6 +34,11 @@ impl Node {
 pub struct SubTree(Vec<Node>);
 
 impl SubTree {
+    pub fn new(last: &U256) -> Self {
+        let mut result = Vec::default();
+        result.push(Node::new2(last, 0));
+        Self(result)
+    }
     pub fn push(&mut self, last0: &U256) -> Option<U256> {
         let mut height10 = 0;
         if let Some(mut last1) = self.0.pop() {

@@ -7,6 +7,7 @@ mod io;
 mod sha224;
 mod sigma32;
 mod subtree;
+mod tree;
 mod u128;
 mod u224;
 mod u256;
