@@ -222,4 +222,37 @@ mod test {
             ]
         );
     }
+
+    #[test]
+    fn hi_test() {
+        let a = to_digest(b'a');
+        let b = to_digest(b'b');
+        let ab = {
+            let mut t = SubTree(Vec::default());
+            assert_eq!(t.push(&a), None);
+            assert_eq!(t.0, [Node::new(&a, &a, 0)]);
+            let ab = t.push(&b);
+            assert_eq!(ab, Some(merge(&a, &b)));
+            assert!(t.0.is_empty());
+            ab
+        }.unwrap();
+        let baa = {
+            let mut t = SubTree(Vec::default());
+            assert_eq!(t.push(&b), None);
+            assert_eq!(t.0, [Node::new(&b, &b, 0)]);
+            assert_eq!(t.push(&a),None);
+            assert_eq!(t.0, [Node::new(&b, &b, 0), Node::new(&a, &a, 254)]);
+            let baa = t.push(&a);
+            assert_eq!(baa, Some(merge(&b, &merge(&a, &a))));
+            assert!(t.0.is_empty());
+            baa
+        }.unwrap();
+        {
+            let mut t = SubTree(Vec::default());
+            assert_eq!(t.push(&ab), None);
+            assert_eq!(t.0, [Node::new(&ab, &ab, 0)]);
+            let r = t.push(&baa);
+            assert_eq!(r, Some(merge(&ab, &baa)));
+        }
+    }
 }
