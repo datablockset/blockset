@@ -25,6 +25,14 @@ pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [a0 | b0, a1 | b1]
 }
 
+pub const fn less(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
+    if a1 == b1 {
+        a0 < b0
+    } else {
+        a1 < b1
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::u256::{shl, U256};
