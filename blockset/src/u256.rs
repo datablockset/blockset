@@ -15,8 +15,8 @@ pub const fn shl(&[lo, hi]: &U256, i: usize) -> U256 {
             [lo << i, (hi << i) | ((lo >> (128 - i)) & ((1 << i) - 1))]
         }
     } else {
-        // If i >=256, a standard `<<` function should panic in debug mode and return the original
-        // value in release mode. Our function returns 0 in this case.
+        // If i >= 256, a standard `<<` function should panic in debug mode and return the original
+        // value in release mode. The `shl` function returns 0 in both modes.
         [0, if i >= 256 { 0 } else { lo << (i - 128) }]
     }
 }
@@ -25,6 +25,7 @@ pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [a0 | b0, a1 | b1]
 }
 
+// Don't use `<` for `U256` because it's not LE comparison.
 pub const fn less(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
     if a1 == b1 {
         a0 < b0

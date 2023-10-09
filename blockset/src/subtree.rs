@@ -31,39 +31,36 @@ impl Node {
 pub struct SubTree(Vec<Node>);
 
 impl SubTree {
-    pub fn push(&mut self, z: &U256) -> Option<U256> {
-        let mut yz = 0;
-        if let Some(mut y) = self.0.pop() {
-            // z >= y.last
-            if !less(z, &y.last) {
-                let mut y = y.root;
-                let mut root = *z;
-                loop {
-                    root = merge(&y, &root);
-                    if let Some(x) = self.0.pop() {
-                        y = x.root;
-                    } else {
-                        return Some(root);
-                    }
-                }
+    pub fn push(&mut self, last0: &U256) -> Option<U256> {
+        let mut last10 = 0;
+        if let Some(mut last1) = self.0.pop() {
+            // last0 >= last1.last
+            if !less(last0, &last1.last) {
+                return Some(self.end(merge(&last1.root, last0)))
             }
-            yz = diff(&y.last, z);
+            last10 = diff(&last1.last, last0);
             loop {
                 // we need `<=` instead of `<` to handle a case when `yz` and `y.height` are both zero.
-                if y.height <= yz {
+                if last1.height <= last10 {
                     break;
                 }
-                let x = self.0.pop().unwrap();
-                y = Node {
-                    root: merge(&x.root, &y.root),
-                    last: y.last,
-                    height: x.height,
+                let last2 = self.0.pop().unwrap();
+                last1 = Node {
+                    root: merge(&last2.root, &last1.root),
+                    last: last1.last,
+                    height: last2.height,
                 };
             }
-            self.0.push(y);
+            self.0.push(last1);
         };
-        self.0.push(Node::new(z, z, yz));
+        self.0.push(Node::new(last0, last0, last10));
         None
+    }
+    pub fn end(&mut self, mut last0: U256) -> U256 {
+        while let Some(last1) = self.0.pop() {
+            last0 = merge(&last1.root, &last0);
+        }
+        last0
     }
 }
 
