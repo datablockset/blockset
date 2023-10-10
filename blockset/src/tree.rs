@@ -1,10 +1,10 @@
 use crate::{to_digest, u256::U256, SubTree};
 
 #[derive(Default)]
-struct Tree(Vec<SubTree>);
+pub struct Tree(Vec<SubTree>);
 
 impl Tree {
-    fn push(&mut self, c: u8) {
+    pub fn push(&mut self, c: u8) {
         let mut i = 0;
         let mut last0 = to_digest(c);
         loop {
@@ -21,14 +21,14 @@ impl Tree {
             }
         }
     }
-    fn end(&mut self) -> U256 {
+    pub fn end(&mut self) -> U256 {
         let mut last0 = [0, 0];
         for sub_tree in self.0.iter_mut() {
             last0 = sub_tree.end(last0);
         }
         last0
     }
-    fn push_all(s: &str) -> U256 {
+    pub fn tree_from_str(s: &str) -> U256 {
         let mut t = Self::default();
         for c in s.bytes() {
             t.push(c);
@@ -39,7 +39,7 @@ impl Tree {
 
 #[cfg(test)]
 mod test {
-    use crate::{u256::U256, merge};
+    use crate::{merge, u256::U256};
 
     use super::Tree;
 
@@ -53,7 +53,7 @@ mod test {
     fn hello_world_test() {
         //  48656c6c6f2c20776f726c6421
         // "H e l l o , _ w o r l d ! "
-        let x = Tree::push_all("Hello, world!");
+        let x = Tree::tree_from_str("Hello, world!");
         // println!("x: {:x?}", x);
         let e = [
             0x00000021_646c726f_77202c6f_6c6c6548,
@@ -67,7 +67,7 @@ mod test {
         //  436f6e74656e742d446570656e64656e7420486173682054726565
         //  0       1       2       3       4       5       6
         // "C o n t e n t - D e p e n d e n t _ H a s h _ T r e e "
-        let x = Tree::push_all("Content-Dependent Hash Tree");
+        let x = Tree::tree_from_str("Content-Dependent Hash Tree");
         let e: U256 = [
             0x6e65646e_65706544_2d746e65_746e6f43,
             0xD8000000_00656572_54206873_61482074,
@@ -118,15 +118,27 @@ mod test {
         //     - "s."
 
         // a = "Imagine intercept"
-        //               p e c r  e t n i  _ e n i  g a m I                                      t
-        let a: U256 = [0x70656372_65746e69_20656e69_67616d49, 0x88000000_00000000_00000000_00000074];
+        let a: U256 = [
+            //p e c r  e t n i  _ e n i  g a m I
+            0x70656372_65746e69_20656e69_67616d49,
+            //__                               t
+            0x88000000_00000000_00000000_00000074,
+        ];
         // b = "ing messages from e"
-        //               o r f  _ s e  g a  s s e m  _ g n i                                e  _ m
-        let b: U256 = [0x6f7266_2073656761_7373656d_20676e69, 0x98000000_00000000_00000000_0065206d];
+        let b: U256 = [
+            //o r f  _ s e g a  s s e m  _ g n i
+            0x6f7266_2073656761_7373656d_20676e69,
+            //                             e _ m
+            0x98000000_00000000_00000000_0065206d,
+        ];
         // c = "xtraterrestrials."
-        //               s l a i  r t s e  r r e t  a r t x                                      .
-        let c: U256 = [0x736c6169_72747365_72726574_61727478, 0x88000000_00000000_00000000_0000002e];
-        let x = Tree::push_all(v);
+        let c: U256 = [
+            //s l a i  r t s e  r r e t  a r t x
+            0x736c6169_72747365_72726574_61727478,
+            //__                               .
+            0x88000000_00000000_00000000_0000002e,
+        ];
+        let x = Tree::tree_from_str(v);
         assert_eq!(x, merge(&merge(&a, &b), &c));
     }
 }
