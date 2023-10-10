@@ -20,10 +20,13 @@ pub trait Io {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::virtual_io::VirtualIo;
 
     use super::Io;
 
+    #[wasm_bindgen_test]
     #[test]
     fn test() {
         let mut io = VirtualIo::new(&[]);

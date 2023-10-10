@@ -73,6 +73,8 @@ impl SubTree {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{
         digest::{merge, to_digest},
         subtree::Node,
@@ -80,6 +82,7 @@ mod test {
 
     use super::{height, SubTree};
 
+    #[wasm_bindgen_test]
     #[test]
     fn test() {
         assert_eq!(height(&[0, 0], &[0, 0]), 256);
@@ -96,6 +99,7 @@ mod test {
         );
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn subtree_test() {
         let a = to_digest(0b01);
@@ -129,6 +133,7 @@ mod test {
         }
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn subtree2_test() {
         let ff = to_digest(0b1111_1111); // 000
@@ -224,6 +229,7 @@ mod test {
         );
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn hi_test() {
         let a = to_digest(b'a');

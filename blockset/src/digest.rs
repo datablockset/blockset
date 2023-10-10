@@ -47,11 +47,14 @@ pub const fn to_digest(a: u8) -> U256 {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{
         digest::{len, merge, remove_len, to_digest, LEN_HI_POS},
         u256::{shl, U256},
     };
 
+    #[wasm_bindgen_test]
     #[test]
     fn bit_test() {
         let r = (8 as u128) << LEN_HI_POS;
@@ -68,12 +71,14 @@ mod test {
         assert_eq!(b, [0x3400, 0]);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn merge_empty_test() {
         assert_eq!(merge(&to_digest(0x12), &U256::default()), to_digest(0x12));
         assert_eq!(merge(&U256::default(), &to_digest(0x34)), to_digest(0x34));
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn const_test() {
         const A: U256 = to_digest(0x12);
@@ -142,6 +147,7 @@ mod test {
         );
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn runtime_test() {
         let check_len = |a, l| {

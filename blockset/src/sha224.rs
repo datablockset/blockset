@@ -133,12 +133,15 @@ pub const fn compress(mut w: U512) -> U256 {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{u256::U256, u512::new};
 
     use super::compress;
 
     const A: U256 = compress(new(0x8000_0000, 0, 0, 0));
 
+    #[wasm_bindgen_test]
     #[test]
     fn test() {
         assert_eq!(
@@ -150,6 +153,7 @@ mod test {
         );
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn runtime_test() {
         assert_eq!(
