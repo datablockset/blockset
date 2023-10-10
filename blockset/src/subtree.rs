@@ -1,4 +1,5 @@
 use crate::{
+    array::ArrayEx,
     merge,
     u256::{less, U256},
 };
@@ -34,6 +35,9 @@ impl Node {
 pub struct SubTree(Vec<Node>);
 
 impl SubTree {
+    pub fn new(last: &U256) -> Self {
+        Self([Node::new2(last, 0)].new_vec())
+    }
     pub fn push(&mut self, last0: &U256) -> Option<U256> {
         let mut height10 = 0;
         if let Some(mut last1) = self.0.pop() {
@@ -95,8 +99,8 @@ mod test {
         let b = to_digest(0b10);
         let c = to_digest(0b11);
         {
-            let mut t = SubTree(Vec::default());
-            assert_eq!(t.push(&a), None);
+            let mut t = SubTree::new(&a);
+            // assert_eq!(t.push(&a), None);
             assert_eq!(t.0, [Node::new2(&a, 0)]);
             assert_eq!(t.push(&b), Some(merge(&a, &b)));
             assert!(t.0.is_empty());
