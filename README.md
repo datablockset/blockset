@@ -10,7 +10,7 @@ Installation:
 cargo install --git https://github.com/datablockset/blockset
 ```
 
-Uninstallation:
+Uninstall the `blockset`:
 
 ```
 cargo uninstall blockset
