@@ -22,3 +22,7 @@ cargo uninstall blockset
   ```
   blockset validate 3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ack
   ```
+- calculate address:
+  ```
+  blockset address ./README.md
+  ```
