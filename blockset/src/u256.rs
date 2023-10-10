@@ -45,7 +45,12 @@ pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
 
 #[cfg(test)]
 mod test {
-    use crate::u256::{shl, U256};
+    use crate::{
+        digest::to_digest,
+        u256::{shl, U256},
+    };
+
+    use super::to_u224;
 
     #[test]
     fn shl_test() {
@@ -91,5 +96,10 @@ mod test {
         assert_eq!(shl(&X, 248), [0, 0x0100_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 255), [0, 0x8000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 256), [0; 2]);
+    }
+
+    #[test]
+    fn to_u224_test() {
+        assert!(to_u224(&to_digest(5)).is_none());
     }
 }
