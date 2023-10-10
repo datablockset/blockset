@@ -1,6 +1,7 @@
 use crate::{
+    array::ArrayEx,
     merge,
-    u256::{less, U256}, array::ArrayEx,
+    u256::{less, U256},
 };
 
 // It should work faster than (a ^ b).leading_zeros().
