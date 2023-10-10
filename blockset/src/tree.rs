@@ -1,5 +1,9 @@
 use crate::{digest::to_digest, subtree::SubTree, u256::U256};
 
+trait Storage {
+    fn store(&mut self, key: U256, level: usize);
+}
+
 #[derive(Default)]
 pub struct Tree(Vec<SubTree>);
 
@@ -92,7 +96,7 @@ mod test {
         // I m a g i n e _ i n t e r c e p t i n g _ m e s s a g e s _ f r o m _ e x t r a t e r r e s t r i a l s .
         //                                   |                                     |
         let v = "Imagine intercepting messages from extraterrestrials.";
-        // - 0x24 (120)
+        // - 0x24 B  = 0x120 b
         //   - 0x11
         //     - 0x6
         //       - "Im"

@@ -22,9 +22,3 @@ mod virtual_io;
 
 pub use app::run;
 pub use io::Io;
-
-//
-// pub use digest::{merge, to_digest};
-// pub use sha224::compress;
-// pub use subtree::SubTree;
-// pub use tree::Tree;
