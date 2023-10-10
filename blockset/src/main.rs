@@ -27,5 +27,5 @@ impl Io for RealIo {
 }
 
 fn main() -> Result<(), String> {
-    run(&mut RealIo::default()).map_err(str::to_string)
+    run(&mut RealIo::default())
 }

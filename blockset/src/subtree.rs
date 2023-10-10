@@ -1,6 +1,6 @@
 use crate::{
     array::ArrayEx,
-    merge,
+    digest::merge,
     u256::{less, U256},
 };
 
@@ -73,7 +73,10 @@ impl SubTree {
 
 #[cfg(test)]
 mod test {
-    use crate::{merge, subtree::Node, to_digest};
+    use crate::{
+        digest::{merge, to_digest},
+        subtree::Node,
+    };
 
     use super::{height, SubTree};
 
