@@ -1,4 +1,4 @@
-use crate::u128::u32x4_add;
+use crate::u128::{to_u32x4, u32x4_add};
 
 pub type U256 = [u128; 2];
 
@@ -32,6 +32,15 @@ pub const fn less(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
     } else {
         a1 < b1
     }
+}
+
+pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
+    let [a10, a11, a12, a13] = to_u32x4(a1);
+    if a13 != 0xFFFF_FFFF {
+        return None;
+    }
+    let [a00, a01, a02, a03] = to_u32x4(a0);
+    Some([a00, a01, a02, a03, a10, a11, a12])
 }
 
 #[cfg(test)]

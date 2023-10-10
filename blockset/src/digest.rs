@@ -1,5 +1,5 @@
 use crate::{
-    compress,
+    sha224::compress,
     u256::{bitor, shl, U256},
 };
 

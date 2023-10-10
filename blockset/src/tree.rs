@@ -1,4 +1,4 @@
-use crate::{to_digest, u256::U256, SubTree};
+use crate::{digest::to_digest, subtree::SubTree, u256::U256};
 
 #[derive(Default)]
 pub struct Tree(Vec<SubTree>);
@@ -28,20 +28,21 @@ impl Tree {
         }
         last0
     }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{digest::merge, u256::U256};
+
+    use super::Tree;
+
     pub fn tree_from_str(s: &str) -> U256 {
-        let mut t = Self::default();
+        let mut t = Tree::default();
         for c in s.bytes() {
             t.push(c);
         }
         t.end()
     }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{merge, u256::U256};
-
-    use super::Tree;
 
     #[test]
     fn empty_test() {
@@ -53,7 +54,7 @@ mod test {
     fn hello_world_test() {
         //  48656c6c6f2c20776f726c6421
         // "H e l l o , _ w o r l d ! "
-        let x = Tree::tree_from_str("Hello, world!");
+        let x = tree_from_str("Hello, world!");
         // println!("x: {:x?}", x);
         let e = [
             0x00000021_646c726f_77202c6f_6c6c6548,
@@ -67,7 +68,7 @@ mod test {
         //  436f6e74656e742d446570656e64656e7420486173682054726565
         //  0       1       2       3       4       5       6
         // "C o n t e n t - D e p e n d e n t _ H a s h _ T r e e "
-        let x = Tree::tree_from_str("Content-Dependent Hash Tree");
+        let x = tree_from_str("Content-Dependent Hash Tree");
         let e: U256 = [
             0x6e65646e_65706544_2d746e65_746e6f43,
             0xD8000000_00656572_54206873_61482074,
@@ -128,7 +129,7 @@ mod test {
         let b: U256 = [
             //o r f  _ s e g a  s s e m  _ g n i
             0x6f7266_2073656761_7373656d_20676e69,
-            //                             e _ m
+            //__                           e _ m
             0x98000000_00000000_00000000_0065206d,
         ];
         // c = "xtraterrestrials."
@@ -138,7 +139,7 @@ mod test {
             //__                               .
             0x88000000_00000000_00000000_0000002e,
         ];
-        let x = Tree::tree_from_str(v);
+        let x = tree_from_str(v);
         assert_eq!(x, merge(&merge(&a, &b), &c));
     }
 }
