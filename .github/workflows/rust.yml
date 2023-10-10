@@ -13,19 +13,19 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo fmt -- --check
 
   clippy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo clippy -- -D warnings
 
   test-wasm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cargo install wasm-pack
       - run: wasm-pack test --node --release ./blockset
 
@@ -37,13 +37,13 @@ jobs:
         type: ['', '--release']
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo test ${{ matrix.type }}
 
   coverage:
     runs-on: macos-13
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo install cargo-tarpaulin
     - run: cargo c
     - uses: actions/upload-artifact@v3
