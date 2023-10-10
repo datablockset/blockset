@@ -75,10 +75,13 @@ impl FromBase32 for (Vec<u32>, BitVec) {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::base32::to_base32;
 
     use super::from_base32;
 
+    #[wasm_bindgen_test]
     #[test]
     fn test() {
         for i in 0..32 {
@@ -95,6 +98,7 @@ mod test {
         assert_eq!(from_base32('O').unwrap(), 0);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn fail_test() {
         assert_eq!(from_base32('$'), None);
@@ -102,6 +106,7 @@ mod test {
         assert_eq!(from_base32('u'), None);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn unicode_test() {
         assert_eq!(from_base32('🦀'), None);

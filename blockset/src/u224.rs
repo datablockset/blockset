@@ -50,11 +50,14 @@ impl FromBase32 for U224 {
 
 #[cfg(test)]
 mod tests {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{
         base32::{StrEx, ToBase32},
         u224::{U224Ex, U224},
     };
 
+    #[wasm_bindgen_test]
     #[test]
     fn test_parity() {
         assert_eq!([0; 7].parity_bit(), 0);
@@ -64,6 +67,7 @@ mod tests {
         assert_eq!([0, 1, 2, 3, 4, 5, 6].parity_bit(), 1);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn test() {
         fn f(a: [u32; 7], b: &str) {
@@ -217,6 +221,7 @@ mod tests {
         );
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn invalid_str_test() {
         assert_eq!("01".from_base32::<U224>(), None);

@@ -48,6 +48,8 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{
         base32::ToBase32,
         run,
@@ -56,6 +58,7 @@ mod test {
         virtual_io::VirtualIo,
     };
 
+    #[wasm_bindgen_test]
     #[test]
     fn test() {
         let mut io = VirtualIo::new(&[]);
@@ -63,6 +66,7 @@ mod test {
         assert_eq!(e, Err("missing command".to_string()));
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn test_unknown_command() {
         let mut io = VirtualIo::new(&["x"]);
@@ -70,6 +74,7 @@ mod test {
         assert_eq!(e, Err("unknown command".to_string()));
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn test_missing_address() {
         let mut io = VirtualIo::new(&["validate"]);
@@ -77,6 +82,7 @@ mod test {
         assert_eq!(e, Err("missing address".to_string()));
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn test_invalid_address() {
         let mut io = VirtualIo::new(&["validate", "0"]);
@@ -84,6 +90,7 @@ mod test {
         assert_eq!(e, Err("invalid address".to_string()));
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn test_valid_address() {
         let mut io = VirtualIo::new(&["validate", "3Vld4j94scaseqgcyzrOha5dxa9rx6ppnfbndck97iack"]);
@@ -91,6 +98,7 @@ mod test {
         assert_eq!(e, Ok(()));
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn test_address() {
         let mut io = VirtualIo::new(&["address", "a.txt"]);

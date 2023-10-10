@@ -13,24 +13,21 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo fmt -- --check
 
   clippy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo clippy -- -D warnings
 
-  build-wasm:
-    strategy:
-      matrix:
-        type: ['', '--release']
+  test-wasm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - run: rustup target add wasm32-unknown-unknown
-      - run: cargo build --target wasm32-unknown-unknown ${{ matrix.type }}
+      - uses: actions/checkout@v4
+      - run: cargo install wasm-pack
+      - run: wasm-pack test --node --release ./blockset
 
   test:
     strategy:
@@ -40,13 +37,13 @@ jobs:
         type: ['', '--release']
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo test ${{ matrix.type }}
 
   coverage:
     runs-on: macos-13
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo install cargo-tarpaulin
     - run: cargo c
     - uses: actions/upload-artifact@v3

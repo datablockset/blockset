@@ -45,6 +45,8 @@ pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{
         digest::to_digest,
         u256::{shl, U256},
@@ -52,6 +54,7 @@ mod test {
 
     use super::to_u224;
 
+    #[wasm_bindgen_test]
     #[test]
     fn shl_test() {
         const X: U256 = [
@@ -98,6 +101,7 @@ mod test {
         assert_eq!(shl(&X, 256), [0; 2]);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn to_u224_test() {
         assert!(to_u224(&to_digest(5)).is_none());

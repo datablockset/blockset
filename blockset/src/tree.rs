@@ -32,6 +32,8 @@ impl Tree {
 
 #[cfg(test)]
 mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use crate::{digest::merge, u256::U256};
 
     use super::Tree;
@@ -44,12 +46,14 @@ mod test {
         t.end()
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn empty_test() {
         let mut t = Tree::default();
         assert_eq!(t.end(), [0, 0]);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn hello_world_test() {
         //  48656c6c6f2c20776f726c6421
@@ -63,6 +67,7 @@ mod test {
         assert_eq!(x, e);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn content_dependent_hash_tree() {
         //  436f6e74656e742d446570656e64656e7420486173682054726565
@@ -78,6 +83,7 @@ mod test {
         assert_eq!(x, e);
     }
 
+    #[wasm_bindgen_test]
     #[test]
     fn text_test() {
         // len: 1ab
