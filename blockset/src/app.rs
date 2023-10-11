@@ -118,10 +118,7 @@ mod test {
     #[test]
     fn test_address() {
         let mut io = VirtualIo::new(&["address", "a.txt"]);
-        io.create("a.txt")
-            .unwrap()
-            .write_all("Hello, world!".as_bytes())
-            .unwrap();
+        io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let d: U256 = [
