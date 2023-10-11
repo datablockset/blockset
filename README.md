@@ -16,6 +16,8 @@ Uninstall the `blockset`:
 cargo uninstall blockset
 ```
 
+- [Internal documentation](https://blockset.pages.dev/blockset/).
+
 ### Commands
 
 - address validation:
