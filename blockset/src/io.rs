@@ -26,8 +26,6 @@ pub trait Io {
 
 #[cfg(test)]
 mod test {
-    use std::io::Write;
-
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::virtual_io::VirtualIo;

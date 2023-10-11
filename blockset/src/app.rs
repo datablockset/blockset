@@ -3,11 +3,9 @@ use std::io::Read;
 use crate::{
     base32::{StrEx, ToBase32},
     io::Io,
-    sha224::compress,
     storage::Null,
     tree::Tree,
     u224::U224,
-    u256::to_u224,
 };
 
 trait ResultEx {
@@ -50,9 +48,7 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
                     }
                 }
             }
-            let d = t.end();
-            let e = to_u224(&compress([d, [0, 0]])).unwrap();
-            io.println(&e.to_base32());
+            io.println(&t.end().to_base32());
             Ok(())
         }
         _ => Err("unknown command".to_string()),

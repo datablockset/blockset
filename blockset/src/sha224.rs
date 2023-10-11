@@ -1,7 +1,8 @@
 use crate::{
     sigma32::{BIG0, BIG1, SMALL0, SMALL1},
     u128::{from_u32x4, get_u32, to_u32x4},
-    u256::{u32x8_add, U256},
+    u224::U224,
+    u256::{to_u224, u32x8_add, U256},
     u32::{add, add3, add4},
     u512::{get_u128, new, U512},
 };
@@ -129,6 +130,10 @@ pub const fn compress(mut w: U512) -> U256 {
     x = u32x8_add(&x, &INIT);
     x[1] |= 0xFFFF_FFFF << 96;
     x
+}
+
+pub fn compress_one(digest: &U256) -> U224 {
+    to_u224(&compress([*digest, [0, 0]])).unwrap()
 }
 
 #[cfg(test)]
