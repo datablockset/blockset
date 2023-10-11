@@ -4,6 +4,7 @@ mod ascii;
 mod base32;
 mod bit_vec;
 mod digest;
+mod file_storage;
 mod io;
 mod sha224;
 mod sigma32;

@@ -1,14 +1,15 @@
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 
 pub trait Io {
     type Args: Iterator<Item = String>;
-    type File: Read;
+    type File: Read + Write;
     fn args(&self) -> Self::Args;
     fn print(&mut self, s: &str);
     fn println(&mut self, s: &str) {
         self.print(s);
         self.print("\n");
     }
+    fn create(&mut self, path: &str) -> io::Result<Self::File>;
     fn open(&mut self, path: &str) -> io::Result<Self::File>;
     fn read_to_string(&mut self, path: &str) -> io::Result<String> {
         let mut file = self.open(path)?;
@@ -20,6 +21,8 @@ pub trait Io {
 
 #[cfg(test)]
 mod test {
+    use std::io::Write;
+
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::virtual_io::VirtualIo;
@@ -30,8 +33,10 @@ mod test {
     #[test]
     fn test() {
         let mut io = VirtualIo::new(&[]);
-        io.file_map
-            .insert("test.txt".to_string(), "Hello, world!".as_bytes().to_vec());
+        io.create("test.txt")
+            .unwrap()
+            .write_all("Hello, world!".as_bytes())
+            .unwrap();
         let result = io.read_to_string("test.txt").unwrap();
         assert_eq!(result, "Hello, world!");
     }
