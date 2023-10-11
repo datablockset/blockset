@@ -3,7 +3,7 @@ use crate::{Io, u224::U224, storage::Storage, u256::{to_u224, U256}, digest::len
 struct FileStorage<'a, T: Io> {
     io: &'a mut T,
     data: Vec<u8>,
-    nodes: Vec<Vec<U256>>,
+    nodes: Vec<(Vec<U224>, U256)>,
 }
 
 impl<'a, T: Io> Storage for FileStorage<'a, T> {
@@ -20,21 +20,26 @@ impl<'a, T: Io> Storage for FileStorage<'a, T> {
             return;
         }
         level >>= 2;
-        self.nodes[level].push(*digest);
         if let Some(k) = to_u224(digest) {
+            self.nodes[level].0.push(k);
             if level == 0 {
                 assert!(self.data.len() >= 32);
                 todo!("save data with key 'k'");
                 self.data.clear();
             } else {
                 todo!("save node with key 'k'");
-                self.nodes[level - 1].clear();
+                self.nodes[level - 1] = (Vec::default(), [0, 0]);
             }
         } else {
+            self.nodes[level].1 = *digest;
+        }
+        /*
+        else {
             let len_bits = len(digest);
             assert_eq!(len_bits & 7, 0);
-            assert_eq!(len_bits >> 3, self.data.len());
+            assert_eq!(len_bits >> 3, self.data.len()); // small levels?
         }
+        */
     }
 
     fn end(&mut self, digest: &U256, level: usize) {

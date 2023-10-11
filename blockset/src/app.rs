@@ -61,6 +61,8 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
 
 #[cfg(test)]
 mod test {
+    use std::io::Write;
+
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -68,7 +70,7 @@ mod test {
         run,
         sha224::compress,
         u256::{to_u224, U256},
-        virtual_io::VirtualIo,
+        virtual_io::VirtualIo, Io,
     };
 
     #[wasm_bindgen_test]
@@ -115,8 +117,7 @@ mod test {
     #[test]
     fn test_address() {
         let mut io = VirtualIo::new(&["address", "a.txt"]);
-        io.file_map
-            .insert("a.txt".to_string(), "Hello, world!".as_bytes().to_vec());
+        io.create("a.txt").unwrap().write_all("Hello, world!".as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let d: U256 = [

@@ -17,7 +17,7 @@ The first byte:
 - `0x01`: a list of hashes of the same level, each hash is 28 bytes long.
 - `0x02`: same as `0x01`, but it has a data block (less than 32 bytes) at the beginning. The data block should be attached to the end of the list of hashes. It's only used if a tail data block is less than 32 bytes and can't be saved in a separate data file `0x00`.
 
-- `0..=31`:
+- `0..=0x1F`:
   - data,
   - a list of nodes
-- `32`: data
+- `0x20`: data

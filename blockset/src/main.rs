@@ -21,6 +21,10 @@ impl Io for RealIo {
         print!("{}", text);
     }
 
+    fn create(&mut self, path: &str) -> io::Result<Self::File> {
+        File::create(path)
+    }
+
     fn open(&mut self, path: &str) -> io::Result<Self::File> {
         File::open(path)
     }
