@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, self};
 
 use crate::{
     base32::{StrEx, ToBase32},
@@ -8,6 +8,18 @@ use crate::{
     u224::U224,
     u256::to_u224,
 };
+
+trait ResultEx {
+    type T;
+    fn to_string_result(self) -> Result<Self::T, String>;
+}
+
+impl<T> ResultEx for io::Result<T> {
+    type T = T;
+    fn to_string_result(self) -> Result<Self::T, String> {
+        self.map_err(|e| e.to_string())
+    }
+}
 
 pub fn run(io: &mut impl Io) -> Result<(), String> {
     let mut a = io.args();
@@ -25,10 +37,10 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             let path = a.next().ok_or("missing file name")?;
             let mut t = Tree::default();
             {
-                let mut f = io.open(&path).map_err(|e| e.to_string())?;
+                let mut f = io.open(&path).to_string_result()?;
                 loop {
                     let mut buf = [0; 1024];
-                    let size = f.read(buf.as_mut()).map_err(|e| e.to_string())?;
+                    let size = f.read(buf.as_mut()).to_string_result()?;
                     if size == 0 {
                         break;
                     }
