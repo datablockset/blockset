@@ -1,4 +1,4 @@
-use std::io::{Read, self};
+use std::io::Read;
 
 use crate::{
     base32::{StrEx, ToBase32},
@@ -14,7 +14,7 @@ trait ResultEx {
     fn to_string_result(self) -> Result<Self::T, String>;
 }
 
-impl<T> ResultEx for io::Result<T> {
+impl<T, E: ToString> ResultEx for Result<T, E> {
     type T = T;
     fn to_string_result(self) -> Result<Self::T, String> {
         self.map_err(|e| e.to_string())
