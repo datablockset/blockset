@@ -16,7 +16,7 @@ impl<T: Storage> Tree<T> {
         let mut i = 0;
         let mut last0 = to_digest(c);
         loop {
-            self.storage.store(last0, i);
+            self.storage.store(&last0, i);
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;
@@ -33,12 +33,12 @@ impl<T: Storage> Tree<T> {
     pub fn end(&mut self) -> U256 {
         let mut last0 = [0, 0];
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
-            last0 = sub_tree.end(last0);
             if last0 != [0, 0] {
-                self.storage.store(last0, i);
+                self.storage.store(&last0, i);
             }
+            last0 = sub_tree.end(last0);
         }
-        self.storage.end();
+        self.storage.end(&last0, self.state.len());
         last0
     }
 }
@@ -59,10 +59,10 @@ mod test {
     struct MemStorage(Vec<(U256, usize)>);
 
     impl Storage for MemStorage {
-        fn store(&mut self, digest: U256, index: usize) {
-            self.0.push((digest, index));
+        fn store(&mut self, digest: &U256, index: usize) {
+            self.0.push((*digest, index));
         }
-        fn end(&mut self) {}
+        fn end(&mut self, digest: &U256, index: usize) {}
     }
 
     fn tree() -> Tree<MemStorage> {
@@ -202,6 +202,9 @@ mod test {
         let cce = merge(&cc, &ce);
         let cpt = merge(&cp, &ct);
         let cespintercept = merge(&merge(&cespi, &cnt), &merge(&merge(&cer, &cce), &cpt));
+        let cgspm = merge(&merge(&cg, &csp), &cm);
+        let cx = to_digest(b'x');
+        let cs = to_digest(b's');
         let c = [
             (ciu, 0),
             (cm, 0),
@@ -234,10 +237,22 @@ mod test {
             (ci, 0),
             (cn, 0),
             (cin, 1),
+            // "g m"
             (cg, 0),
             (csp, 0),
             (cm, 0),
-            (merge(&merge(&cg, &csp), &cm), 1),
+            (cgspm, 1),
+            (merge(&cin, &cgspm), 2),
+            // "es"
+            (ce, 0),
+            (cs, 0),
+            // "xtrat"
+            //(cx, 0),
+            //(ct, 0),
+            //(cr, 0),
+            //(ca, 0),
+            //(ct, 0),
+            //(merge(&merge(&cx, &ct), &merge(&cr, &merge(&ca, &ct))), 1)
         ];
         assert_eq!(x.0[..c.len()], c);
     }

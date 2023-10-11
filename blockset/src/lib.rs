@@ -15,6 +15,7 @@ mod u224;
 mod u256;
 mod u32;
 mod u512;
+mod file_storage;
 
 #[cfg(test)]
 mod static_assert;

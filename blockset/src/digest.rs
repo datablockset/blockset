@@ -10,7 +10,7 @@ const LEN_HI_POS: usize = 0x78;
 // in bits
 // - 0..0xF8 - data
 // - 0xFF - hash
-const fn len(&[_, hi]: &U256) -> usize {
+pub const fn len(&[_, hi]: &U256) -> usize {
     (hi >> LEN_HI_POS) as usize
 }
 
