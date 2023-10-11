@@ -299,7 +299,7 @@ mod test {
             q(&b[..2], e);
         }
         {
-            let mut e= merge(&b[2], &last);
+            let mut e = merge(&b[2], &last);
             e = merge(&b[1], &e);
             e = merge(&b[0], &e);
             q(&b[..3], e);
