@@ -4,6 +4,7 @@ use crate::{
     base32::{StrEx, ToBase32},
     io::Io,
     sha224::compress,
+    storage::Null,
     tree::Tree,
     u224::U224,
     u256::to_u224,
@@ -35,7 +36,7 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         }
         "address" => {
             let path = a.next().ok_or("missing file name")?;
-            let mut t = Tree::default();
+            let mut t = Tree::new(Null());
             {
                 let mut f = io.open(&path).to_string_result()?;
                 loop {

@@ -1,17 +1,16 @@
 # File Format
 
+## File Structure
+
 The first byte:
 
-- 0x0: data
-- 0x1: a list of hashes of the same level, each hash is 28 bytes long.
-- 0x2: a final block. It may contain data at the end of the file.
+- `0x00`: data
+- `0x01`: a list of hashes of the same level, each hash is 28 bytes long.
+- `0x02`: same as `0x01`, but it has a data block (less than 32 bytes) at the beginning. The data block should be attached to the end of the list of hashes. It's only used if a tail data block is less than 32 bytes and can't be saved in a separate data file `0x00`.
 
-## 0x0. Data
+## File Types
 
-When we read the file, we apply all the bytes but the last one to `tree.push()`. The last byte should be applied to `subtree.end()`. The `end()` function will return the root hash of the subtree.
+Two type of files:
 
-## 0x1. A list of hashes
-
-When we read the file, we apply all the items but the last one in the list to `tree.push()`. The last item should be applied to `tree.end()`. The `end()` function will return the root hash of the subtree.
-
-## 0x2. A final block
+- a part of a data block. The file name starts with `_` and followed by the base32 encoded `hash` of the data block.
+- whole data block. The file name is a base32 encoded `final_hash` of the data block. A `final_hash` is `compress([hash, empty])`.
