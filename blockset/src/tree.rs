@@ -52,10 +52,10 @@ mod test {
 
     use crate::{
         digest::{merge, to_digest},
-        sha224::{compress, compress_one},
+        sha224::compress_one,
         storage::Storage,
         u224::U224,
-        u256::{to_u224, U256},
+        u256::U256,
     };
 
     use super::Tree;
