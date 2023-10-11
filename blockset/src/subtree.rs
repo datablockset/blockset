@@ -5,6 +5,7 @@ use crate::{
 };
 
 // It should work faster than (a ^ b).leading_zeros().
+// `0..=256`
 pub const fn height(&[a0, a1]: &U256, &[b0, b1]: &U256) -> u32 {
     let mut result = 0;
     let mut v = a1 ^ b1;
