@@ -37,7 +37,7 @@ pub struct SubTree(Vec<Node>);
 
 impl SubTree {
     pub fn new(last: &U256) -> Self {
-        Self([Node::new2(last, 0)].new_vec())
+        Self([Node::new2(last, 0)].move_to_vec())
     }
     pub fn push(&mut self, last0: &U256) -> Option<U256> {
         let mut height10 = 0;
