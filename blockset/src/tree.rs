@@ -1,18 +1,23 @@
-use crate::{digest::to_digest, subtree::SubTree, u256::U256};
+use crate::{digest::to_digest, storage::Storage, subtree::SubTree, u256::U256};
 
-trait Storage {
-    fn store(&mut self, key: U256, level: usize);
+pub struct Tree<T: Storage> {
+    state: Vec<SubTree>,
+    storage: T,
 }
 
-#[derive(Default)]
-pub struct Tree(Vec<SubTree>);
-
-impl Tree {
+impl<T: Storage> Tree<T> {
+    pub fn new(storage: T) -> Self {
+        Self {
+            state: Vec::default(),
+            storage,
+        }
+    }
     pub fn push(&mut self, c: u8) {
         let mut i = 0;
         let mut last0 = to_digest(c);
         loop {
-            if let Some(sub_tree) = self.0.get_mut(i) {
+            self.storage.store(last0, i);
+            if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;
                     i += 1;
@@ -20,16 +25,20 @@ impl Tree {
                     return;
                 }
             } else {
-                self.0.push(SubTree::new(&last0));
+                self.state.push(SubTree::new(&last0));
                 return;
             }
         }
     }
     pub fn end(&mut self) -> U256 {
         let mut last0 = [0, 0];
-        for sub_tree in self.0.iter_mut() {
+        for (i, sub_tree) in self.state.iter_mut().enumerate() {
             last0 = sub_tree.end(last0);
+            if last0 != [0, 0] {
+                self.storage.store(last0, i);
+            }
         }
+        self.storage.end();
         last0
     }
 }
@@ -38,12 +47,16 @@ impl Tree {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{digest::merge, u256::U256};
+    use crate::{digest::merge, storage::Null, u256::U256};
 
     use super::Tree;
 
+    fn tree() -> Tree<Null> {
+        Tree::new(Null())
+    }
+
     pub fn tree_from_str(s: &str) -> U256 {
-        let mut t = Tree::default();
+        let mut t = tree();
         for c in s.bytes() {
             t.push(c);
         }
@@ -53,7 +66,7 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn empty_test() {
-        let mut t = Tree::default();
+        let mut t = tree();
         assert_eq!(t.end(), [0, 0]);
     }
 

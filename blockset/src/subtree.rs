@@ -273,7 +273,7 @@ mod test {
     fn examples_test() {
         let f = |c: u128| [!c, 0xFFFFFFFF_00000000_00000000_00000000];
         let last = f(0b00000110);
-        let q = |b: &[U256], e: U256| {
+        let check = |b: &[U256], e: U256| {
             let mut t = SubTree::default();
             for c in b {
                 assert_eq!(t.push(c), None);
@@ -291,18 +291,18 @@ mod test {
         let m = |i| merge(&b[i], &b[i + 1]);
         {
             let e = merge(&b[0], &last);
-            q(&b[..1], e);
+            check(&b[..1], e);
         }
         {
             let mut e = merge(&b[1], &last);
             e = merge(&b[0], &e);
-            q(&b[..2], e);
+            check(&b[..2], e);
         }
         {
             let mut e = merge(&b[2], &last);
             e = merge(&b[1], &e);
             e = merge(&b[0], &e);
-            q(&b[..3], e);
+            check(&b[..3], e);
         }
         let b00 = {
             let b0011 = m(1);
@@ -311,20 +311,20 @@ mod test {
         {
             let mut e = merge(&b[3], &last);
             e = merge(&b00, &e);
-            q(&b[..4], e);
+            check(&b[..4], e);
         }
         {
             let mut e = merge(&b[4], &last);
             e = merge(&b[3], &e);
             e = merge(&b00, &e);
-            q(&b[..5], e);
+            check(&b[..5], e);
         }
         {
             let mut e = merge(&b[5], &last);
             e = merge(&b[4], &e);
             e = merge(&b[3], &e);
             e = merge(&b00, &e);
-            q(&b[..6], e);
+            check(&b[..6], e);
         }
         let b0 = {
             let b01 = {
@@ -336,27 +336,27 @@ mod test {
         {
             let mut e = merge(&b[6], &last);
             e = merge(&b0, &e);
-            q(&b[..7], e);
+            check(&b[..7], e);
         }
         {
             let mut e = merge(&b[7], &last);
             e = merge(&b[6], &e);
             e = merge(&b0, &e);
-            q(&b[..8], e);
+            check(&b[..8], e);
         }
         let b1000 = merge(&b[6], &b[7]);
         {
             let mut e = merge(&b[8], &last);
             e = merge(&b1000, &e);
             e = merge(&b0, &e);
-            q(&b[..9], e);
+            check(&b[..9], e);
         }
         {
             let mut e = merge(&b[9], &last);
             e = merge(&b[8], &e);
             e = merge(&b1000, &e);
             e = merge(&b0, &e);
-            q(&b[..10], e);
+            check(&b[..10], e);
         }
         let b1010101 = merge(&b[8], &b[9]);
         {
@@ -364,7 +364,7 @@ mod test {
             e = merge(&b1010101, &e);
             e = merge(&b1000, &e);
             e = merge(&b0, &e);
-            q(&b[..11], e);
+            check(&b[..11], e);
         }
         let b10 = {
             let b101 = merge(&b1010101, &b[10]);
@@ -374,14 +374,14 @@ mod test {
             let mut e = merge(&b[11], &last);
             e = merge(&b10, &e);
             e = merge(&b0, &e);
-            q(&b[..12], e);
+            check(&b[..12], e);
         }
         {
             let mut e = merge(&b[12], &last);
             e = merge(&b[11], &e);
             e = merge(&b10, &e);
             e = merge(&b0, &e);
-            q(&b[..13], e);
+            check(&b[..13], e);
         }
         let b110 = merge(&b[11], &b[12]);
         {
@@ -389,7 +389,7 @@ mod test {
             e = merge(&b110, &e);
             e = merge(&b10, &e);
             e = merge(&b0, &e);
-            q(&b[..14], e);
+            check(&b[..14], e);
         }
         {
             let mut e = merge(&b[14], &last);
@@ -397,7 +397,7 @@ mod test {
             e = merge(&b110, &e);
             e = merge(&b10, &e);
             e = merge(&b0, &e);
-            q(&b[..15], e);
+            check(&b[..15], e);
         }
         {
             let mut e = merge(&b[15], &last);
@@ -406,7 +406,7 @@ mod test {
             e = merge(&b110, &e);
             e = merge(&b10, &e);
             e = merge(&b0, &e);
-            q(&b, e);
+            check(&b, e);
         }
     }
 }

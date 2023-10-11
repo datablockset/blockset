@@ -7,6 +7,7 @@ mod digest;
 mod io;
 mod sha224;
 mod sigma32;
+mod storage;
 mod subtree;
 mod tree;
 mod u128;
