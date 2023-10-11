@@ -5,6 +5,7 @@ use crate::{
 };
 
 // It should work faster than (a ^ b).leading_zeros().
+// `0..=256`
 pub const fn height(&[a0, a1]: &U256, &[b0, b1]: &U256) -> u32 {
     let mut result = 0;
     let mut v = a1 ^ b1;
@@ -78,6 +79,7 @@ mod test {
     use crate::{
         digest::{merge, to_digest},
         subtree::Node,
+        u256::U256,
     };
 
     use super::{height, SubTree};
@@ -262,6 +264,149 @@ mod test {
             assert_eq!(t.0, [Node::new2(&ab, 0)]);
             let r = t.push(&baa);
             assert_eq!(r, Some(merge(&ab, &baa)));
+        }
+    }
+
+    /// See [../../notes/subtree-graph.md](../../notes/subtree-graph.md).
+    #[wasm_bindgen_test]
+    #[test]
+    fn examples_test() {
+        let f = |c: u128| [!c, 0xFFFFFFFF_00000000_00000000_00000000];
+        let last = f(0b00000110);
+        let q = |b: &[U256], e: U256| {
+            let mut t = SubTree::default();
+            for c in b {
+                assert_eq!(t.push(c), None);
+            }
+            let root = t.push(&last).unwrap();
+            assert_eq!(root, e);
+        };
+        let b = [
+            0b00010010, 0b00110101, 0b00111000, 0b01010001, //
+            0b01101000, 0b01101100, 0b10000111, 0b10001011, //
+            0b10101010, 0b10101011, 0b10110111, 0b11000010, //
+            0b11011110, 0b11101000, 0b11110110, 0b11111011, //
+        ]
+        .map(f);
+        let m = |i| merge(&b[i], &b[i + 1]);
+        {
+            let e = merge(&b[0], &last);
+            q(&b[..1], e);
+        }
+        {
+            let mut e = merge(&b[1], &last);
+            e = merge(&b[0], &e);
+            q(&b[..2], e);
+        }
+        {
+            let mut e = merge(&b[2], &last);
+            e = merge(&b[1], &e);
+            e = merge(&b[0], &e);
+            q(&b[..3], e);
+        }
+        let b00 = {
+            let b0011 = m(1);
+            merge(&b[0], &b0011)
+        };
+        {
+            let mut e = merge(&b[3], &last);
+            e = merge(&b00, &e);
+            q(&b[..4], e);
+        }
+        {
+            let mut e = merge(&b[4], &last);
+            e = merge(&b[3], &e);
+            e = merge(&b00, &e);
+            q(&b[..5], e);
+        }
+        {
+            let mut e = merge(&b[5], &last);
+            e = merge(&b[4], &e);
+            e = merge(&b[3], &e);
+            e = merge(&b00, &e);
+            q(&b[..6], e);
+        }
+        let b0 = {
+            let b01 = {
+                let b01101 = m(4);
+                merge(&b[3], &b01101)
+            };
+            merge(&b00, &b01)
+        };
+        {
+            let mut e = merge(&b[6], &last);
+            e = merge(&b0, &e);
+            q(&b[..7], e);
+        }
+        {
+            let mut e = merge(&b[7], &last);
+            e = merge(&b[6], &e);
+            e = merge(&b0, &e);
+            q(&b[..8], e);
+        }
+        let b1000 = merge(&b[6], &b[7]);
+        {
+            let mut e = merge(&b[8], &last);
+            e = merge(&b1000, &e);
+            e = merge(&b0, &e);
+            q(&b[..9], e);
+        }
+        {
+            let mut e = merge(&b[9], &last);
+            e = merge(&b[8], &e);
+            e = merge(&b1000, &e);
+            e = merge(&b0, &e);
+            q(&b[..10], e);
+        }
+        let b1010101 = merge(&b[8], &b[9]);
+        {
+            let mut e = merge(&b[10], &last);
+            e = merge(&b1010101, &e);
+            e = merge(&b1000, &e);
+            e = merge(&b0, &e);
+            q(&b[..11], e);
+        }
+        let b10 = {
+            let b101 = merge(&b1010101, &b[10]);
+            merge(&b1000, &b101)
+        };
+        {
+            let mut e = merge(&b[11], &last);
+            e = merge(&b10, &e);
+            e = merge(&b0, &e);
+            q(&b[..12], e);
+        }
+        {
+            let mut e = merge(&b[12], &last);
+            e = merge(&b[11], &e);
+            e = merge(&b10, &e);
+            e = merge(&b0, &e);
+            q(&b[..13], e);
+        }
+        let b110 = merge(&b[11], &b[12]);
+        {
+            let mut e = merge(&b[13], &last);
+            e = merge(&b110, &e);
+            e = merge(&b10, &e);
+            e = merge(&b0, &e);
+            q(&b[..14], e);
+        }
+        {
+            let mut e = merge(&b[14], &last);
+            e = merge(&b[13], &e);
+            e = merge(&b110, &e);
+            e = merge(&b10, &e);
+            e = merge(&b0, &e);
+            q(&b[..15], e);
+        }
+        {
+            let mut e = merge(&b[15], &last);
+            e = merge(&b[14], &e);
+            e = merge(&b[13], &e);
+            e = merge(&b110, &e);
+            e = merge(&b10, &e);
+            e = merge(&b0, &e);
+            q(&b, e);
         }
     }
 }

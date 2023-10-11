@@ -8,11 +8,10 @@ The first byte:
 
 ## 0x0. Data
 
-When we read the file, we apply all the bytes but the last one to `subtree.push()`. The last byte should be applied to `subtree.end()`. The `end()` function will return the root hash of the subtree.
+When we read the file, we apply all the bytes but the last one to `tree.push()`. The last byte should be applied to `subtree.end()`. The `end()` function will return the root hash of the subtree.
 
 ## 0x1. A list of hashes
 
-When we read the file, we apply all the items but the last one in the list to `subtree.push()`. The last item should be applied to `subtree.end()`. The `end()` function will return the root hash of the subtree.
+When we read the file, we apply all the items but the last one in the list to `tree.push()`. The last item should be applied to `tree.end()`. The `end()` function will return the root hash of the subtree.
 
 ## 0x2. A final block
-
