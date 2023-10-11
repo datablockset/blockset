@@ -9,5 +9,5 @@ pub struct Null();
 
 impl Storage for Null {
     fn store(&mut self, _key: &U256, _level: usize) {}
-    fn end(&mut self, key: &U256, level: usize) {}
+    fn end(&mut self, _key: &U256, _level: usize) {}
 }

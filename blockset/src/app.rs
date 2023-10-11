@@ -70,7 +70,8 @@ mod test {
         run,
         sha224::compress,
         u256::{to_u224, U256},
-        virtual_io::VirtualIo, Io,
+        virtual_io::VirtualIo,
+        Io,
     };
 
     #[wasm_bindgen_test]
@@ -117,7 +118,10 @@ mod test {
     #[test]
     fn test_address() {
         let mut io = VirtualIo::new(&["address", "a.txt"]);
-        io.create("a.txt").unwrap().write_all("Hello, world!".as_bytes()).unwrap();
+        io.create("a.txt")
+            .unwrap()
+            .write_all("Hello, world!".as_bytes())
+            .unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let d: U256 = [

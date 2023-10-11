@@ -1,8 +1,10 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     io::{self, Read, Write},
     iter::once,
-    vec, cell::RefCell, rc::Rc,
+    rc::Rc,
+    vec,
 };
 
 use crate::Io;
@@ -40,10 +42,9 @@ impl MemFile {
 
 impl Read for MemFile {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let b = self.vec_ref.borrow();
-        let remainder = &b[self.pos..];
-        let len = remainder.len().min(buf.len());
-        buf[..len].copy_from_slice(&remainder[..len]);
+        let sorce = &self.vec_ref.borrow()[self.pos..];
+        let len = sorce.len().min(buf.len());
+        buf[..len].copy_from_slice(&sorce[..len]);
         self.pos += len;
         Ok(len)
     }
@@ -51,8 +52,7 @@ impl Read for MemFile {
 
 impl Write for MemFile {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let mut b = self.vec_ref.borrow_mut();
-        b.extend_from_slice(buf);
+        self.vec_ref.borrow_mut().extend_from_slice(buf);
         Ok(buf.len())
     }
     fn flush(&mut self) -> io::Result<()> {

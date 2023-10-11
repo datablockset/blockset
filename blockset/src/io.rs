@@ -33,7 +33,10 @@ mod test {
     #[test]
     fn test() {
         let mut io = VirtualIo::new(&[]);
-        io.create("test.txt").unwrap().write_all("Hello, world!".as_bytes()).unwrap();
+        io.create("test.txt")
+            .unwrap()
+            .write_all("Hello, world!".as_bytes())
+            .unwrap();
         let result = io.read_to_string("test.txt").unwrap();
         assert_eq!(result, "Hello, world!");
     }
