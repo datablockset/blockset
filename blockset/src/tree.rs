@@ -47,20 +47,35 @@ impl<T: Storage> Tree<T> {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{digest::merge, storage::Null, u256::U256};
+    use crate::{
+        digest::{merge, to_digest},
+        storage::Storage,
+        u256::U256,
+    };
 
     use super::Tree;
 
-    fn tree() -> Tree<Null> {
-        Tree::new(Null())
+    #[derive(Default)]
+    struct MemStorage(Vec<(U256, usize)>);
+
+    impl Storage for MemStorage {
+        fn store(&mut self, digest: U256, index: usize) {
+            self.0.push((digest, index));
+        }
+        fn end(&mut self) {}
     }
 
-    pub fn tree_from_str(s: &str) -> U256 {
+    fn tree() -> Tree<MemStorage> {
+        Tree::new(MemStorage::default())
+    }
+
+    pub fn tree_from_str(s: &str) -> (Vec<(U256, usize)>, U256) {
         let mut t = tree();
         for c in s.bytes() {
             t.push(c);
         }
-        t.end()
+        let root = t.end();
+        (t.storage.0, root)
     }
 
     #[wasm_bindgen_test]
@@ -81,7 +96,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        assert_eq!(x, e);
+        assert_eq!(x.1, e);
     }
 
     #[wasm_bindgen_test]
@@ -95,9 +110,9 @@ mod test {
             0x6e65646e_65706544_2d746e65_746e6f43,
             0xD8000000_00656572_54206873_61482074,
         ];
-        println!("x: {:x?}", x);
-        println!("e: {:x?}", e);
-        assert_eq!(x, e);
+        // println!("x: {:x?}", x);
+        // println!("e: {:x?}", e);
+        assert_eq!(x.1, e);
     }
 
     #[wasm_bindgen_test]
@@ -163,6 +178,35 @@ mod test {
             0x88000000_00000000_00000000_0000002e,
         ];
         let x = tree_from_str(v);
-        assert_eq!(x, merge(&merge(&a, &b), &c));
+        assert_eq!(x.1, merge(&merge(&a, &b), &c));
+        //
+        let ciu = to_digest(b'I');
+        let cm = to_digest(b'm');
+        let ca = to_digest(b'a');
+        let cg = to_digest(b'g');
+        let ci = to_digest(b'i');
+        let cn = to_digest(b'n');
+        let cium = merge(&ciu, &cm);
+        let cag = merge(&ca, &cg);
+        let cin = merge(&ci, &cn);
+        let ce = to_digest(b'e');
+        let csp = to_digest(b' ');
+        let c = [
+            (ciu, 0),
+            (cm, 0),
+            (cium, 1),
+            (ca, 0),
+            (cg, 0),
+            (cag, 1),
+            (ci, 0),
+            (cn, 0),
+            (cin, 1),
+            (merge(&merge(&cium, &cag), &cin), 2),
+            (ce, 0),
+            (csp, 0),
+            (ci, 0),
+            (merge(&merge(&ce, &csp), &ci), 1),
+        ];
+        assert_eq!(x.0[..c.len()], c);
     }
 }
