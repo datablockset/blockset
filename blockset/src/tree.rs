@@ -189,8 +189,19 @@ mod test {
         let cium = merge(&ciu, &cm);
         let cag = merge(&ca, &cg);
         let cin = merge(&ci, &cn);
+        let ciumagin = merge(&merge(&cium, &cag), &cin);
         let ce = to_digest(b'e');
         let csp = to_digest(b' ');
+        let ct = to_digest(b't');
+        let cr = to_digest(b'r');
+        let cc = to_digest(b'c');
+        let cp = to_digest(b'p');
+        let cespi = merge(&merge(&ce, &csp), &ci);
+        let cnt = merge(&cn, &ct);
+        let cer = merge(&ce, &cr);
+        let cce = merge(&cc, &ce);
+        let cpt = merge(&cp, &ct);
+        let cespintercept = merge(&merge(&cespi, &cnt), &merge(&merge(&cer, &cce), &cpt));
         let c = [
             (ciu, 0),
             (cm, 0),
@@ -201,11 +212,32 @@ mod test {
             (ci, 0),
             (cn, 0),
             (cin, 1),
-            (merge(&merge(&cium, &cag), &cin), 2),
+            (ciumagin, 2),
             (ce, 0),
             (csp, 0),
             (ci, 0),
-            (merge(&merge(&ce, &csp), &ci), 1),
+            (cespi, 1),
+            (cn, 0),
+            (ct, 0),
+            (cnt, 1),
+            (ce, 0),
+            (cr, 0),
+            (cer, 1),
+            (cc, 0),
+            (ce, 0),
+            (cce, 1),
+            (cp, 0),
+            (ct, 0),
+            (cpt, 1),
+            (cespintercept, 2),
+            (merge(&ciumagin, &cespintercept), 3),
+            (ci, 0),
+            (cn, 0),
+            (cin, 1),
+            (cg, 0),
+            (csp, 0),
+            (cm, 0),
+            (merge(&merge(&cg, &csp), &cm), 1),
         ];
         assert_eq!(x.0[..c.len()], c);
     }
