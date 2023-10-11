@@ -4,6 +4,10 @@ Data Block Set
 
 ## For Developers
 
+Internal documentation: https://blockset.pages.dev/.
+
+### Testing `blockset` from the `main` branch
+
 Installation:
 
 ```console
@@ -15,8 +19,6 @@ Uninstall the `blockset`:
 ```console
 cargo uninstall blockset
 ```
-
-- [Internal documentation](https://blockset.pages.dev/blockset/).
 
 ### Commands
 
