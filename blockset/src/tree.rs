@@ -1,4 +1,6 @@
-use crate::{digest::to_digest, storage::Storage, subtree::SubTree, u256::U256};
+use crate::{
+    digest::to_digest, sha224::compress_one, storage::Storage, subtree::SubTree, u224::U224,
+};
 
 pub struct Tree<T: Storage> {
     state: Vec<SubTree>,
@@ -30,7 +32,7 @@ impl<T: Storage> Tree<T> {
             }
         }
     }
-    pub fn end(&mut self) -> U256 {
+    pub fn end(&mut self) -> U224 {
         let mut last0 = [0, 0];
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
@@ -38,8 +40,9 @@ impl<T: Storage> Tree<T> {
             }
             last0 = sub_tree.end(last0);
         }
-        self.storage.end(&last0, self.state.len());
-        last0
+        let key = compress_one(&last0);
+        self.storage.end(&key, self.state.len());
+        key
     }
 }
 
@@ -49,7 +52,9 @@ mod test {
 
     use crate::{
         digest::{merge, to_digest},
+        sha224::compress_one,
         storage::Storage,
+        u224::U224,
         u256::U256,
     };
 
@@ -62,14 +67,14 @@ mod test {
         fn store(&mut self, digest: &U256, index: usize) {
             self.0.push((*digest, index));
         }
-        fn end(&mut self, digest: &U256, index: usize) {}
+        fn end(&mut self, _digest: &U224, _index: usize) {}
     }
 
     fn tree() -> Tree<MemStorage> {
         Tree::new(MemStorage::default())
     }
 
-    pub fn tree_from_str(s: &str) -> (Vec<(U256, usize)>, U256) {
+    pub fn tree_from_str(s: &str) -> (Vec<(U256, usize)>, U224) {
         let mut t = tree();
         for c in s.bytes() {
             t.push(c);
@@ -82,7 +87,7 @@ mod test {
     #[test]
     fn empty_test() {
         let mut t = tree();
-        assert_eq!(t.end(), [0, 0]);
+        assert_eq!(t.end(), compress_one(&[0, 0]));
     }
 
     #[wasm_bindgen_test]
@@ -96,7 +101,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        assert_eq!(x.1, e);
+        assert_eq!(x.1, compress_one(&e));
     }
 
     #[wasm_bindgen_test]
@@ -112,7 +117,7 @@ mod test {
         ];
         // println!("x: {:x?}", x);
         // println!("e: {:x?}", e);
-        assert_eq!(x.1, e);
+        assert_eq!(x.1, compress_one(&e));
     }
 
     #[wasm_bindgen_test]
@@ -178,7 +183,7 @@ mod test {
             0x88000000_00000000_00000000_0000002e,
         ];
         let x = tree_from_str(v);
-        assert_eq!(x.1, merge(&merge(&a, &b), &c));
+        assert_eq!(x.1, compress_one(&merge(&merge(&a, &b), &c)));
         //
         let ciu = to_digest(b'I');
         let cm = to_digest(b'm');
@@ -203,7 +208,7 @@ mod test {
         let cpt = merge(&cp, &ct);
         let cespintercept = merge(&merge(&cespi, &cnt), &merge(&merge(&cer, &cce), &cpt));
         let cgspm = merge(&merge(&cg, &csp), &cm);
-        let cx = to_digest(b'x');
+        // let cx = to_digest(b'x');
         let cs = to_digest(b's');
         let c = [
             (ciu, 0),
