@@ -28,6 +28,3 @@ mod virtual_io;
 
 pub use app::run;
 pub use io::{Io, Metadata};
-
-//
-pub use u32::{from_u8x4, to_u8x4};

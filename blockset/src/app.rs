@@ -180,4 +180,42 @@ mod test {
         let v = io.read("b.txt").unwrap();
         assert_eq!(v, "Hello, world!".as_bytes());
     }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_add_empty() {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        io.write("a.txt", "".as_bytes()).unwrap();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let d: U256 = [0, 0];
+        let s = compress_one(&d).to_base32();
+        assert_eq!(io.stdout, s.clone() + "\n");
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_get_empty() {
+        let d: U256 = [0, 0];
+        let s = compress_one(&d).to_base32();
+        let mut io = VirtualIo::new(&["get", &s, "a.txt"]);
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+    }
+
+    /*
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_big() {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        let x = "Hello, world!".repeat(100000);
+        io.write("a.txt", x.as_bytes()).unwrap();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let x = &io.stdout[..45];
+        io.args = ["blockset", "get", x, "b.txt"].iter().map(|s| s.to_string()).collect();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+    }
+    */
 }

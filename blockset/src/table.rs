@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use crate::{from_u8x4, u224::U224};
+use crate::{sha224::compress_one, u224::U224, u32::from_u8x4};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
@@ -8,12 +8,17 @@ pub enum Type {
     Parts = 1,
 }
 
+const EMPTY: U224 = compress_one(&[0, 0]);
+
 pub trait Table {
     fn has_block(&self, t: Type, key: &U224) -> bool;
     fn get_block(&self, t: Type, key: &U224) -> io::Result<Vec<u8>>;
     fn set_block(&mut self, t: Type, key: &U224, value: impl Iterator<Item = u8>)
         -> io::Result<()>;
     fn restore(&self, t: Type, k: &U224, w: &mut impl Write) -> io::Result<()> {
+        if *k == EMPTY {
+            return Ok(());
+        }
         let v = self.get_block(t, k)?;
         let mut len = *v.first().unwrap() as usize;
         if len == 0x20 {
