@@ -64,6 +64,12 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             io.println(&k);
             Ok(())
         }
+        "get" => {
+            let address = a.next().ok_or("missing address")?;
+            let path = a.next().ok_or("missing file name")?;
+            //
+            Ok(())
+        }
         _ => Err("unknown command".to_string()),
     }
 }

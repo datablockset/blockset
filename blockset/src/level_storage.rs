@@ -117,8 +117,6 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
 
 #[cfg(test)]
 mod test {
-    use std::io;
-
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -127,7 +125,6 @@ mod test {
         table::{Table, Type},
         tree::Tree,
         u224::U224,
-        u32::from_u8x4,
     };
 
     use super::LevelStorage;
@@ -151,35 +148,10 @@ mod test {
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
-    fn restore<T: Table>(table: &T, t: Type, k: &U224) -> io::Result<Vec<u8>> {
-        let mut v = table.get_block(t, &k)?;
-        let mut len = *v.first().unwrap() as usize;
-        if len == 0x20 {
-            v.remove(0);
-            Ok(v)
-        } else {
-            let mut result = Vec::new();
-            len += 1;
-            let mut i = len;
-            while i + 28 <= v.len() {
-                let mut kn = U224::default();
-                for ki in &mut kn {
-                    let n = i + 4;
-                    let slice = &v[i..n];
-                    *ki = from_u8x4(slice.try_into().unwrap());
-                    i = n;
-                }
-                result.extend(restore(table, Type::Parts, &kn)?);
-            }
-            result.extend(&v[1..len]);
-            Ok(result)
-        }
-    }
-
     fn big(c: &str) {
         let mut table = MemTable::default();
         let k = add(&mut table, c);
-        let v = restore(&table, Type::Main, &k).unwrap();
+        let v = table.restore(Type::Main, &k).unwrap();
         assert_eq!(v, c.as_bytes());
     }
 
