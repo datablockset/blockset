@@ -3,9 +3,10 @@ use std::io::Read;
 use crate::{
     base32::{StrEx, ToBase32},
     io::Io,
-    storage::Null,
+    storage::{Null, Storage},
     tree::Tree,
     u224::U224,
+    file_table::FileTable, level_storage::LevelStorage,
 };
 
 trait ResultEx {
@@ -18,6 +19,21 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     fn to_string_result(self) -> Result<Self::T, String> {
         self.map_err(|e| e.to_string())
     }
+}
+
+fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String> {
+    let mut tree = Tree::new(s);
+    loop {
+        let mut buf = [0; 1024];
+        let size = file.read(buf.as_mut()).to_string_result()?;
+        if size == 0 {
+            break;
+        }
+        for c in buf[0..size].iter() {
+            tree.push(*c);
+        }
+    }
+    Ok(tree.end().to_base32())
 }
 
 pub fn run(io: &mut impl Io) -> Result<(), String> {
@@ -34,21 +50,17 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         }
         "address" => {
             let path = a.next().ok_or("missing file name")?;
-            let mut t = Tree::new(Null());
-            {
-                let mut f = io.open(&path).to_string_result()?;
-                loop {
-                    let mut buf = [0; 1024];
-                    let size = f.read(buf.as_mut()).to_string_result()?;
-                    if size == 0 {
-                        break;
-                    }
-                    for c in buf[0..size].iter() {
-                        t.push(*c);
-                    }
-                }
-            }
-            io.println(&t.end().to_base32());
+            let f = io.open(&path).to_string_result()?;
+            let k = read_to_tree(Null(), f)?;
+            io.println(&k);
+            Ok(())
+        }
+        "add" => {
+            let path = a.next().ok_or("missing file name")?;
+            let f = io.open(&path).to_string_result()?;
+            let mut table = FileTable(io);
+            let k = read_to_tree(LevelStorage::new(&mut table), f)?;
+            io.println(&k);
             Ok(())
         }
         _ => Err("unknown command".to_string()),

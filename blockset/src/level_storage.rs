@@ -4,7 +4,7 @@ use crate::{
     digest::len,
     sha224::compress_one,
     storage::Storage,
-    table::{Table, Tables},
+    table::{Table, Type},
     u224::U224,
     u256::{to_u224, U256},
     u32::to_u8x4,
@@ -26,11 +26,11 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, table: &mut impl Table, i: usize, k: &U224) {
+    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) {
         let data = take(&mut self.data);
         if i == 0 {
             assert!(!data.is_empty());
-            table.set_block(k, once(0x20).chain(data));
+            table.set_block(t, k, once(0x20).chain(data));
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
@@ -42,6 +42,7 @@ impl Levels {
             // we should have at least one node.
             assert_ne!(level.nodes.len(), 0);
             table.set_block(
+                t,
                 k,
                 once(data.len() as u8)
                     .chain(data)
@@ -53,12 +54,21 @@ impl Levels {
     }
 }
 
-struct Level4Storage<P: Table, M: Table> {
-    tables: Tables<M, P>,
+pub struct LevelStorage<'a, T: Table> {
+    table: &'a mut T,
     levels: Levels,
 }
 
-impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
+impl<'a, T: Table> LevelStorage<'a, T> {
+    pub fn new(table: &'a mut T) -> Self {
+        Self {
+            table,
+            levels: Default::default(),
+        }
+    }
+}
+
+impl<'a, T: Table> Storage for LevelStorage<'a, T> {
     fn store(&mut self, digest: &U256, mut i: usize) {
         if i < DATA_LEVEL {
             if i == 0 {
@@ -78,7 +88,7 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.tables.parts, i, &k);
+            self.levels.store(self.table, Type::Parts, i, &k);
         } else {
             level.last = *digest;
             {
@@ -99,7 +109,7 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.tables.main, i, k);
+        self.levels.store(self.table, Type::Main, i, k);
     }
 }
 
@@ -110,13 +120,13 @@ mod test {
     use crate::{
         mem_table::MemTable,
         storage::Storage,
-        table::{Table, Tables},
+        table::{Table, Type},
         tree::Tree,
         u224::U224,
         u32::from_u8x4,
     };
 
-    use super::Level4Storage;
+    use super::LevelStorage;
 
     fn tree_from_str<T: Storage>(tree: &mut Tree<T>, s: &str) -> U224 {
         for c in s.bytes() {
@@ -125,32 +135,20 @@ mod test {
         tree.end()
     }
 
-    fn add(tables: &mut Tables<MemTable, MemTable>, c: &str) -> U224 {
-        let mut tree = {
-            let storage = Level4Storage {
-                tables: Tables {
-                    main: &mut tables.main,
-                    parts: &mut tables.parts,
-                },
-                levels: Default::default(),
-            };
-            Tree::new(storage)
-        };
+    fn add(table: &mut MemTable, c: &str) -> U224 {
+        let mut tree = Tree::new(LevelStorage::new(table));
         tree_from_str(&mut tree, c)
     }
 
     fn small(c: &str) {
-        let mut tables = Tables {
-            main: MemTable::default(),
-            parts: MemTable::default(),
-        };
-        let k = add(&mut tables, c);
-        let v = tables.main.get_block(&k).unwrap();
+        let mut table = MemTable::default();
+        let k = add(&mut table, c);
+        let v = table.get_block(Type::Main,&k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
-    fn restore<M: Table, P: Table>(main: &M, parts: &P, k: &U224) -> Option<Vec<u8>> {
-        let mut v = main.get_block(&k)?;
+    fn restore<T: Table>(table: &T, t: Type, k: &U224) -> Option<Vec<u8>> {
+        let mut v = table.get_block(t, &k)?;
         let mut len = *v.first()? as usize;
         if len == 0x20 {
             v.remove(0);
@@ -167,7 +165,7 @@ mod test {
                     *ki = from_u8x4(slice.try_into().ok()?);
                     i = n;
                 }
-                result.extend(restore(parts, parts, &kn)?);
+                result.extend(restore(table, Type::Parts, &kn)?);
             }
             result.extend(&v[1..len]);
             Some(result)
@@ -175,12 +173,9 @@ mod test {
     }
 
     fn big(c: &str) {
-        let mut tables = Tables {
-            main: MemTable::default(),
-            parts: MemTable::default(),
-        };
-        let k = add(&mut tables, c);
-        let v = restore(&tables.main, &tables.parts, &k).unwrap();
+        let mut table = MemTable::default();
+        let k = add(&mut table, c);
+        let v = restore(&table, Type::Main, &k).unwrap();
         assert_eq!(v, c.as_bytes());
     }
 
