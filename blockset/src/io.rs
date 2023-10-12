@@ -1,11 +1,11 @@
-use std::io::{self, Read, Write};
+use std::{io::{self, Read, Write}, fmt};
 
 #[derive(Default)]
 pub struct Metadata();
 
 pub trait Io {
     type Args: Iterator<Item = String>;
-    type File: Read + Write;
+    type File: Read + Write + fmt::Debug;
     fn args(&self) -> Self::Args;
     fn print(&mut self, s: &str);
     fn println(&mut self, s: &str) {
@@ -13,6 +13,7 @@ pub trait Io {
         self.print("\n");
     }
     fn metadata(&self, path: &str) -> io::Result<Metadata>;
+    fn create_dir(&mut self, path: &str) -> io::Result<()>;
     fn create(&mut self, path: &str) -> io::Result<Self::File>;
     fn open(&self, path: &str) -> io::Result<Self::File>;
     fn read(&self, path: &str) -> io::Result<Vec<u8>> {
@@ -28,7 +29,9 @@ pub trait Io {
         Ok(result)
     }
     fn write(&mut self, path: &str, data: &[u8]) -> io::Result<()> {
+        println!("write: {} {:?}", path, data);
         let mut file = self.create(path)?;
+        println!("file: {:?}", file);
         file.write_all(data)?;
         Ok(())
     }

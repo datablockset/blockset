@@ -14,35 +14,35 @@ impl<T: Storage> Tree<T> {
             storage,
         }
     }
-    pub fn push(&mut self, c: u8) {
+    pub fn push(&mut self, c: u8) -> Option<()> {
         let mut i = 0;
         let mut last0 = to_digest(c);
         loop {
-            self.storage.store(&last0, i);
+            self.storage.store(&last0, i)?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;
                     i += 1;
                 } else {
-                    return;
+                    return Some(());
                 }
             } else {
                 self.state.push(SubTree::new(&last0));
-                return;
+                return Some(());
             }
         }
     }
-    pub fn end(&mut self) -> U224 {
+    pub fn end(&mut self) -> Option<U224> {
         let mut last0 = [0, 0];
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
-                self.storage.store(&last0, i);
+                self.storage.store(&last0, i)?;
             }
             last0 = sub_tree.end(last0);
         }
         let key = compress_one(&last0);
-        self.storage.end(&key, self.state.len());
-        key
+        self.storage.end(&key, self.state.len())?;
+        Some(key)
     }
 }
 
@@ -64,10 +64,13 @@ mod test {
     struct MemStorage(Vec<(U256, usize)>);
 
     impl Storage for MemStorage {
-        fn store(&mut self, digest: &U256, index: usize) {
+        fn store(&mut self, digest: &U256, index: usize) -> Option<()> {
             self.0.push((*digest, index));
+            Some(())
         }
-        fn end(&mut self, _digest: &U224, _index: usize) {}
+        fn end(&mut self, _digest: &U224, _index: usize) -> Option<()> {
+            Some(())
+        }
     }
 
     fn tree() -> Tree<MemStorage> {
@@ -79,7 +82,7 @@ mod test {
         for c in s.bytes() {
             t.push(c);
         }
-        let root = t.end();
+        let root = t.end().unwrap();
         (t.storage.0, root)
     }
 
@@ -87,7 +90,7 @@ mod test {
     #[test]
     fn empty_test() {
         let mut t = tree();
-        assert_eq!(t.end(), compress_one(&[0, 0]));
+        assert_eq!(t.end().unwrap(), compress_one(&[0, 0]));
     }
 
     #[wasm_bindgen_test]

@@ -7,7 +7,7 @@ use std::{
     vec,
 };
 
-use crate::{Io, io::Metadata};
+use crate::{io::Metadata, Io};
 
 type VecRef = Rc<RefCell<Vec<u8>>>;
 
@@ -29,6 +29,7 @@ impl VirtualIo {
     }
 }
 
+#[derive(Debug)]
 pub struct MemFile {
     vec_ref: VecRef,
     pos: usize,
@@ -85,5 +86,8 @@ impl Io for VirtualIo {
             .get(path)
             .map(|v| MemFile::new(v.clone()))
             .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
+    }
+    fn create_dir(&mut self, _path: &str) -> io::Result<()> {
+        Ok(())
     }
 }

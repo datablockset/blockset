@@ -26,11 +26,11 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) {
+    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> Option<()> {
         let data = take(&mut self.data);
         if i == 0 {
             assert!(!data.is_empty());
-            table.set_block(t, k, once(0x20).chain(data));
+            table.set_block(t, k, once(0x20).chain(data))?;
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
@@ -47,10 +47,11 @@ impl Levels {
                 once(data.len() as u8)
                     .chain(data)
                     .chain(level.nodes.into_iter().flatten().flat_map(to_u8x4)),
-            );
+            )?;
             assert_eq!(ref_level.nodes.len(), 0);
             assert_eq!(ref_level.last, [0, 0]);
         }
+        Some(())
     }
 }
 
@@ -69,17 +70,17 @@ impl<'a, T: Table> LevelStorage<'a, T> {
 }
 
 impl<'a, T: Table> Storage for LevelStorage<'a, T> {
-    fn store(&mut self, digest: &U256, mut i: usize) {
+    fn store(&mut self, digest: &U256, mut i: usize) -> Option<()> {
         if i < DATA_LEVEL {
             if i == 0 {
                 assert_eq!(digest[1], 0x08000000_00000000_00000000_00000000);
                 self.levels.data.push(digest[0] as u8);
             }
-            return;
+            return Some(());
         }
         i -= DATA_LEVEL;
         if i % SKIP_LEVEL != 0 {
-            return;
+            return Some(());
         }
         i /= SKIP_LEVEL;
         if i >= self.levels.nodes.len() {
@@ -88,7 +89,7 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(self.table, Type::Parts, i, &k);
+            self.levels.store(self.table, Type::Parts, i, &k)?;
         } else {
             level.last = *digest;
             {
@@ -97,19 +98,20 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
                 assert_eq!(len_bits >> 3, self.levels.data.len());
             }
         }
+        Some(())
     }
 
-    fn end(&mut self, k: &U224, mut i: usize) {
+    fn end(&mut self, k: &U224, mut i: usize) -> Option<()> {
         if i == 0 {
             assert_eq!(*k, compress_one(&[0, 0]));
-            return;
+            return Some(());
         }
         i = if i <= DATA_LEVEL {
             0
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(self.table, Type::Main, i, k);
+        self.levels.store(self.table, Type::Main, i, k)
     }
 }
 
@@ -132,7 +134,7 @@ mod test {
         for c in s.bytes() {
             tree.push(c);
         }
-        tree.end()
+        tree.end().unwrap()
     }
 
     fn add(table: &mut MemTable, c: &str) -> U224 {

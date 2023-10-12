@@ -30,10 +30,10 @@ fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String>
             break;
         }
         for c in buf[0..size].iter() {
-            tree.push(*c);
+            tree.push(*c).ok_or("tree error")?;
         }
     }
-    Ok(tree.end().to_base32())
+    Ok(tree.end().ok_or("tree error")?.to_base32())
 }
 
 pub fn run(io: &mut impl Io) -> Result<(), String> {
@@ -133,5 +133,22 @@ mod test {
         ];
         let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
         assert_eq!(io.stdout, s + "\n");
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_add() {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let d: U256 = [
+            0x00000021_646c726f_77202c6f_6c6c6548,
+            0x68000000_00000000_00000000_00000000,
+        ];
+        let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
+        assert_eq!(io.stdout, s.clone() + "\n");
+        let v = io.read(&("cdt0/".to_owned() + &s)).unwrap();
+        assert_eq!(v, " Hello, world!".as_bytes());
     }
 }

@@ -1,5 +1,6 @@
 use crate::u224::U224;
 
+#[derive(Debug, Clone, Copy)]
 pub enum Type {
     Main = 0,
     Parts = 1,
