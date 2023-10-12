@@ -20,7 +20,8 @@ impl<T: Storage> Tree<T> {
         let mut i = 0;
         let mut last0 = to_digest(c);
         loop {
-            self.storage.store(&last0, i)?;
+            let x = self.storage.store(&last0, i);
+            x?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;
@@ -125,6 +126,24 @@ mod test {
         // println!("x: {:x?}", x);
         // println!("e: {:x?}", e);
         assert_eq!(x.1, compress_one(&e));
+    }
+
+    struct BrokenStorage ();
+
+    impl Storage for BrokenStorage {
+        fn store(&mut self, _digest: &U256, _index: usize) -> io::Result<()> {
+            Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
+        }
+        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<()> {
+            Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
+        }
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn fail_store_test() {
+        let mut t = Tree::new(BrokenStorage());
+        assert!(t.push(b'a').is_err());
     }
 
     #[wasm_bindgen_test]

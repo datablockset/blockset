@@ -203,17 +203,30 @@ mod test {
         assert_eq!(e, Ok(()));
     }
 
-    #[wasm_bindgen_test]
-    #[test]
-    fn test_big() {
+    fn add_get(src: String) {
         let mut io = VirtualIo::new(&["add", "a.txt"]);
-        let x = "Hello, world!".repeat(95000);
-        io.write("a.txt", x.as_bytes()).unwrap();
+        io.write("a.txt", src.as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let x = &io.stdout[..45];
         io.args = ["blockset", "get", x, "b.txt"].iter().map(|s| s.to_string()).collect();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
+        let v = io.read("b.txt").unwrap();
+        assert_eq!(v, src.as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_big() {
+        add_get("Hello, world!".repeat(95000));
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_repeat() {
+        for i in 0..1000 {
+            add_get("X".repeat(i));
+        }
     }
 }

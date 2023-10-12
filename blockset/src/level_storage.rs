@@ -30,7 +30,7 @@ impl Levels {
         let data = take(&mut self.data);
         if i == 0 {
             assert!(!data.is_empty());
-            table.set_block(t, k, once(0x20).chain(data))?;
+            table.check_set_block(t, k, once(0x20).chain(data))?;
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
@@ -46,15 +46,13 @@ impl Levels {
                 assert_eq!(level.last, [0, 0]);
                 return Ok(()); // already stored
             }
-            table.set_block(
+            table.check_set_block(
                 t,
                 k,
                 once(data.len() as u8)
                     .chain(data)
                     .chain(level.nodes.into_iter().flatten().flat_map(to_u8x4)),
             )?;
-            assert_eq!(ref_level.nodes.len(), 0);
-            assert_eq!(ref_level.last, [0, 0]);
         }
         Ok(())
     }

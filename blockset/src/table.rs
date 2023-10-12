@@ -15,6 +15,17 @@ pub trait Table {
     fn get_block(&self, t: Type, key: &U224) -> io::Result<Vec<u8>>;
     fn set_block(&mut self, t: Type, key: &U224, value: impl Iterator<Item = u8>)
         -> io::Result<()>;
+    fn check_set_block(
+        &mut self,
+        t: Type,
+        key: &U224,
+        value: impl Iterator<Item = u8>,
+    ) -> io::Result<()> {
+        if !self.has_block(t, key) {
+            self.set_block(t, key, value)?;
+        }
+        Ok(())
+    }
     fn restore(&self, mut t: Type, k: &U224, w: &mut impl Write) -> io::Result<()> {
         if *k == EMPTY {
             return Ok(());
@@ -49,27 +60,5 @@ pub trait Table {
             t = Type::Parts;
         }
         w.write_all(&tail)
-        /*
-        let v = self.get_block(t, k)?;
-        let mut len = *v.first().unwrap() as usize;
-        if len == 0x20 {
-            w.write_all(&v[1..])
-        } else {
-            len += 1;
-            let mut i = len;
-            tail = v[i..].to_vec();
-            while i + 28 <= v.len() {
-                let mut kn = U224::default();
-                for ki in &mut kn {
-                    let n = i + 4;
-                    let slice = &v[i..n];
-                    *ki = from_u8x4(slice.try_into().unwrap());
-                    i = n;
-                }
-                self.restore(Type::Parts, &kn, w)?;
-            }
-            w.write_all(&tail)
-        }
-        */
     }
 }
