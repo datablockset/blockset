@@ -7,7 +7,7 @@ use std::{
     vec,
 };
 
-use crate::Io;
+use crate::{Io, io::Metadata};
 
 type VecRef = Rc<RefCell<Vec<u8>>>;
 
@@ -69,12 +69,18 @@ impl Io for VirtualIo {
     fn print(&mut self, s: &str) {
         self.stdout.push_str(s);
     }
+    fn metadata(&self, path: &str) -> io::Result<Metadata> {
+        self.file_map
+            .get(path)
+            .map(|_| Metadata::default())
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
+    }
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
         let vec_ref = Rc::new(RefCell::new(Vec::default()));
         self.file_map.insert(path.to_string(), vec_ref.clone());
         Ok(MemFile::new(vec_ref))
     }
-    fn open(&mut self, path: &str) -> io::Result<Self::File> {
+    fn open(&self, path: &str) -> io::Result<Self::File> {
         self.file_map
             .get(path)
             .map(|v| MemFile::new(v.clone()))

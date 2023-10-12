@@ -1,4 +1,4 @@
-use blockset::{run, Io};
+use blockset::{run, Io, Metadata};
 use std::{
     env::{args, Args},
     fs::File,
@@ -25,8 +25,12 @@ impl Io for RealIo {
         File::create(path)
     }
 
-    fn open(&mut self, path: &str) -> io::Result<Self::File> {
+    fn open(&self, path: &str) -> io::Result<Self::File> {
         File::open(path)
+    }
+
+    fn metadata(&self, path: &str) -> io::Result<Metadata> {
+        std::fs::metadata(path).map(|_| Metadata::default())
     }
 }
 

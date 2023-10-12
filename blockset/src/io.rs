@@ -1,5 +1,8 @@
 use std::io::{self, Read, Write};
 
+#[derive(Default)]
+pub struct Metadata();
+
 pub trait Io {
     type Args: Iterator<Item = String>;
     type File: Read + Write;
@@ -9,8 +12,15 @@ pub trait Io {
         self.print(s);
         self.print("\n");
     }
+    fn metadata(&self, path: &str) -> io::Result<Metadata>;
     fn create(&mut self, path: &str) -> io::Result<Self::File>;
-    fn open(&mut self, path: &str) -> io::Result<Self::File>;
+    fn open(&self, path: &str) -> io::Result<Self::File>;
+    fn read(&self, path: &str) -> io::Result<Vec<u8>> {
+        let mut file = self.open(path)?;
+        let mut result = Vec::default();
+        file.read_to_end(&mut result)?;
+        Ok(result)
+    }
     fn read_to_string(&mut self, path: &str) -> io::Result<String> {
         let mut file = self.open(path)?;
         let mut result = String::default();

@@ -13,8 +13,9 @@ impl Table for MemTable {
         self.get(key).cloned()
     }
 
-    fn set_block(&mut self, key: &U224, value: impl Iterator<Item = u8>) {
+    fn set_block(&mut self, key: &U224, value: impl Iterator<Item = u8>) -> Option<()> {
         self.insert(*key, value.collect());
+        Some(())
     }
 }
 
@@ -27,7 +28,8 @@ impl Table for &mut MemTable {
         self.get(key).cloned()
     }
 
-    fn set_block(&mut self, key: &U224, value: impl Iterator<Item = u8>) {
+    fn set_block(&mut self, key: &U224, value: impl Iterator<Item = u8>) -> Option<()>{
         self.insert(*key, value.collect());
+        Some(())
     }
 }

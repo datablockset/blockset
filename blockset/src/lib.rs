@@ -4,6 +4,7 @@ mod ascii;
 mod base32;
 mod bit_vec;
 mod digest;
+mod file_table;
 mod io;
 mod sha224;
 mod sigma32;
@@ -28,7 +29,7 @@ mod level_storage;
 mod mem_table;
 
 pub use app::run;
-pub use io::Io;
+pub use io::{Io, Metadata};
 
 //
 pub use table::Tables;
