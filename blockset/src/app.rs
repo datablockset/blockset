@@ -209,7 +209,10 @@ mod test {
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let x = &io.stdout[..45];
-        io.args = ["blockset", "get", x, "b.txt"].iter().map(|s| s.to_string()).collect();
+        io.args = ["blockset", "get", x, "b.txt"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let v = io.read("b.txt").unwrap();

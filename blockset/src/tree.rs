@@ -128,7 +128,7 @@ mod test {
         assert_eq!(x.1, compress_one(&e));
     }
 
-    struct BrokenStorage ();
+    struct BrokenStorage();
 
     impl Storage for BrokenStorage {
         fn store(&mut self, _digest: &U256, _index: usize) -> io::Result<()> {
