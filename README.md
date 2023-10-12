@@ -34,3 +34,7 @@ cargo uninstall blockset
   ```
   blockset add ./LICENSE
   ```
+- get a fila by address
+  ```
+  blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./old.md
+  ```

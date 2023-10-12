@@ -1,4 +1,7 @@
-use std::{io::{self, Read, Write}, fmt};
+use std::{
+    fmt,
+    io::{self, Read, Write},
+};
 
 #[derive(Default)]
 pub struct Metadata();

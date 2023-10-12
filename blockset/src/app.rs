@@ -2,11 +2,13 @@ use std::io::Read;
 
 use crate::{
     base32::{StrEx, ToBase32},
+    file_table::{FileTable, DIR},
     io::Io,
+    level_storage::LevelStorage,
     storage::{Null, Storage},
+    table::{Table, Type},
     tree::Tree,
     u224::U224,
-    file_table::{FileTable, DIR}, level_storage::LevelStorage,
 };
 
 trait ResultEx {
@@ -65,9 +67,12 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             Ok(())
         }
         "get" => {
-            let address = a.next().ok_or("missing address")?;
+            let b32 = a.next().ok_or("missing address")?;
+            let d = b32.from_base32::<U224>().ok_or("invalid address")?;
             let path = a.next().ok_or("missing file name")?;
-            //
+            let mut f = io.create(&path).to_string_result()?;
+            let table = FileTable(io);
+            table.restore(Type::Main, &d, &mut f).to_string_result()?;
             Ok(())
         }
         _ => Err("unknown command".to_string()),
@@ -81,7 +86,7 @@ mod test {
     use crate::{
         base32::ToBase32,
         run,
-        sha224::compress,
+        sha224::{compress, compress_one},
         u256::{to_u224, U256},
         virtual_io::VirtualIo,
         Io,
@@ -153,9 +158,26 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
+        let s = compress_one(&d).to_base32();
         assert_eq!(io.stdout, s.clone() + "\n");
         let v = io.read(&("cdt0/".to_owned() + &s)).unwrap();
         assert_eq!(v, " Hello, world!".as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_get() {
+        let d: U256 = [
+            0x00000021_646c726f_77202c6f_6c6c6548,
+            0x68000000_00000000_00000000_00000000,
+        ];
+        let s = compress_one(&d).to_base32();
+        let mut io = VirtualIo::new(&["get", s.as_str(), "b.txt"]);
+        io.create_dir("cdt0").unwrap();
+        io.write(&("cdt0/".to_owned() + &s), " Hello, world!".as_bytes())
+            .unwrap();
+        run(&mut io).unwrap();
+        let v = io.read("b.txt").unwrap();
+        assert_eq!(v, "Hello, world!".as_bytes());
     }
 }

@@ -1,7 +1,7 @@
 use blockset::{run, Io, Metadata};
 use std::{
     env::{args, Args},
-    fs::{File, create_dir},
+    fs::{create_dir, File},
     io,
 };
 

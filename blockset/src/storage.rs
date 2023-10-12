@@ -10,6 +10,10 @@ pub trait Storage {
 pub struct Null();
 
 impl Storage for Null {
-    fn store(&mut self, _key: &U256, _level: usize) -> io::Result<()> { Ok(()) }
-    fn end(&mut self, _key: &U224, _level: usize) -> io::Result<()> { Ok(()) }
+    fn store(&mut self, _key: &U256, _level: usize) -> io::Result<()> {
+        Ok(())
+    }
+    fn end(&mut self, _key: &U224, _level: usize) -> io::Result<()> {
+        Ok(())
+    }
 }

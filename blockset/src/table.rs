@@ -1,6 +1,6 @@
-use std::io;
+use std::io::{self, Write};
 
-use crate::{u224::U224, from_u8x4};
+use crate::{from_u8x4, u224::U224};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
@@ -11,15 +11,14 @@ pub enum Type {
 pub trait Table {
     fn has_block(&self, t: Type, key: &U224) -> bool;
     fn get_block(&self, t: Type, key: &U224) -> io::Result<Vec<u8>>;
-    fn set_block(&mut self, t: Type, key: &U224, value: impl Iterator<Item = u8>) -> io::Result<()>;
-    fn restore(&self, t: Type, k: &U224) -> io::Result<Vec<u8>> {
-        let mut v = self.get_block(t, &k)?;
+    fn set_block(&mut self, t: Type, key: &U224, value: impl Iterator<Item = u8>)
+        -> io::Result<()>;
+    fn restore(&self, t: Type, k: &U224, w: &mut impl Write) -> io::Result<()> {
+        let v = self.get_block(t, k)?;
         let mut len = *v.first().unwrap() as usize;
         if len == 0x20 {
-            v.remove(0);
-            Ok(v)
+            w.write_all(&v[1..])
         } else {
-            let mut result = Vec::new();
             len += 1;
             let mut i = len;
             while i + 28 <= v.len() {
@@ -30,10 +29,9 @@ pub trait Table {
                     *ki = from_u8x4(slice.try_into().unwrap());
                     i = n;
                 }
-                result.extend(self.restore(Type::Parts, &kn)?);
+                self.restore(Type::Parts, &kn, w)?;
             }
-            result.extend(&v[1..len]);
-            Ok(result)
+            w.write_all(&v[1..len])
         }
     }
 }

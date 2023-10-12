@@ -20,11 +20,11 @@ mod u32;
 mod u512;
 
 #[cfg(test)]
+mod mem_table;
+#[cfg(test)]
 mod static_assert;
 #[cfg(test)]
 mod virtual_io;
-#[cfg(test)]
-mod mem_table;
 
 pub use app::run;
 pub use io::{Io, Metadata};

@@ -1,4 +1,4 @@
-use std::{iter::once, mem::take, io};
+use std::{io, iter::once, mem::take};
 
 use crate::{
     digest::len,
@@ -117,6 +117,8 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
 
 #[cfg(test)]
 mod test {
+    use std::io::Cursor;
+
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -144,14 +146,16 @@ mod test {
     fn small(c: &str) {
         let mut table = MemTable::default();
         let k = add(&mut table, c);
-        let v = table.get_block(Type::Main,&k).unwrap();
+        let v = table.get_block(Type::Main, &k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
     fn big(c: &str) {
         let mut table = MemTable::default();
         let k = add(&mut table, c);
-        let v = table.restore(Type::Main, &k).unwrap();
+        let mut v = Vec::default();
+        let mut cursor = Cursor::new(&mut v);
+        table.restore(Type::Main, &k, &mut cursor).unwrap();
         assert_eq!(v, c.as_bytes());
     }
 
