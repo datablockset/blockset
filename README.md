@@ -30,7 +30,7 @@ cargo uninstall blockset
   ```console
   blockset address ./README.md
   ```
-- add to the local storage `cdt0/`:
+- add a data block to the local storage `cdt0/`:
   ```console
   blockset add ./LICENSE
   ```
