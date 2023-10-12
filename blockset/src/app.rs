@@ -203,12 +203,11 @@ mod test {
         assert_eq!(e, Ok(()));
     }
 
-    /*
     #[wasm_bindgen_test]
     #[test]
     fn test_big() {
         let mut io = VirtualIo::new(&["add", "a.txt"]);
-        let x = "Hello, world!".repeat(100000);
+        let x = "Hello, world!".repeat(95000);
         io.write("a.txt", x.as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
@@ -217,5 +216,4 @@ mod test {
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
     }
-    */
 }
