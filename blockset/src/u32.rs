@@ -23,6 +23,11 @@ pub const fn to_u8x4(a: u32) -> [u8; 4] {
     [a as u8, (a >> 8) as u8, (a >> 16) as u8, (a >> 24) as u8]
 }
 
+#[inline(always)]
+pub const fn from_u8x4(a: &[u8; 4]) -> u32 {
+    a[0] as u32 | ((a[1] as u32) << 8) | ((a[2] as u32) << 16) | ((a[3] as u32) << 24)
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
