@@ -4,7 +4,7 @@ use crate::{
     digest::len,
     sha224::compress_one,
     storage::Storage,
-    table::Table,
+    table::{Table, Tables},
     u224::U224,
     u256::{to_u224, U256},
     u32::to_u8x4,
@@ -42,7 +42,7 @@ impl Levels {
             // we should have at least one node.
             assert_ne!(level.nodes.len(), 0);
             table.set_block(
-                &to_u224(&level.last).unwrap(),
+                k,
                 once(data.len() as u8)
                     .chain(data)
                     .chain(level.nodes.into_iter().flatten().flat_map(to_u8x4)),
@@ -54,8 +54,7 @@ impl Levels {
 }
 
 struct Level4Storage<P: Table, M: Table> {
-    part_table: P,
-    main_table: M,
+    tables: Tables<M, P>,
     levels: Levels,
 }
 
@@ -79,7 +78,7 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.part_table, i, &k);
+            self.levels.store(&mut self.tables.parts, i, &k);
         } else {
             level.last = *digest;
             {
@@ -98,9 +97,9 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
         i = if i <= DATA_LEVEL {
             0
         } else {
-            (i - DATA_LEVEL) / SKIP_LEVEL
+            (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.main_table, i, k);
+        self.levels.store(&mut self.tables.main, i, k);
     }
 }
 
@@ -108,7 +107,14 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{mem_table::MemTable, storage::Storage, table::Table, tree::Tree, u224::U224};
+    use crate::{
+        mem_table::MemTable,
+        storage::Storage,
+        table::{Table, Tables},
+        tree::Tree,
+        u224::U224,
+        u32::from_u8x4,
+    };
 
     use super::Level4Storage;
 
@@ -119,20 +125,63 @@ mod test {
         tree.end()
     }
 
-    fn small(c: &str) {
-        let mut part_table = MemTable::default();
-        let mut main_table = MemTable::default();
+    fn add(tables: &mut Tables<MemTable, MemTable>, c: &str) -> U224 {
         let mut tree = {
             let storage = Level4Storage {
-                part_table: &mut part_table,
-                main_table: &mut main_table,
+                tables: Tables {
+                    main: &mut tables.main,
+                    parts: &mut tables.parts,
+                },
                 levels: Default::default(),
             };
             Tree::new(storage)
         };
-        let k = tree_from_str(&mut tree, c);
-        let v = main_table.get_block(&k).unwrap();
+        tree_from_str(&mut tree, c)
+    }
+
+    fn small(c: &str) {
+        let mut tables = Tables {
+            main: MemTable::default(),
+            parts: MemTable::default(),
+        };
+        let k = add(&mut tables, c);
+        let v = tables.main.get_block(&k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
+    }
+
+    fn restore<M: Table, P: Table>(main: &M, parts: &P, k: &U224) -> Option<Vec<u8>> {
+        let mut v = main.get_block(&k)?;
+        let mut len = *v.first()? as usize;
+        if len == 0x20 {
+            v.remove(0);
+            Some(v)
+        } else {
+            let mut result = Vec::new();
+            len += 1;
+            let mut i = len;
+            while i + 28 <= v.len() {
+                let mut kn = U224::default();
+                for ki in &mut kn {
+                    let n = i + 4;
+                    let slice = &v[i..n];
+                    *ki = from_u8x4(slice.try_into().ok()?);
+                    i = n;
+                }
+                result.extend(restore(parts, parts, &kn)?);
+            }
+            result.extend(&v[1..len]);
+            Some(result)
+        }
+    }
+
+    fn big(c: &str) {
+        let mut tables = Tables {
+            main: MemTable::default(),
+            parts: MemTable::default(),
+        };
+        let k = add(&mut tables, c);
+        let v = restore(&tables.main, &tables.parts, &k).unwrap();
+        assert_eq!(v, c.as_bytes());
     }
 
     #[wasm_bindgen_test]
@@ -149,8 +198,12 @@ mod test {
             structure the stream without linguistic reference points? How do we
             identify repetitive segments?"#,
         );
-        /*
-        small(r#"There are a lot of articles, videos, and blog posts about
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_big() {
+        big(r#"There are a lot of articles, videos, and blog posts about
             functional programming using different programming languages,
             including JavaScript.
 
@@ -204,6 +257,5 @@ mod test {
             In most purely functional programming languages, a function can
             accept only one argument, and currying is a way to provide multiple
             arguments to a function."#);
-            */
     }
 }

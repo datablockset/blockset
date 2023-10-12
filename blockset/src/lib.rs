@@ -31,4 +31,5 @@ pub use app::run;
 pub use io::Io;
 
 //
-pub use u32::to_u8x4;
+pub use table::Tables;
+pub use u32::{from_u8x4, to_u8x4};
