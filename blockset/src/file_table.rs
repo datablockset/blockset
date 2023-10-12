@@ -4,10 +4,10 @@ use crate::{Io, table::{Table, Type}, u224::U224, base32::ToBase32};
 
 pub struct FileTable<'a, T: Io>(pub &'a mut T);
 
-pub const DIR: &str = "cdt0/";
+pub const DIR: &str = "cdt0";
 
 fn path(t: Type, key: &U224) -> String {
-    DIR.to_owned() + ["", "_"][t as usize] + &key.to_base32()
+    DIR.to_owned() + "/" + ["", "_"][t as usize] + &key.to_base32()
 }
 
 impl<'a, T: Io> Table for FileTable<'a, T> {

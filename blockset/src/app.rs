@@ -6,7 +6,7 @@ use crate::{
     storage::{Null, Storage},
     tree::Tree,
     u224::U224,
-    file_table::FileTable, level_storage::LevelStorage,
+    file_table::{FileTable, DIR}, level_storage::LevelStorage,
 };
 
 trait ResultEx {
@@ -57,6 +57,7 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         }
         "add" => {
             let path = a.next().ok_or("missing file name")?;
+            let _ = io.create_dir(DIR);
             let f = io.open(&path).to_string_result()?;
             let mut table = FileTable(io);
             let k = read_to_tree(LevelStorage::new(&mut table), f)?;
