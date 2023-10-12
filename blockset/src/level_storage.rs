@@ -29,7 +29,7 @@ impl Levels {
     fn store(&mut self, table: &mut impl Table, i: usize, k: &U224) {
         let data = take(&mut self.data);
         if i == 0 {
-            assert!(data.len() > 0);
+            assert!(!data.is_empty());
             table.set_block(k, once(0x20).chain(data));
         } else {
             let ref_level = &mut self.nodes[i - 1];
@@ -95,7 +95,11 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
             assert_eq!(*k, compress_one(&[0, 0]));
             return;
         }
-        i = if i <= DATA_LEVEL { 0 } else { (i - DATA_LEVEL) / SKIP_LEVEL };
+        i = if i <= DATA_LEVEL {
+            0
+        } else {
+            (i - DATA_LEVEL) / SKIP_LEVEL
+        };
         self.levels.store(&mut self.main_table, i, k);
     }
 }
@@ -104,7 +108,7 @@ impl<P: Table, M: Table> Storage for Level4Storage<P, M> {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{mem_table::MemTable, tree::Tree, u224::U224, storage::Storage, table::Table};
+    use crate::{mem_table::MemTable, storage::Storage, table::Table, tree::Tree, u224::U224};
 
     use super::Level4Storage;
 
@@ -136,14 +140,16 @@ mod test {
     fn test() {
         small("Hello, world!");
         small("Content-Dependent Hash Tree");
-        small(r#"Imagine intercepting messages from extraterrestrials.
+        small(
+            r#"Imagine intercepting messages from extraterrestrials.
             We don’t know their language, but we assume that they use a
             sequential language unless they are from the Arrival film.
             The messages manifest as a sequence of numbers. We know that each
             number can be a finite number between 0 and N-1. How can we
             structure the stream without linguistic reference points? How do we
-            identify repetitive segments?"#);
-            /*
+            identify repetitive segments?"#,
+        );
+        /*
         small(r#"There are a lot of articles, videos, and blog posts about
             functional programming using different programming languages,
             including JavaScript.

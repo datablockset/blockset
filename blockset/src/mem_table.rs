@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{u224::U224, table::Table};
+use crate::{table::Table, u224::U224};
 
 pub type MemTable = HashMap<U224, Vec<u8>>;
 
