@@ -67,7 +67,7 @@ mod test {
         fn store(&mut self, digest: &U256, index: usize) {
             self.0.push((*digest, index));
         }
-        fn end(&mut self, digest: &U224, index: usize) {}
+        fn end(&mut self, _digest: &U224, _index: usize) {}
     }
 
     fn tree() -> Tree<MemStorage> {
@@ -208,7 +208,7 @@ mod test {
         let cpt = merge(&cp, &ct);
         let cespintercept = merge(&merge(&cespi, &cnt), &merge(&merge(&cer, &cce), &cpt));
         let cgspm = merge(&merge(&cg, &csp), &cm);
-        let cx = to_digest(b'x');
+        // let cx = to_digest(b'x');
         let cs = to_digest(b's');
         let c = [
             (ciu, 0),

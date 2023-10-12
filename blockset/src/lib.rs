@@ -16,6 +16,7 @@ mod u224;
 mod u256;
 mod u32;
 mod u512;
+mod table;
 
 #[cfg(test)]
 mod static_assert;

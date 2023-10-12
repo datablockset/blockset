@@ -57,8 +57,6 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
 
 #[cfg(test)]
 mod test {
-    use std::io::Write;
-
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
