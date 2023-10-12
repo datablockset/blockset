@@ -5,8 +5,6 @@ mod base32;
 mod bit_vec;
 mod digest;
 mod io;
-mod level_storage;
-mod mem_table;
 mod sha224;
 mod sigma32;
 mod storage;
@@ -24,5 +22,13 @@ mod static_assert;
 #[cfg(test)]
 mod virtual_io;
 
+#[cfg(test)]
+mod level_storage;
+#[cfg(test)]
+mod mem_table;
+
 pub use app::run;
 pub use io::Io;
+
+//
+pub use u32::to_u8x4;
