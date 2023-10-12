@@ -1,18 +1,19 @@
 use std::{
     cell::RefCell,
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     io::{self, Read, Write},
     iter::once,
     rc::Rc,
     vec,
 };
 
-use crate::{Io, io::Metadata};
+use crate::{io::Metadata, Io};
 
 type VecRef = Rc<RefCell<Vec<u8>>>;
 
 pub struct VirtualIo {
     pub args: Vec<String>,
+    pub directory_set: HashSet<String>,
     pub file_map: HashMap<String, VecRef>,
     pub stdout: String,
 }
@@ -23,12 +24,22 @@ impl VirtualIo {
             args: once("blockset".to_string())
                 .chain(args.iter().map(|v| v.to_string()))
                 .collect(),
+            directory_set: HashSet::default(),
             file_map: HashMap::default(),
             stdout: String::default(),
         }
     }
+    pub fn check_dir(&self, path: &str) -> io::Result<()> {
+        if let Some(d) = path.rfind('/').map(|i| &path[..i]) {
+            if !self.directory_set.contains(d) {
+                return Err(not_found());
+            }
+        }
+        Ok(())
+    }
 }
 
+#[derive(Debug)]
 pub struct MemFile {
     vec_ref: VecRef,
     pos: usize,
@@ -60,6 +71,10 @@ impl Write for MemFile {
     }
 }
 
+fn not_found() -> io::Error {
+    io::Error::new(io::ErrorKind::NotFound, "file not found")
+}
+
 impl Io for VirtualIo {
     type File = MemFile;
     type Args = vec::IntoIter<String>;
@@ -73,17 +88,23 @@ impl Io for VirtualIo {
         self.file_map
             .get(path)
             .map(|_| Metadata::default())
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
+            .ok_or_else(not_found)
     }
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
+        self.check_dir(path)?;
         let vec_ref = Rc::new(RefCell::new(Vec::default()));
         self.file_map.insert(path.to_string(), vec_ref.clone());
         Ok(MemFile::new(vec_ref))
     }
     fn open(&self, path: &str) -> io::Result<Self::File> {
+        self.check_dir(path)?;
         self.file_map
             .get(path)
             .map(|v| MemFile::new(v.clone()))
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
+            .ok_or_else(not_found)
+    }
+    fn create_dir(&mut self, path: &str) -> io::Result<()> {
+        self.directory_set.insert(path.to_string());
+        Ok(())
     }
 }

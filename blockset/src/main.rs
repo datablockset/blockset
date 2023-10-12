@@ -1,7 +1,7 @@
 use blockset::{run, Io, Metadata};
 use std::{
     env::{args, Args},
-    fs::File,
+    fs::{create_dir, File},
     io,
 };
 
@@ -31,6 +31,10 @@ impl Io for RealIo {
 
     fn metadata(&self, path: &str) -> io::Result<Metadata> {
         std::fs::metadata(path).map(|_| Metadata::default())
+    }
+
+    fn create_dir(&mut self, path: &str) -> io::Result<()> {
+        create_dir(path)
     }
 }
 

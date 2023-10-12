@@ -1,3 +1,5 @@
+use std::io;
+
 use crate::{
     digest::to_digest, sha224::compress_one, storage::Storage, subtree::SubTree, u224::U224,
 };
@@ -14,40 +16,43 @@ impl<T: Storage> Tree<T> {
             storage,
         }
     }
-    pub fn push(&mut self, c: u8) {
+    pub fn push(&mut self, c: u8) -> io::Result<()> {
         let mut i = 0;
         let mut last0 = to_digest(c);
         loop {
-            self.storage.store(&last0, i);
+            let x = self.storage.store(&last0, i);
+            x?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;
                     i += 1;
                 } else {
-                    return;
+                    return Ok(());
                 }
             } else {
                 self.state.push(SubTree::new(&last0));
-                return;
+                return Ok(());
             }
         }
     }
-    pub fn end(&mut self) -> U224 {
+    pub fn end(&mut self) -> io::Result<U224> {
         let mut last0 = [0, 0];
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
-                self.storage.store(&last0, i);
+                self.storage.store(&last0, i)?;
             }
             last0 = sub_tree.end(last0);
         }
         let key = compress_one(&last0);
-        self.storage.end(&key, self.state.len());
-        key
+        self.storage.end(&key, self.state.len())?;
+        Ok(key)
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::io;
+
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -64,10 +69,13 @@ mod test {
     struct MemStorage(Vec<(U256, usize)>);
 
     impl Storage for MemStorage {
-        fn store(&mut self, digest: &U256, index: usize) {
+        fn store(&mut self, digest: &U256, index: usize) -> io::Result<()> {
             self.0.push((*digest, index));
+            Ok(())
         }
-        fn end(&mut self, _digest: &U224, _index: usize) {}
+        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<()> {
+            Ok(())
+        }
     }
 
     fn tree() -> Tree<MemStorage> {
@@ -77,9 +85,9 @@ mod test {
     pub fn tree_from_str(s: &str) -> (Vec<(U256, usize)>, U224) {
         let mut t = tree();
         for c in s.bytes() {
-            t.push(c);
+            t.push(c).unwrap();
         }
-        let root = t.end();
+        let root = t.end().unwrap();
         (t.storage.0, root)
     }
 
@@ -87,7 +95,7 @@ mod test {
     #[test]
     fn empty_test() {
         let mut t = tree();
-        assert_eq!(t.end(), compress_one(&[0, 0]));
+        assert_eq!(t.end().unwrap(), compress_one(&[0, 0]));
     }
 
     #[wasm_bindgen_test]
@@ -118,6 +126,24 @@ mod test {
         // println!("x: {:x?}", x);
         // println!("e: {:x?}", e);
         assert_eq!(x.1, compress_one(&e));
+    }
+
+    struct BrokenStorage();
+
+    impl Storage for BrokenStorage {
+        fn store(&mut self, _digest: &U256, _index: usize) -> io::Result<()> {
+            Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
+        }
+        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<()> {
+            Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
+        }
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn fail_store_test() {
+        let mut t = Tree::new(BrokenStorage());
+        assert!(t.push(b'a').is_err());
     }
 
     #[wasm_bindgen_test]

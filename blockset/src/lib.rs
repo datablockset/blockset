@@ -6,6 +6,7 @@ mod bit_vec;
 mod digest;
 mod file_table;
 mod io;
+mod level_storage;
 mod sha224;
 mod sigma32;
 mod storage;
@@ -19,18 +20,11 @@ mod u32;
 mod u512;
 
 #[cfg(test)]
+mod mem_table;
+#[cfg(test)]
 mod static_assert;
 #[cfg(test)]
 mod virtual_io;
 
-#[cfg(test)]
-mod level_storage;
-#[cfg(test)]
-mod mem_table;
-
 pub use app::run;
 pub use io::{Io, Metadata};
-
-//
-pub use table::Tables;
-pub use u32::{from_u8x4, to_u8x4};

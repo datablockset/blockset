@@ -1,45 +1,56 @@
-use std::marker::PhantomData;
+use std::io;
 
-use crate::{Io, table::Table, u224::U224, base32::ToBase32, Tables};
+use crate::{
+    base32::ToBase32,
+    table::{Table, Type},
+    u224::U224,
+    Io,
+};
 
-pub trait Path {
-    const PREFIX: &'static str;
+pub struct FileTable<'a, T: Io>(pub &'a mut T);
+
+pub const DIR: &str = "cdt0";
+
+fn path(t: Type, key: &U224) -> String {
+    DIR.to_owned() + "/" + ["", "_"][t as usize] + &key.to_base32()
 }
 
-pub struct FileTable<'a, T: Io, P: Path>(&'a mut T, PhantomData<P>);
-
-struct MainPath();
-
-impl Path for MainPath {
-    const PREFIX: &'static str = "";
-}
-
-pub type MainFileTable<'a, T> = FileTable<'a, T, MainPath>;
-
-struct PartsPath();
-
-impl Path for PartsPath {
-    const PREFIX: &'static str = "_";
-}
-
-pub type PartsFileTable<'a, T> = FileTable<'a, T, PartsPath>;
-
-const DIR: &str = "cdt0/";
-
-fn path<P: Path>(key: &U224) -> String {
-    DIR.to_owned() + P::PREFIX + &key.to_base32()
-}
-
-impl<'a, T: Io, P: Path> Table for FileTable<'a, T, P> {
-    fn has_block(&self, key: &U224) -> bool {
-        self.0.metadata(&path::<P>(key)).is_ok()
+impl<'a, T: Io> Table for FileTable<'a, T> {
+    fn has_block(&self, t: Type, key: &U224) -> bool {
+        self.0.metadata(&path(t, key)).is_ok()
     }
 
-    fn get_block(&self, key: &U224) -> Option<Vec<u8>> {
-        self.0.read(&path::<P>(key)).ok()
+    fn get_block(&self, t: Type, key: &U224) -> io::Result<Vec<u8>> {
+        self.0.read(&path(t, key))
     }
 
-    fn set_block(&mut self, key: &U224, value: impl Iterator<Item = u8>) -> Option<()> {
-        self.0.write(&path::<P>(key), &value.collect::<Vec<_>>()).ok()
+    fn set_block(
+        &mut self,
+        t: Type,
+        key: &U224,
+        value: impl Iterator<Item = u8>,
+    ) -> io::Result<()> {
+        let x = value.collect::<Vec<_>>();
+        let p = path(t, key);
+        // println!("set_block: {} {:?} {:?} {:?}", p, t, key, x);
+        self.0.write(&p, &x)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use crate::table::Type;
+
+    use super::path;
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test() {
+        let k = [
+            0x0ae63892, 0xc81cd1b0, 0x4f97a944, 0x891a80e6, 0x9205f2b7, 0xc9d3c292, 0x397b08b5,
+        ];
+        path(Type::Main, &k);
     }
 }

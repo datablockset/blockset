@@ -2,8 +2,11 @@ use std::io::Read;
 
 use crate::{
     base32::{StrEx, ToBase32},
+    file_table::{FileTable, DIR},
     io::Io,
-    storage::Null,
+    level_storage::LevelStorage,
+    storage::{Null, Storage},
+    table::{Table, Type},
     tree::Tree,
     u224::U224,
 };
@@ -20,6 +23,21 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     }
 }
 
+fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String> {
+    let mut tree = Tree::new(s);
+    loop {
+        let mut buf = [0; 1024];
+        let size = file.read(buf.as_mut()).to_string_result()?;
+        if size == 0 {
+            break;
+        }
+        for c in buf[0..size].iter() {
+            tree.push(*c).to_string_result()?;
+        }
+    }
+    Ok(tree.end().to_string_result()?.to_base32())
+}
+
 pub fn run(io: &mut impl Io) -> Result<(), String> {
     let mut a = io.args();
     a.next().unwrap();
@@ -34,21 +52,27 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         }
         "address" => {
             let path = a.next().ok_or("missing file name")?;
-            let mut t = Tree::new(Null());
-            {
-                let mut f = io.open(&path).to_string_result()?;
-                loop {
-                    let mut buf = [0; 1024];
-                    let size = f.read(buf.as_mut()).to_string_result()?;
-                    if size == 0 {
-                        break;
-                    }
-                    for c in buf[0..size].iter() {
-                        t.push(*c);
-                    }
-                }
-            }
-            io.println(&t.end().to_base32());
+            let f = io.open(&path).to_string_result()?;
+            let k = read_to_tree(Null(), f)?;
+            io.println(&k);
+            Ok(())
+        }
+        "add" => {
+            let path = a.next().ok_or("missing file name")?;
+            let _ = io.create_dir(DIR);
+            let f = io.open(&path).to_string_result()?;
+            let mut table = FileTable(io);
+            let k = read_to_tree(LevelStorage::new(&mut table), f)?;
+            io.println(&k);
+            Ok(())
+        }
+        "get" => {
+            let b32 = a.next().ok_or("missing address")?;
+            let d = b32.from_base32::<U224>().ok_or("invalid address")?;
+            let path = a.next().ok_or("missing file name")?;
+            let mut f = io.create(&path).to_string_result()?;
+            let table = FileTable(io);
+            table.restore(Type::Main, &d, &mut f).to_string_result()?;
             Ok(())
         }
         _ => Err("unknown command".to_string()),
@@ -62,7 +86,7 @@ mod test {
     use crate::{
         base32::ToBase32,
         run,
-        sha224::compress,
+        sha224::{compress, compress_one},
         u256::{to_u224, U256},
         virtual_io::VirtualIo,
         Io,
@@ -121,5 +145,91 @@ mod test {
         ];
         let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
         assert_eq!(io.stdout, s + "\n");
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_add() {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let d: U256 = [
+            0x00000021_646c726f_77202c6f_6c6c6548,
+            0x68000000_00000000_00000000_00000000,
+        ];
+        let s = compress_one(&d).to_base32();
+        assert_eq!(io.stdout, s.clone() + "\n");
+        let v = io.read(&("cdt0/".to_owned() + &s)).unwrap();
+        assert_eq!(v, " Hello, world!".as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_get() {
+        let d: U256 = [
+            0x00000021_646c726f_77202c6f_6c6c6548,
+            0x68000000_00000000_00000000_00000000,
+        ];
+        let s = compress_one(&d).to_base32();
+        let mut io = VirtualIo::new(&["get", s.as_str(), "b.txt"]);
+        io.create_dir("cdt0").unwrap();
+        io.write(&("cdt0/".to_owned() + &s), " Hello, world!".as_bytes())
+            .unwrap();
+        run(&mut io).unwrap();
+        let v = io.read("b.txt").unwrap();
+        assert_eq!(v, "Hello, world!".as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_add_empty() {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        io.write("a.txt", "".as_bytes()).unwrap();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let d: U256 = [0, 0];
+        let s = compress_one(&d).to_base32();
+        assert_eq!(io.stdout, s.clone() + "\n");
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_get_empty() {
+        let d: U256 = [0, 0];
+        let s = compress_one(&d).to_base32();
+        let mut io = VirtualIo::new(&["get", &s, "a.txt"]);
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+    }
+
+    fn add_get(src: String) {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        io.write("a.txt", src.as_bytes()).unwrap();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let x = &io.stdout[..45];
+        io.args = ["blockset", "get", x, "b.txt"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        let e = run(&mut io);
+        assert_eq!(e, Ok(()));
+        let v = io.read("b.txt").unwrap();
+        assert_eq!(v, src.as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_big() {
+        add_get("Hello, world!".repeat(95000));
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_repeat() {
+        for i in 0..1000 {
+            add_get("X".repeat(i));
+        }
     }
 }
