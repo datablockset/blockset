@@ -30,10 +30,10 @@ fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String>
             break;
         }
         for c in buf[0..size].iter() {
-            tree.push(*c).ok_or("tree error")?;
+            tree.push(*c).to_string_result()?;
         }
     }
-    Ok(tree.end().ok_or("tree error")?.to_base32())
+    Ok(tree.end().to_string_result()?.to_base32())
 }
 
 pub fn run(io: &mut impl Io) -> Result<(), String> {

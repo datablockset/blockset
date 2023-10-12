@@ -29,9 +29,9 @@ pub trait Io {
         Ok(result)
     }
     fn write(&mut self, path: &str, data: &[u8]) -> io::Result<()> {
-        println!("write: {} {:?}", path, data);
+        // println!("write: {} {:?}", path, data);
         let mut file = self.create(path)?;
-        println!("file: {:?}", file);
+        // println!("file: {:?}", file);
         file.write_all(data)?;
         Ok(())
     }

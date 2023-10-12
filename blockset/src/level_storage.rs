@@ -1,4 +1,4 @@
-use std::{iter::once, mem::take};
+use std::{iter::once, mem::take, io};
 
 use crate::{
     digest::len,
@@ -26,7 +26,7 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> Option<()> {
+    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> io::Result<()> {
         let data = take(&mut self.data);
         if i == 0 {
             assert!(!data.is_empty());
@@ -51,7 +51,7 @@ impl Levels {
             assert_eq!(ref_level.nodes.len(), 0);
             assert_eq!(ref_level.last, [0, 0]);
         }
-        Some(())
+        Ok(())
     }
 }
 
@@ -70,17 +70,17 @@ impl<'a, T: Table> LevelStorage<'a, T> {
 }
 
 impl<'a, T: Table> Storage for LevelStorage<'a, T> {
-    fn store(&mut self, digest: &U256, mut i: usize) -> Option<()> {
+    fn store(&mut self, digest: &U256, mut i: usize) -> io::Result<()> {
         if i < DATA_LEVEL {
             if i == 0 {
                 assert_eq!(digest[1], 0x08000000_00000000_00000000_00000000);
                 self.levels.data.push(digest[0] as u8);
             }
-            return Some(());
+            return Ok(());
         }
         i -= DATA_LEVEL;
         if i % SKIP_LEVEL != 0 {
-            return Some(());
+            return Ok(());
         }
         i /= SKIP_LEVEL;
         if i >= self.levels.nodes.len() {
@@ -98,13 +98,13 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
                 assert_eq!(len_bits >> 3, self.levels.data.len());
             }
         }
-        Some(())
+        Ok(())
     }
 
-    fn end(&mut self, k: &U224, mut i: usize) -> Option<()> {
+    fn end(&mut self, k: &U224, mut i: usize) -> io::Result<()> {
         if i == 0 {
             assert_eq!(*k, compress_one(&[0, 0]));
-            return Some(());
+            return Ok(());
         }
         i = if i <= DATA_LEVEL {
             0
@@ -117,6 +117,8 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
 
 #[cfg(test)]
 mod test {
+    use std::io;
+
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -132,7 +134,7 @@ mod test {
 
     fn tree_from_str<T: Storage>(tree: &mut Tree<T>, s: &str) -> U224 {
         for c in s.bytes() {
-            tree.push(c);
+            tree.push(c).unwrap();
         }
         tree.end().unwrap()
     }
@@ -149,12 +151,12 @@ mod test {
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
-    fn restore<T: Table>(table: &T, t: Type, k: &U224) -> Option<Vec<u8>> {
+    fn restore<T: Table>(table: &T, t: Type, k: &U224) -> io::Result<Vec<u8>> {
         let mut v = table.get_block(t, &k)?;
-        let mut len = *v.first()? as usize;
+        let mut len = *v.first().unwrap() as usize;
         if len == 0x20 {
             v.remove(0);
-            Some(v)
+            Ok(v)
         } else {
             let mut result = Vec::new();
             len += 1;
@@ -164,13 +166,13 @@ mod test {
                 for ki in &mut kn {
                     let n = i + 4;
                     let slice = &v[i..n];
-                    *ki = from_u8x4(slice.try_into().ok()?);
+                    *ki = from_u8x4(slice.try_into().unwrap());
                     i = n;
                 }
                 result.extend(restore(table, Type::Parts, &kn)?);
             }
             result.extend(&v[1..len]);
-            Some(result)
+            Ok(result)
         }
     }
 
