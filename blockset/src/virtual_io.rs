@@ -11,6 +11,11 @@ use crate::{io::Metadata, Io};
 
 type VecRef = Rc<RefCell<Vec<u8>>>;
 
+enum Object {
+    File(VecRef),
+    Dir(HashMap<String, Object>),
+}
+
 pub struct VirtualIo {
     pub args: Vec<String>,
     pub file_map: HashMap<String, VecRef>,
@@ -61,6 +66,10 @@ impl Write for MemFile {
     }
 }
 
+fn not_found() -> io::Error {
+    io::Error::new(io::ErrorKind::NotFound, "file not found")
+}
+
 impl Io for VirtualIo {
     type File = MemFile;
     type Args = vec::IntoIter<String>;
@@ -74,7 +83,7 @@ impl Io for VirtualIo {
         self.file_map
             .get(path)
             .map(|_| Metadata::default())
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
+            .ok_or_else(not_found)
     }
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
         let vec_ref = Rc::new(RefCell::new(Vec::default()));
@@ -85,7 +94,7 @@ impl Io for VirtualIo {
         self.file_map
             .get(path)
             .map(|v| MemFile::new(v.clone()))
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "file not found"))
+            .ok_or_else(not_found)
     }
     fn create_dir(&mut self, _path: &str) -> io::Result<()> {
         Ok(())
