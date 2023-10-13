@@ -9,7 +9,7 @@ Internal documentation: https://blockset.pages.dev/.
 ### Best practices
 
 - Avoid `unsafe` code. Currently, we don't have `unsafe` code.
-- Avoid using macros.
+- Avoid using macros. Allowed macros: `derive`, `cfg`, `test`, `assert..`, `wasm_bindgen_test`.
 - Make `const` functions if possible.
 - No I/O is allowed in a library. We have 100% code coverage.
 - Avoid using dependencies, especially if they use I/O directly.
