@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Write};
 
 use crate::{
     base32::{StrEx, ToBase32},
@@ -38,7 +38,17 @@ fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String>
     Ok(tree.end().to_string_result()?.to_base32())
 }
 
+fn print(w: &mut impl Write, s: &str) -> Result<(), String> {
+    w.write_all(s.as_bytes()).to_string_result()
+}
+
+fn println(w: &mut impl Write, s: &str) -> Result<(), String> {
+    print(w, s)?;
+    print(w, "\n")
+}
+
 pub fn run(io: &mut impl Io) -> Result<(), String> {
+    let stdout = &mut io.stdout();
     let mut a = io.args();
     a.next().unwrap();
     let command = a.next().ok_or("missing command")?;
@@ -46,15 +56,15 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         "validate" => {
             let b32 = a.next().ok_or("missing address")?;
             let d = b32.from_base32::<U224>().ok_or("invalid address")?;
-            io.print("valid: ");
-            io.println(&d.to_base32());
+            print(stdout, "valid: ")?;
+            println(stdout, &d.to_base32())?;
             Ok(())
         }
         "address" => {
             let path = a.next().ok_or("missing file name")?;
             let f = io.open(&path).to_string_result()?;
             let k = read_to_tree(Null(), f)?;
-            io.println(&k);
+            println(stdout, &k)?;
             Ok(())
         }
         "add" => {
@@ -63,7 +73,7 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             let f = io.open(&path).to_string_result()?;
             let mut table = FileTable(io);
             let k = read_to_tree(LevelStorage::new(&mut table), f)?;
-            io.println(&k);
+            println(stdout, &k)?;
             Ok(())
         }
         "get" => {
@@ -144,7 +154,7 @@ mod test {
             0x68000000_00000000_00000000_00000000,
         ];
         let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
-        assert_eq!(io.stdout, s + "\n");
+        assert_eq!(io.stdout.to_string(), s + "\n");
     }
 
     #[wasm_bindgen_test]
@@ -159,7 +169,7 @@ mod test {
             0x68000000_00000000_00000000_00000000,
         ];
         let s = compress_one(&d).to_base32();
-        assert_eq!(io.stdout, s.clone() + "\n");
+        assert_eq!(io.stdout.to_string(), s.clone() + "\n");
         let v = io.read(&("cdt0/".to_owned() + &s)).unwrap();
         assert_eq!(v, " Hello, world!".as_bytes());
     }
@@ -190,7 +200,7 @@ mod test {
         assert_eq!(e, Ok(()));
         let d: U256 = [0, 0];
         let s = compress_one(&d).to_base32();
-        assert_eq!(io.stdout, s.clone() + "\n");
+        assert_eq!(io.stdout.to_string(), s.clone() + "\n");
     }
 
     #[wasm_bindgen_test]
@@ -208,7 +218,7 @@ mod test {
         io.write("a.txt", src.as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
-        let x = &io.stdout[..45];
+        let x = &io.stdout.to_string()[..45];
         io.args = ["blockset", "get", x, "b.txt"]
             .iter()
             .map(|s| s.to_string())

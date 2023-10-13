@@ -3,7 +3,7 @@
 use std::{
     env::{args, Args},
     fs::{self, create_dir, File},
-    io,
+    io::{self, Stdout},
 };
 
 use crate::{Io, Metadata};
@@ -20,6 +20,7 @@ pub struct RealIo();
 impl Io for RealIo {
     type Args = Args;
 
+    type Stdout = Stdout;
     type File = File;
     type Metadata = fs::Metadata;
 
@@ -27,9 +28,11 @@ impl Io for RealIo {
         args()
     }
 
+    /*
     fn print(&mut self, text: &str) {
         print!("{}", text);
     }
+    */
 
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
         File::create(path)
@@ -40,10 +43,14 @@ impl Io for RealIo {
     }
 
     fn metadata(&self, path: &str) -> io::Result<fs::Metadata> {
-        std::fs::metadata(path)
+        fs::metadata(path)
     }
 
     fn create_dir(&mut self, path: &str) -> io::Result<()> {
         create_dir(path)
+    }
+
+    fn stdout(&mut self) -> Self::Stdout {
+        io::stdout()
     }
 }
