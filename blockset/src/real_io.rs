@@ -1,8 +1,12 @@
 #![cfg(not(tarpaulin_include))]
 
-use std::{fs::{self, File, create_dir}, env::{Args, args}, io};
+use std::{
+    env::{args, Args},
+    fs::{self, create_dir, File},
+    io,
+};
 
-use crate::{Metadata, Io};
+use crate::{Io, Metadata};
 
 impl Metadata for fs::Metadata {
     fn len(&self) -> u64 {

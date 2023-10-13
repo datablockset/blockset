@@ -1,8 +1,9 @@
 use std::{
     fmt,
-    io::{self, Read, Write}, fs,
+    io::{self, Read, Write},
 };
 
+#[allow(clippy::len_without_is_empty)]
 pub trait Metadata {
     fn len(&self) -> u64;
 }
