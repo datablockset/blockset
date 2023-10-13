@@ -1,4 +1,4 @@
-use std::io::{Read, Write, self};
+use std::io::{Read, Write};
 
 use crate::{
     base32::{StrEx, ToBase32},
@@ -64,7 +64,7 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             let path = a.next().ok_or("missing file name")?;
             let f = io.open(&path).to_string_result()?;
             let k = read_to_tree(Null(), f)?;
-            println(stdout,&k)?;
+            println(stdout, &k)?;
             Ok(())
         }
         "add" => {
@@ -73,7 +73,7 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             let f = io.open(&path).to_string_result()?;
             let mut table = FileTable(io);
             let k = read_to_tree(LevelStorage::new(&mut table), f)?;
-            println(stdout,&k)?;
+            println(stdout, &k)?;
             Ok(())
         }
         "get" => {

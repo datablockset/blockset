@@ -4,7 +4,8 @@ use std::{
     io::{self, Read, Write},
     iter::once,
     rc::Rc,
-    vec, str::from_utf8,
+    str::from_utf8,
+    vec,
 };
 
 use crate::io::Io;
@@ -20,7 +21,7 @@ impl crate::io::Metadata for Metadata {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct VecRef (Rc<RefCell<Vec<u8>>>);
+pub struct VecRef(Rc<RefCell<Vec<u8>>>);
 
 impl VecRef {
     pub fn to_string(&self) -> String {
