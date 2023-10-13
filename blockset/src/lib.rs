@@ -7,6 +7,7 @@ mod digest;
 mod file_table;
 mod io;
 mod level_storage;
+mod real_io;
 mod sha224;
 mod sigma32;
 mod storage;
@@ -28,3 +29,4 @@ mod virtual_io;
 
 pub use app::run;
 pub use io::{Io, Metadata};
+pub use real_io::RealIo;

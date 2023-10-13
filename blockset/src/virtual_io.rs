@@ -7,7 +7,17 @@ use std::{
     vec,
 };
 
-use crate::{io::Metadata, Io};
+use crate::io::Io;
+
+pub struct Metadata {
+    len: u64,
+}
+
+impl crate::io::Metadata for Metadata {
+    fn len(&self) -> u64 {
+        self.len
+    }
+}
 
 type VecRef = Rc<RefCell<Vec<u8>>>;
 
@@ -78,6 +88,7 @@ fn not_found() -> io::Error {
 impl Io for VirtualIo {
     type File = MemFile;
     type Args = vec::IntoIter<String>;
+    type Metadata = Metadata;
     fn args(&self) -> Self::Args {
         self.args.clone().into_iter()
     }
@@ -87,7 +98,9 @@ impl Io for VirtualIo {
     fn metadata(&self, path: &str) -> io::Result<Metadata> {
         self.file_map
             .get(path)
-            .map(|_| Metadata::default())
+            .map(|v| Metadata {
+                len: v.borrow().len() as u64,
+            })
             .ok_or_else(not_found)
     }
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
