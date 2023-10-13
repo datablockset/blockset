@@ -8,7 +8,7 @@ use crate::{
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
-    u224::U224,
+    u224::U224, Metadata,
 };
 
 trait ResultEx {
@@ -23,9 +23,17 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     }
 }
 
-fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String> {
+fn read_to_tree<T: Storage>(
+    s: T,
+    mut file: impl Read,
+    len: u64,
+    stdout: &mut impl Write,
+) -> Result<String, String> {
     let mut tree = Tree::new(s);
+    let mut i = 0;
     loop {
+        let p = (i / len).to_string();
+        // print(stdout, &p).to_string_result()?;
         let mut buf = [0; 1024];
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
@@ -34,6 +42,7 @@ fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String>
         for c in buf[0..size].iter() {
             tree.push(*c).to_string_result()?;
         }
+        i += size as u64;
     }
     Ok(tree.end().to_string_result()?.to_base32())
 }
@@ -62,17 +71,19 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         }
         "address" => {
             let path = a.next().ok_or("missing file name")?;
+            let len = io.metadata(&path).to_string_result()?.len();
             let f = io.open(&path).to_string_result()?;
-            let k = read_to_tree(Null(), f)?;
+            let k = read_to_tree(Null(), f, len, stdout)?;
             println(stdout, &k)?;
             Ok(())
         }
         "add" => {
             let path = a.next().ok_or("missing file name")?;
             let _ = io.create_dir(DIR);
+            let len = io.metadata(&path).to_string_result()?.len();
             let f = io.open(&path).to_string_result()?;
             let mut table = FileTable(io);
-            let k = read_to_tree(LevelStorage::new(&mut table), f)?;
+            let k = read_to_tree(LevelStorage::new(&mut table), f, len, stdout)?;
             println(stdout, &k)?;
             Ok(())
         }
