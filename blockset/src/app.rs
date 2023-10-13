@@ -8,7 +8,8 @@ use crate::{
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
-    u224::U224, Metadata,
+    u224::U224,
+    Metadata,
 };
 
 trait ResultEx {
@@ -31,18 +32,20 @@ fn read_to_tree<T: Storage>(
 ) -> Result<String, String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
-    loop {
-        let p = (i / len).to_string();
-        // print(stdout, &p).to_string_result()?;
-        let mut buf = [0; 1024];
-        let size = file.read(buf.as_mut()).to_string_result()?;
-        if size == 0 {
-            break;
+    if len != 0 {
+        loop {
+            let p = (i / len).to_string();
+            // print(stdout, &p).to_string_result()?;
+            let mut buf = [0; 1024];
+            let size = file.read(buf.as_mut()).to_string_result()?;
+            if size == 0 {
+                break;
+            }
+            for c in buf[0..size].iter() {
+                tree.push(*c).to_string_result()?;
+            }
+            i += size as u64;
         }
-        for c in buf[0..size].iter() {
-            tree.push(*c).to_string_result()?;
-        }
-        i += size as u64;
     }
     Ok(tree.end().to_string_result()?.to_base32())
 }
