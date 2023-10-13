@@ -11,13 +11,17 @@ pub trait Metadata {
 pub trait Io {
     type Args: Iterator<Item = String>;
     type File: Read + Write + fmt::Debug;
+    type Stdout: Write;
     type Metadata: Metadata;
     fn args(&self) -> Self::Args;
+    fn stdout(&mut self) -> Self::Stdout;
+    /*
     fn print(&mut self, s: &str);
     fn println(&mut self, s: &str) {
         self.print(s);
         self.print("\n");
     }
+    */
     fn metadata(&self, path: &str) -> io::Result<Self::Metadata>;
     fn create_dir(&mut self, path: &str) -> io::Result<()>;
     fn create(&mut self, path: &str) -> io::Result<Self::File>;

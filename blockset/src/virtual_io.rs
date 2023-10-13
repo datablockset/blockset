@@ -4,7 +4,7 @@ use std::{
     io::{self, Read, Write},
     iter::once,
     rc::Rc,
-    vec,
+    vec, str::from_utf8,
 };
 
 use crate::io::Io;
@@ -19,13 +19,30 @@ impl crate::io::Metadata for Metadata {
     }
 }
 
-type VecRef = Rc<RefCell<Vec<u8>>>;
+#[derive(Debug, Default, Clone)]
+pub struct VecRef (Rc<RefCell<Vec<u8>>>);
+
+impl VecRef {
+    pub fn to_string(&self) -> String {
+        from_utf8(&self.0.borrow()).unwrap().to_string()
+    }
+}
+
+impl Write for VecRef {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.borrow_mut().extend_from_slice(buf);
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
 
 pub struct VirtualIo {
     pub args: Vec<String>,
     pub directory_set: HashSet<String>,
     pub file_map: HashMap<String, VecRef>,
-    pub stdout: String,
+    pub stdout: VecRef,
 }
 
 impl VirtualIo {
@@ -36,7 +53,7 @@ impl VirtualIo {
                 .collect(),
             directory_set: HashSet::default(),
             file_map: HashMap::default(),
-            stdout: String::default(),
+            stdout: VecRef::default(),
         }
     }
     pub fn check_dir(&self, path: &str) -> io::Result<()> {
@@ -63,7 +80,7 @@ impl MemFile {
 
 impl Read for MemFile {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let sorce = &self.vec_ref.borrow()[self.pos..];
+        let sorce = &self.vec_ref.0.borrow()[self.pos..];
         let len = sorce.len().min(buf.len());
         buf[..len].copy_from_slice(&sorce[..len]);
         self.pos += len;
@@ -73,11 +90,10 @@ impl Read for MemFile {
 
 impl Write for MemFile {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.vec_ref.borrow_mut().extend_from_slice(buf);
-        Ok(buf.len())
+        self.vec_ref.write(buf)
     }
     fn flush(&mut self) -> io::Result<()> {
-        Ok(())
+        self.vec_ref.flush()
     }
 }
 
@@ -87,25 +103,29 @@ fn not_found() -> io::Error {
 
 impl Io for VirtualIo {
     type File = MemFile;
+    type Stdout = VecRef;
     type Args = vec::IntoIter<String>;
     type Metadata = Metadata;
     fn args(&self) -> Self::Args {
         self.args.clone().into_iter()
     }
+    /*
     fn print(&mut self, s: &str) {
         self.stdout.push_str(s);
     }
+    */
+
     fn metadata(&self, path: &str) -> io::Result<Metadata> {
         self.file_map
             .get(path)
             .map(|v| Metadata {
-                len: v.borrow().len() as u64,
+                len: v.0.borrow().len() as u64,
             })
             .ok_or_else(not_found)
     }
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
         self.check_dir(path)?;
-        let vec_ref = Rc::new(RefCell::new(Vec::default()));
+        let vec_ref = VecRef::default();
         self.file_map.insert(path.to_string(), vec_ref.clone());
         Ok(MemFile::new(vec_ref))
     }
@@ -119,5 +139,9 @@ impl Io for VirtualIo {
     fn create_dir(&mut self, path: &str) -> io::Result<()> {
         self.directory_set.insert(path.to_string());
         Ok(())
+    }
+
+    fn stdout(&mut self) -> VecRef {
+        self.stdout.clone()
     }
 }
