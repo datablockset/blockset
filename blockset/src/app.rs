@@ -24,27 +24,41 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     }
 }
 
+fn replace(stdout: &mut impl Write, len: usize, s: &str) -> Result<usize, String> {
+    let mut vec = Vec::default();
+    for _ in 0..len {
+        vec.push(8);
+    }
+    vec.extend_from_slice(s.as_bytes());
+    stdout.write(&vec).to_string_result()?;
+    Ok(s.len())
+}
+
 fn read_to_tree<T: Storage>(
     s: T,
     mut file: impl Read,
     len: u64,
-    _stdout: &mut impl Write,
+    stdout: &mut impl Write,
 ) -> Result<String, String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
-    if len != 0 {
-        loop {
-            let _p = (i * 100 / len).to_string() + "%";
-            // print(stdout, &p).to_string_result()?;
-            let mut buf = [0; 1024];
-            let size = file.read(buf.as_mut()).to_string_result()?;
-            if size == 0 {
-                break;
-            }
-            for c in buf[0..size].iter() {
-                tree.push(*c).to_string_result()?;
-            }
-            i += size as u64;
+    let mut prior = 0;
+    loop {
+        let mut buf = [0; 1024];
+        let p = if len == 0 {
+            String::default()
+        } else {
+            (i * 100 / len).to_string() + "%"
+        };
+        prior = replace(stdout, prior, &p)?;
+        let size = file.read(buf.as_mut()).to_string_result()?;
+        if size == 0 {
+            replace(stdout, prior, "")?;
+            break;
+        }
+        i += size as u64;
+        for c in buf[0..size].iter() {
+            tree.push(*c).to_string_result()?;
         }
     }
     Ok(tree.end().to_string_result()?.to_base32())
