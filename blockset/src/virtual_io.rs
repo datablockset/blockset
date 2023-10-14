@@ -52,9 +52,20 @@ pub struct FileSystem {
     file_map: HashMap<String, VecRef>,
 }
 
+impl FileSystem {
+    pub fn check_dir(&self, path: &str) -> io::Result<()> {
+        if let Some(d) = path.rfind('/').map(|i| &path[..i]) {
+            if !self.directory_set.contains(d) {
+                return Err(not_found());
+            }
+        }
+        Ok(())
+    }
+}
+
 pub struct VirtualIo {
     pub args: Vec<String>,
-    pub fs: FileSystem,
+    pub fs: RefCell<FileSystem>,
     pub stdout: VecRef,
 }
 
@@ -64,17 +75,9 @@ impl VirtualIo {
             args: once("blockset".to_string())
                 .chain(args.iter().map(|v| v.to_string()))
                 .collect(),
-            fs: FileSystem::default(),
+            fs: Default::default(),
             stdout: VecRef::default(),
         }
-    }
-    pub fn check_dir(&self, path: &str) -> io::Result<()> {
-        if let Some(d) = path.rfind('/').map(|i| &path[..i]) {
-            if !self.fs.directory_set.contains(d) {
-                return Err(not_found());
-            }
-        }
-        Ok(())
     }
 }
 
@@ -122,7 +125,8 @@ impl Io for VirtualIo {
         self.args.clone().into_iter()
     }
     fn metadata(&self, path: &str) -> io::Result<Metadata> {
-        self.fs.file_map
+        let fs = self.fs.borrow();
+        fs.file_map
             .get(path)
             .map(|v| Metadata {
                 len: v.0.borrow().len() as u64,
@@ -130,20 +134,23 @@ impl Io for VirtualIo {
             .ok_or_else(not_found)
     }
     fn create(&mut self, path: &str) -> io::Result<Self::File> {
-        self.check_dir(path)?;
+        let mut fs = self.fs.borrow_mut();
+        fs.check_dir(path)?;
         let vec_ref = VecRef::default();
-        self.fs.file_map.insert(path.to_string(), vec_ref.clone());
+        fs.file_map.insert(path.to_string(), vec_ref.clone());
         Ok(MemFile::new(vec_ref))
     }
     fn open(&self, path: &str) -> io::Result<Self::File> {
-        self.check_dir(path)?;
-        self.fs.file_map
+        let fs = self.fs.borrow();
+        fs.check_dir(path)?;
+        fs.file_map
             .get(path)
             .map(|v| MemFile::new(v.clone()))
             .ok_or_else(not_found)
     }
     fn create_dir(&mut self, path: &str) -> io::Result<()> {
-        self.fs.directory_set.insert(path.to_string());
+        let mut fs = self.fs.borrow_mut();
+        fs.directory_set.insert(path.to_string());
         Ok(())
     }
     fn stdout(&self) -> VecRef {
