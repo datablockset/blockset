@@ -7,7 +7,7 @@ use crate::{
     Io,
 };
 
-pub struct FileTable<'a, T: Io>(pub &'a mut T);
+pub struct FileTable<'a, T: Io>(pub &'a T);
 
 pub const DIR: &str = "cdt0";
 
@@ -32,7 +32,6 @@ impl<'a, T: Io> Table for FileTable<'a, T> {
     ) -> io::Result<()> {
         let x = value.collect::<Vec<_>>();
         let p = path(t, key);
-        // println!("set_block: {} {:?} {:?} {:?}", p, t, key, x);
         self.0.write(&p, &x)
     }
 }

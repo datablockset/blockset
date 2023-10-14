@@ -58,13 +58,13 @@ impl Levels {
     }
 }
 
-pub struct LevelStorage<'a, T: Table> {
-    table: &'a mut T,
+pub struct LevelStorage<T: Table> {
+    table: T,
     levels: Levels,
 }
 
-impl<'a, T: Table> LevelStorage<'a, T> {
-    pub fn new(table: &'a mut T) -> Self {
+impl<T: Table> LevelStorage<T> {
+    pub fn new(table: T) -> Self {
         Self {
             table,
             levels: Default::default(),
@@ -72,7 +72,7 @@ impl<'a, T: Table> LevelStorage<'a, T> {
     }
 }
 
-impl<'a, T: Table> Storage for LevelStorage<'a, T> {
+impl<T: Table> Storage for LevelStorage<T> {
     fn store(&mut self, digest: &U256, mut i: usize) -> io::Result<()> {
         if i < DATA_LEVEL {
             if i == 0 {
@@ -92,7 +92,7 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(self.table, Type::Parts, i, &k)?;
+            self.levels.store(&mut self.table, Type::Parts, i, &k)?;
         } else {
             level.last = *digest;
             {
@@ -114,7 +114,7 @@ impl<'a, T: Table> Storage for LevelStorage<'a, T> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(self.table, Type::Main, i, k)
+        self.levels.store(&mut self.table, Type::Main, i, k)
     }
 }
 
@@ -149,7 +149,7 @@ mod test {
     fn small(c: &str) {
         let mut table = MemTable::default();
         let k = add(&mut table, c);
-        let v = table.get_block(Type::Main, &k).unwrap();
+        let v = (&mut table).get_block(Type::Main, &k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
@@ -158,7 +158,7 @@ mod test {
         let k = add(&mut table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);
-        table.restore(Type::Main, &k, &mut cursor).unwrap();
+        (&mut table).restore(Type::Main, &k, &mut cursor).unwrap();
         assert_eq!(v, c.as_bytes());
     }
 

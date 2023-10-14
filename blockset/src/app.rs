@@ -71,7 +71,21 @@ fn println(w: &mut impl Write, s: &str) -> Result<(), String> {
     print(w, "\n")
 }
 
-pub fn run(io: &mut impl Io) -> Result<(), String> {
+fn add<'a, T: Io, S: 'a + Storage>(
+    io: &'a T,
+    a: &mut T::Args,
+    storage: impl Fn(&'a T) -> S,
+) -> Result<(), String> {
+    let stdout = &mut io.stdout();
+    let path = a.next().ok_or("missing file name")?;
+    let len = io.metadata(&path).to_string_result()?.len();
+    let f = io.open(&path).to_string_result()?;
+    let k = read_to_tree(storage(io), f, len, stdout)?;
+    println(stdout, &k)?;
+    Ok(())
+}
+
+pub fn run(io: &impl Io) -> Result<(), String> {
     let stdout = &mut io.stdout();
     let mut a = io.args();
     a.next().unwrap();
@@ -84,24 +98,11 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
             println(stdout, &d.to_base32())?;
             Ok(())
         }
-        "address" => {
-            let path = a.next().ok_or("missing file name")?;
-            let len = io.metadata(&path).to_string_result()?.len();
-            let f = io.open(&path).to_string_result()?;
-            let k = read_to_tree(Null(), f, len, stdout)?;
-            println(stdout, &k)?;
-            Ok(())
-        }
-        "add" => {
-            let path = a.next().ok_or("missing file name")?;
+        "address" => add(io, &mut a, |_| Null()),
+        "add" => add(io, &mut a, |io| {
             let _ = io.create_dir(DIR);
-            let len = io.metadata(&path).to_string_result()?.len();
-            let f = io.open(&path).to_string_result()?;
-            let mut table = FileTable(io);
-            let k = read_to_tree(LevelStorage::new(&mut table), f, len, stdout)?;
-            println(stdout, &k)?;
-            Ok(())
-        }
+            LevelStorage::new(FileTable(io))
+        }),
         "get" => {
             let b32 = a.next().ok_or("missing address")?;
             let d = b32.from_base32::<U224>().ok_or("invalid address")?;
