@@ -40,7 +40,6 @@ impl Levels {
                 assert_eq!(len_bits >> 3, data.len());
             }
             // we should have at least one node.
-            // assert_ne!(level.nodes.len(), 0);
             if level.nodes.first().unwrap() == k {
                 assert_eq!(level.nodes.len(), 1);
                 assert_eq!(level.last, [0, 0]);

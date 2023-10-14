@@ -26,6 +26,7 @@ pub trait Table {
         }
         Ok(())
     }
+    // we should extract a state machine from the function and remove `set_progress`.
     fn restore(
         &self,
         mut t: Type,
