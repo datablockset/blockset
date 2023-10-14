@@ -50,7 +50,7 @@ impl Io for RealIo {
         create_dir(path)
     }
 
-    fn stdout(&mut self) -> Self::Stdout {
+    fn stdout(&self) -> Self::Stdout {
         io::stdout()
     }
 }
