@@ -10,6 +10,7 @@ mod level_storage;
 mod real_io;
 mod sha224;
 mod sigma32;
+mod state;
 mod storage;
 mod subtree;
 mod table;

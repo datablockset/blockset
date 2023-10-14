@@ -5,6 +5,7 @@ use crate::{
     file_table::{FileTable, DIR},
     io::Io,
     level_storage::LevelStorage,
+    state::State,
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
@@ -24,14 +25,6 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     }
 }
 
-fn replace(stdout: &mut impl Write, len: usize, s: &str) -> Result<usize, String> {
-    let mut vec = Vec::default();
-    vec.resize(len, 8);
-    vec.extend_from_slice(s.as_bytes());
-    stdout.write(&vec).to_string_result()?;
-    Ok(s.len())
-}
-
 fn read_to_tree<T: Storage>(
     s: T,
     mut file: impl Read,
@@ -40,18 +33,13 @@ fn read_to_tree<T: Storage>(
 ) -> Result<String, String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
-    let mut prior = 0;
+    let mut state = State::new(stdout);
     loop {
         let mut buf = [0; 1024];
-        let p = if len == 0 {
-            String::default()
-        } else {
-            (i * 100 / len).to_string() + "%"
-        };
-        prior = replace(stdout, prior, &p)?;
+        let p = if len == 0 { 100 } else { i * 100 / len };
+        state.set_percent(p as u8).to_string_result()?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
-            replace(stdout, prior, "")?;
             break;
         }
         i += size as u64;
@@ -109,7 +97,9 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             let path = a.next().ok_or("missing file name")?;
             let mut f = io.create(&path).to_string_result()?;
             let table = FileTable(io);
-            table.restore(Type::Main, &d, &mut f).to_string_result()?;
+            table
+                .restore(Type::Main, &d, &mut f, stdout)
+                .to_string_result()?;
             Ok(())
         }
         _ => Err("unknown command".to_string()),
