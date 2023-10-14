@@ -26,9 +26,7 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
 
 fn replace(stdout: &mut impl Write, len: usize, s: &str) -> Result<usize, String> {
     let mut vec = Vec::default();
-    for _ in 0..len {
-        vec.push(8);
-    }
+    vec.resize(len, 8);
     vec.extend_from_slice(s.as_bytes());
     stdout.write(&vec).to_string_result()?;
     Ok(s.len())
