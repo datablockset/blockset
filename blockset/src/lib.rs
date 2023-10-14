@@ -10,6 +10,7 @@ mod level_storage;
 mod real_io;
 mod sha224;
 mod sigma32;
+mod state;
 mod storage;
 mod subtree;
 mod table;
@@ -18,7 +19,6 @@ mod u128;
 mod u224;
 mod u256;
 mod u32;
-mod state;
 mod u512;
 
 #[cfg(test)]

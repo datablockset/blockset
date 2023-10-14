@@ -1,4 +1,4 @@
-use std::io::{Write, self};
+use std::io::{self, Write};
 
 pub struct State<'a, T: Write> {
     stdout: &'a mut T,
@@ -13,7 +13,7 @@ impl<'a, T: Write> State<'a, T> {
         let mut vec = Vec::default();
         vec.resize(self.prior, 8);
         vec.extend_from_slice(s.as_bytes());
-        self.stdout.write(&vec)?;
+        self.stdout.write_all(&vec)?;
         self.prior = s.len();
         Ok(())
     }

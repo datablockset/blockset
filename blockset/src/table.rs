@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use crate::{sha224::compress_one, u224::U224, u32::from_u8x4};
+use crate::{sha224::compress_one, state::State, u224::U224, u32::from_u8x4};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
@@ -31,18 +31,23 @@ pub trait Table {
         mut t: Type,
         k: &U224,
         w: &mut impl Write,
-        _stdout: &mut impl Write,
+        stdout: &mut impl Write,
     ) -> io::Result<()> {
         if *k == EMPTY {
             return Ok(());
         }
         let mut tail = Vec::default();
-        let mut keys = [*k].to_vec();
-        while let Some(key) = keys.pop() {
+        let mut keys = [(*k, 1.0)].to_vec();
+        let mut progress = 0.0;
+        let mut state = State::new(stdout);
+        state.set_percent(0)?;
+        while let Some((key, size)) = keys.pop() {
             let v = self.get_block(t, &key)?;
             let mut len = *v.first().unwrap() as usize;
             if len == 0x20 {
+                progress += size;
                 w.write_all(&v[1..])?;
+                state.set_percent((progress * 100.0) as u8)?;
             } else {
                 len += 1;
                 if len > 1 {
@@ -50,6 +55,8 @@ pub trait Table {
                     tail = v[1..len].to_vec();
                 }
                 let mut i = v.len();
+                assert_eq!((i - len) % 28, 0);
+                let size = size / ((i - len) / 28) as f64;
                 while len + 28 <= i {
                     let mut kn = U224::default();
                     i -= 28;
@@ -60,7 +67,7 @@ pub trait Table {
                         *ki = from_u8x4(slice.try_into().unwrap());
                         j = n;
                     }
-                    keys.push(kn);
+                    keys.push((kn, size));
                 }
             }
             t = Type::Parts;

@@ -5,11 +5,12 @@ use crate::{
     file_table::{FileTable, DIR},
     io::Io,
     level_storage::LevelStorage,
+    state::State,
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
     u224::U224,
-    Metadata, state::State,
+    Metadata,
 };
 
 trait ResultEx {
@@ -35,11 +36,7 @@ fn read_to_tree<T: Storage>(
     let mut state = State::new(stdout);
     loop {
         let mut buf = [0; 1024];
-        let p = if len == 0 {
-            100
-        } else {
-            i * 100 / len
-        };
+        let p = if len == 0 { 100 } else { i * 100 / len };
         state.set_percent(p as u8).to_string_result()?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
