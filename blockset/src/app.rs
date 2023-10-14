@@ -24,12 +24,28 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     }
 }
 
-fn replace(stdout: &mut impl Write, len: usize, s: &str) -> Result<usize, String> {
-    let mut vec = Vec::default();
-    vec.resize(len, 8);
-    vec.extend_from_slice(s.as_bytes());
-    stdout.write(&vec).to_string_result()?;
-    Ok(s.len())
+struct State<'a, T: Write> {
+    stdout: &'a mut T,
+    prior: usize,
+}
+
+impl<'a, T: Write> State<'a, T> {
+    fn new(stdout: &'a mut T) -> Self {
+        Self { stdout, prior: 0 }
+    }
+    fn set(&mut self, s: &str) -> Result<(), String> {
+        let mut vec = Vec::default();
+        vec.resize(self.prior, 8);
+        vec.extend_from_slice(s.as_bytes());
+        self.stdout.write(&vec).to_string_result()?;
+        self.prior = s.len();
+        Ok(())
+    }
+}
+impl<'a, T: Write> Drop for State<'a, T> {
+    fn drop(&mut self) {
+        let _ = self.set("");
+    }
 }
 
 fn read_to_tree<T: Storage>(
@@ -40,7 +56,7 @@ fn read_to_tree<T: Storage>(
 ) -> Result<String, String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
-    let mut prior = 0;
+    let mut state = State::new(stdout);
     loop {
         let mut buf = [0; 1024];
         let p = if len == 0 {
@@ -48,10 +64,9 @@ fn read_to_tree<T: Storage>(
         } else {
             (i * 100 / len).to_string() + "%"
         };
-        prior = replace(stdout, prior, &p)?;
+        state.set(&p)?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
-            replace(stdout, prior, "")?;
             break;
         }
         i += size as u64;
@@ -109,7 +124,7 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             let path = a.next().ok_or("missing file name")?;
             let mut f = io.create(&path).to_string_result()?;
             let table = FileTable(io);
-            table.restore(Type::Main, &d, &mut f).to_string_result()?;
+            table.restore(Type::Main, &d, &mut f, stdout).to_string_result()?;
             Ok(())
         }
         _ => Err("unknown command".to_string()),

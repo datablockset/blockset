@@ -154,11 +154,18 @@ mod test {
     }
 
     fn big(c: &str) {
-        let mut table = MemTable::default();
-        let k = add(&mut table, c);
+        let table = &mut MemTable::default();
+        let k = add(table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);
-        (&mut table).restore(Type::Main, &k, &mut cursor).unwrap();
+        table
+            .restore(
+                Type::Main,
+                &k,
+                &mut cursor,
+                &mut Cursor::<Vec<_>>::default(),
+            )
+            .unwrap();
         assert_eq!(v, c.as_bytes());
     }
 
