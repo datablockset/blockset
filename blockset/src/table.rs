@@ -26,7 +26,13 @@ pub trait Table {
         }
         Ok(())
     }
-    fn restore(&self, mut t: Type, k: &U224, w: &mut impl Write, _stdout: &mut impl Write) -> io::Result<()> {
+    fn restore(
+        &self,
+        mut t: Type,
+        k: &U224,
+        w: &mut impl Write,
+        _stdout: &mut impl Write,
+    ) -> io::Result<()> {
         if *k == EMPTY {
             return Ok(());
         }

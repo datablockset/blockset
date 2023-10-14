@@ -124,7 +124,9 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             let path = a.next().ok_or("missing file name")?;
             let mut f = io.create(&path).to_string_result()?;
             let table = FileTable(io);
-            table.restore(Type::Main, &d, &mut f, stdout).to_string_result()?;
+            table
+                .restore(Type::Main, &d, &mut f, stdout)
+                .to_string_result()?;
             Ok(())
         }
         _ => Err("unknown command".to_string()),
