@@ -9,7 +9,7 @@ use crate::{
     table::{Table, Type},
     tree::Tree,
     u224::U224,
-    Metadata,
+    Metadata, state::State,
 };
 
 trait ResultEx {
@@ -21,30 +21,6 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     type T = T;
     fn to_string_result(self) -> Result<Self::T, String> {
         self.map_err(|e| e.to_string())
-    }
-}
-
-struct State<'a, T: Write> {
-    stdout: &'a mut T,
-    prior: usize,
-}
-
-impl<'a, T: Write> State<'a, T> {
-    fn new(stdout: &'a mut T) -> Self {
-        Self { stdout, prior: 0 }
-    }
-    fn set(&mut self, s: &str) -> Result<(), String> {
-        let mut vec = Vec::default();
-        vec.resize(self.prior, 8);
-        vec.extend_from_slice(s.as_bytes());
-        self.stdout.write(&vec).to_string_result()?;
-        self.prior = s.len();
-        Ok(())
-    }
-}
-impl<'a, T: Write> Drop for State<'a, T> {
-    fn drop(&mut self) {
-        let _ = self.set("");
     }
 }
 
@@ -60,11 +36,11 @@ fn read_to_tree<T: Storage>(
     loop {
         let mut buf = [0; 1024];
         let p = if len == 0 {
-            String::default()
+            100
         } else {
-            (i * 100 / len).to_string() + "%"
+            i * 100 / len
         };
-        state.set(&p)?;
+        state.set_percent(p as u8).to_string_result()?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
             break;

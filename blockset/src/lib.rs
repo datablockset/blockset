@@ -18,6 +18,7 @@ mod u128;
 mod u224;
 mod u256;
 mod u32;
+mod state;
 mod u512;
 
 #[cfg(test)]
