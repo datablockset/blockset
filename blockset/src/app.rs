@@ -71,7 +71,7 @@ fn println(w: &mut impl Write, s: &str) -> Result<(), String> {
     print(w, "\n")
 }
 
-pub fn run(io: &mut impl Io) -> Result<(), String> {
+pub fn run(io: &impl Io) -> Result<(), String> {
     let stdout = &mut io.stdout();
     let mut a = io.args();
     a.next().unwrap();

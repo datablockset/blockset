@@ -7,7 +7,7 @@ use crate::{
     Io,
 };
 
-pub struct FileTable<'a, T: Io>(pub &'a mut T);
+pub struct FileTable<'a, T: Io>(pub &'a T);
 
 pub const DIR: &str = "cdt0";
 

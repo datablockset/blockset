@@ -133,7 +133,7 @@ impl Io for VirtualIo {
             })
             .ok_or_else(not_found)
     }
-    fn create(&mut self, path: &str) -> io::Result<Self::File> {
+    fn create(&self, path: &str) -> io::Result<Self::File> {
         let mut fs = self.fs.borrow_mut();
         fs.check_dir(path)?;
         let vec_ref = VecRef::default();
@@ -148,7 +148,7 @@ impl Io for VirtualIo {
             .map(|v| MemFile::new(v.clone()))
             .ok_or_else(not_found)
     }
-    fn create_dir(&mut self, path: &str) -> io::Result<()> {
+    fn create_dir(&self, path: &str) -> io::Result<()> {
         let mut fs = self.fs.borrow_mut();
         fs.directory_set.insert(path.to_string());
         Ok(())

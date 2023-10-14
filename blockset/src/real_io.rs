@@ -28,13 +28,7 @@ impl Io for RealIo {
         args()
     }
 
-    /*
-    fn print(&mut self, text: &str) {
-        print!("{}", text);
-    }
-    */
-
-    fn create(&mut self, path: &str) -> io::Result<Self::File> {
+    fn create(&self, path: &str) -> io::Result<Self::File> {
         File::create(path)
     }
 
@@ -46,7 +40,7 @@ impl Io for RealIo {
         fs::metadata(path)
     }
 
-    fn create_dir(&mut self, path: &str) -> io::Result<()> {
+    fn create_dir(&self, path: &str) -> io::Result<()> {
         create_dir(path)
     }
 
