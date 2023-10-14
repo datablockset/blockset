@@ -7,7 +7,7 @@ use crate::{
 
 pub type MemTable = [HashMap<U224, Vec<u8>>; 2];
 
-impl Table for MemTable {
+impl Table for &mut MemTable {
     fn has_block(&self, t: Type, key: &U224) -> bool {
         self[t as usize].contains_key(key)
     }

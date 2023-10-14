@@ -32,7 +32,6 @@ impl<'a, T: Io> Table for FileTable<'a, T> {
     ) -> io::Result<()> {
         let x = value.collect::<Vec<_>>();
         let p = path(t, key);
-        // println!("set_block: {} {:?} {:?} {:?}", p, t, key, x);
         self.0.write(&p, &x)
     }
 }
