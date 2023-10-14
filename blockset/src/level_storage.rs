@@ -63,7 +63,7 @@ pub struct LevelStorage<T: Table> {
     levels: Levels,
 }
 
-impl<'a, T: Table> LevelStorage<T> {
+impl<T: Table> LevelStorage<T> {
     pub fn new(table: T) -> Self {
         Self {
             table,
