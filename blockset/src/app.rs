@@ -28,13 +28,13 @@ fn read_to_tree<T: Storage>(
     s: T,
     mut file: impl Read,
     len: u64,
-    stdout: &mut impl Write,
+    _stdout: &mut impl Write,
 ) -> Result<String, String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
     if len != 0 {
         loop {
-            let p = (i / len).to_string();
+            let _p = (i * 100 / len).to_string() + "%";
             // print(stdout, &p).to_string_result()?;
             let mut buf = [0; 1024];
             let size = file.read(buf.as_mut()).to_string_result()?;
