@@ -17,8 +17,14 @@ impl<'a, T: Write> State<'a, T> {
         self.prior = s.len();
         Ok(())
     }
+    /*
     pub fn set_percent(&mut self, v: u8) -> io::Result<()> {
         let s = v.to_string() + "%";
+        self.set(&s)
+    }
+    */
+    pub fn set_progress(&mut self, b: u64, p: u8) -> io::Result<()> {
+        let s = b.to_string() + "B " + &p.to_string() + "%";
         self.set(&s)
     }
 }
