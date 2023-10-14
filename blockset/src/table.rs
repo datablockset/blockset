@@ -39,15 +39,18 @@ pub trait Table {
         let mut tail = Vec::default();
         let mut keys = [(*k, 1.0)].to_vec();
         let mut progress = 0.0;
+        let mut progress_b = 0;
         let mut state = State::new(stdout);
-        state.set_percent(0)?;
+        state.set_progress(0, 0)?;
         while let Some((key, size)) = keys.pop() {
             let v = self.get_block(t, &key)?;
             let mut len = *v.first().unwrap() as usize;
             if len == 0x20 {
+                let buf = &v[1..];
+                w.write_all(buf)?;
                 progress += size;
-                w.write_all(&v[1..])?;
-                state.set_percent((progress * 100.0) as u8)?;
+                progress_b += buf.len() as u64;
+                state.set_progress(progress_b, (progress * 100.0) as u8)?;
             } else {
                 len += 1;
                 if len > 1 {
