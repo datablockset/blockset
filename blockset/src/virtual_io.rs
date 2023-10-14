@@ -25,7 +25,15 @@ pub struct VecRef(Rc<RefCell<Vec<u8>>>);
 
 impl VecRef {
     pub fn to_string(&self) -> String {
-        from_utf8(&self.0.borrow()).unwrap().to_string()
+        let mut result = String::default();
+        for &c in self.0.borrow().iter() {
+            if c == 8 {
+                result.pop();
+            } else {
+                result.push(c as char);
+            }
+        }
+        result
     }
 }
 
@@ -110,12 +118,6 @@ impl Io for VirtualIo {
     fn args(&self) -> Self::Args {
         self.args.clone().into_iter()
     }
-    /*
-    fn print(&mut self, s: &str) {
-        self.stdout.push_str(s);
-    }
-    */
-
     fn metadata(&self, path: &str) -> io::Result<Metadata> {
         self.file_map
             .get(path)
@@ -141,7 +143,6 @@ impl Io for VirtualIo {
         self.directory_set.insert(path.to_string());
         Ok(())
     }
-
     fn stdout(&mut self) -> VecRef {
         self.stdout.clone()
     }

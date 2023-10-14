@@ -9,6 +9,7 @@ use crate::{
     table::{Table, Type},
     tree::Tree,
     u224::U224,
+    Metadata,
 };
 
 trait ResultEx {
@@ -23,14 +24,37 @@ impl<T, E: ToString> ResultEx for Result<T, E> {
     }
 }
 
-fn read_to_tree<T: Storage>(s: T, mut file: impl Read) -> Result<String, String> {
+fn replace(stdout: &mut impl Write, len: usize, s: &str) -> Result<usize, String> {
+    let mut vec = Vec::default();
+    vec.resize(len, 8);
+    vec.extend_from_slice(s.as_bytes());
+    stdout.write(&vec).to_string_result()?;
+    Ok(s.len())
+}
+
+fn read_to_tree<T: Storage>(
+    s: T,
+    mut file: impl Read,
+    len: u64,
+    stdout: &mut impl Write,
+) -> Result<String, String> {
     let mut tree = Tree::new(s);
+    let mut i = 0;
+    let mut prior = 0;
     loop {
         let mut buf = [0; 1024];
+        let p = if len == 0 {
+            String::default()
+        } else {
+            (i * 100 / len).to_string() + "%"
+        };
+        prior = replace(stdout, prior, &p)?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
+            replace(stdout, prior, "")?;
             break;
         }
+        i += size as u64;
         for c in buf[0..size].iter() {
             tree.push(*c).to_string_result()?;
         }
@@ -62,17 +86,19 @@ pub fn run(io: &mut impl Io) -> Result<(), String> {
         }
         "address" => {
             let path = a.next().ok_or("missing file name")?;
+            let len = io.metadata(&path).to_string_result()?.len();
             let f = io.open(&path).to_string_result()?;
-            let k = read_to_tree(Null(), f)?;
+            let k = read_to_tree(Null(), f, len, stdout)?;
             println(stdout, &k)?;
             Ok(())
         }
         "add" => {
             let path = a.next().ok_or("missing file name")?;
             let _ = io.create_dir(DIR);
+            let len = io.metadata(&path).to_string_result()?.len();
             let f = io.open(&path).to_string_result()?;
             let mut table = FileTable(io);
-            let k = read_to_tree(LevelStorage::new(&mut table), f)?;
+            let k = read_to_tree(LevelStorage::new(&mut table), f, len, stdout)?;
             println(stdout, &k)?;
             Ok(())
         }
