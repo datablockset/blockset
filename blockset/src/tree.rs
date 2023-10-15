@@ -21,7 +21,8 @@ impl<T: Storage> Tree<T> {
         let mut last0 = to_digest(c);
         let mut total = 0;
         loop {
-            total += self.storage.store(&last0, i)?;
+            let tmp = self.storage.store(&last0, i);
+            total += tmp?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;

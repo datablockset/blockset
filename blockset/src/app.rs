@@ -5,7 +5,7 @@ use crate::{
     file_table::{FileTable, DIR},
     io::Io,
     level_storage::LevelStorage,
-    state::State,
+    state::{mb, progress, State},
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
@@ -38,7 +38,8 @@ fn read_to_tree<T: Storage>(
     loop {
         let mut buf = [0; 1024];
         let p = if len == 0 { 100 } else { i * 100 / len };
-        state.set_progress(i, p as u8).to_string_result()?;
+        let s = "Stored: ".to_owned() + &mb(total) + ". Processed: " + &progress(i, p as u8);
+        state.set(&s).to_string_result()?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
             break;
