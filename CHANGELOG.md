@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix a progress message.
+
 ## 0.2.3
 
 - Show how much new data is stored. Issue [#79](https://github.com/datablockset/blockset/issues/79).
