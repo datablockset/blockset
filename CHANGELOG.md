@@ -9,15 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.2.3
 
-- Show how much new data is stored.
+- Show how much new data is stored. Issue [#79](https://github.com/datablockset/blockset/issues/79).
 
 ## 0.2.2
 
-- Show progress during `get`. #49
+- Show progress in `MB`. Issue [#73](https://github.com/datablockset/blockset/issues/73).
+- Show progress during `get`. Issue [#49](https://github.com/datablockset/blockset/issues/49).
 
 ## 0.2.1
 
-- Show progress during `add`. #49
+- Show progress during `add`. Issue [#49](https://github.com/datablockset/blockset/issues/49).
 
 ## 0.2.0
 
