@@ -30,6 +30,7 @@ fn read_to_tree<T: Storage>(
     mut file: impl Read,
     len: u64,
     stdout: &mut impl Write,
+    display_new: bool,
 ) -> Result<String, String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
@@ -38,7 +39,12 @@ fn read_to_tree<T: Storage>(
     loop {
         let mut buf = [0; 1024];
         let p = if len == 0 { 100 } else { i * 100 / len };
-        let s = "Stored: ".to_owned() + &mb(total) + ". Processed: " + &progress(i, p as u8);
+        let s = if display_new {
+            "New data: ".to_owned() + &mb(total) + ". "
+        } else {
+            String::new()
+        } + "Processed: "
+            + &progress(i, p as u8);
         state.set(&s).to_string_result()?;
         let size = file.read(buf.as_mut()).to_string_result()?;
         if size == 0 {
@@ -65,12 +71,13 @@ fn add<'a, T: Io, S: 'a + Storage>(
     io: &'a T,
     a: &mut T::Args,
     storage: impl Fn(&'a T) -> S,
+    display_new: bool,
 ) -> Result<(), String> {
     let stdout = &mut io.stdout();
     let path = a.next().ok_or("missing file name")?;
     let len = io.metadata(&path).to_string_result()?.len();
     let f = io.open(&path).to_string_result()?;
-    let k = read_to_tree(storage(io), f, len, stdout)?;
+    let k = read_to_tree(storage(io), f, len, stdout, display_new)?;
     println(stdout, &k)?;
     Ok(())
 }
@@ -88,11 +95,11 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             println(stdout, &d.to_base32())?;
             Ok(())
         }
-        "address" => add(io, &mut a, |_| Null()),
+        "address" => add(io, &mut a, |_| Null(), false),
         "add" => add(io, &mut a, |io| {
             let _ = io.create_dir(DIR);
             LevelStorage::new(FileTable(io))
-        }),
+        }, true),
         "get" => {
             let b32 = a.next().ok_or("missing address")?;
             let d = b32.from_base32::<U224>().ok_or("invalid address")?;
