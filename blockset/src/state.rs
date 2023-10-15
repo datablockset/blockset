@@ -5,6 +5,14 @@ pub struct State<'a, T: Write> {
     prior: usize,
 }
 
+pub fn mb(b: u64) -> String {
+    (b / 1_000_000).to_string() + " MB"
+}
+
+pub fn progress(b: u64, p: u8) -> String {
+    mb(b) + ", " + &p.to_string() + "%."
+}
+
 impl<'a, T: Write> State<'a, T> {
     pub fn new(stdout: &'a mut T) -> Self {
         Self { stdout, prior: 0 }
@@ -16,10 +24,6 @@ impl<'a, T: Write> State<'a, T> {
         self.stdout.write_all(&vec)?;
         self.prior = s.len();
         Ok(())
-    }
-    pub fn set_progress(&mut self, b: u64, p: u8) -> io::Result<()> {
-        let s = (b / 1_000_000).to_string() + " MB, " + &p.to_string() + "%.";
-        self.set(&s)
     }
 }
 impl<'a, T: Write> Drop for State<'a, T> {
