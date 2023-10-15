@@ -20,11 +20,12 @@ pub trait Table {
         t: Type,
         key: &U224,
         value: impl Iterator<Item = u8>,
-    ) -> io::Result<()> {
-        if !self.has_block(t, key) {
-            self.set_block(t, key, value)?;
+    ) -> io::Result<bool> {
+        if self.has_block(t, key) {
+            return Ok(false);
         }
-        Ok(())
+        self.set_block(t, key, value)?;
+        Ok(true)
     }
     // we should extract a state machine from the function and remove `set_progress`.
     fn restore(

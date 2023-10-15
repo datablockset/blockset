@@ -26,34 +26,40 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> io::Result<()> {
+    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> io::Result<u64> {
         let data = take(&mut self.data);
-        if i == 0 {
+        let data_len = data.len();
+        let r = if i == 0 {
             assert!(!data.is_empty());
-            table.check_set_block(t, k, once(0x20).chain(data))?;
+            table.check_set_block(t, k, once(0x20).chain(data))?
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
             {
                 let len_bits = len(&level.last);
                 assert_eq!(len_bits & 7, 0);
-                assert_eq!(len_bits >> 3, data.len());
+                assert_eq!(len_bits >> 3, data_len);
             }
-            // we should have at least one node.
+            // We should have at least one node because `k`
+            // can't be formed from `last` only.
+            // If the first node is equal to the original `k` then
+            // we don't need to store it.
             if level.nodes.first().unwrap() == k {
+                // only one node can produce the same digest.
                 assert_eq!(level.nodes.len(), 1);
+                // no additional data should be present.
                 assert_eq!(level.last, [0, 0]);
-                return Ok(()); // already stored
+                return Ok(0); // already stored
             }
             table.check_set_block(
                 t,
                 k,
-                once(data.len() as u8)
+                once(data_len as u8)
                     .chain(data)
                     .chain(level.nodes.into_iter().flatten().flat_map(to_u8x4)),
-            )?;
-        }
-        Ok(())
+            )?
+        };
+        Ok(if r { data_len as u64 } else { 0 })
     }
 }
 
@@ -72,17 +78,17 @@ impl<T: Table> LevelStorage<T> {
 }
 
 impl<T: Table> Storage for LevelStorage<T> {
-    fn store(&mut self, digest: &U256, mut i: usize) -> io::Result<()> {
+    fn store(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
         if i < DATA_LEVEL {
             if i == 0 {
                 assert_eq!(digest[1], 0x08000000_00000000_00000000_00000000);
                 self.levels.data.push(digest[0] as u8);
             }
-            return Ok(());
+            return Ok(0);
         }
         i -= DATA_LEVEL;
         if i % SKIP_LEVEL != 0 {
-            return Ok(());
+            return Ok(0);
         }
         i /= SKIP_LEVEL;
         if i >= self.levels.nodes.len() {
@@ -91,7 +97,7 @@ impl<T: Table> Storage for LevelStorage<T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.table, Type::Parts, i, &k)?;
+            self.levels.store(&mut self.table, Type::Parts, i, &k)
         } else {
             level.last = *digest;
             {
@@ -99,14 +105,14 @@ impl<T: Table> Storage for LevelStorage<T> {
                 assert_eq!(len_bits & 7, 0);
                 assert_eq!(len_bits >> 3, self.levels.data.len());
             }
+            Ok(0)
         }
-        Ok(())
     }
 
-    fn end(&mut self, k: &U224, mut i: usize) -> io::Result<()> {
+    fn end(&mut self, k: &U224, mut i: usize) -> io::Result<u64> {
         if i == 0 {
             assert_eq!(*k, compress_one(&[0, 0]));
-            return Ok(());
+            return Ok(0);
         }
         i = if i <= DATA_LEVEL {
             0
@@ -137,7 +143,7 @@ mod test {
         for c in s.bytes() {
             tree.push(c).unwrap();
         }
-        tree.end().unwrap()
+        tree.end().unwrap().0
     }
 
     fn add(table: &mut MemTable, c: &str) -> U224 {

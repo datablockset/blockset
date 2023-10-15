@@ -34,6 +34,7 @@ fn read_to_tree<T: Storage>(
     let mut tree = Tree::new(s);
     let mut i = 0;
     let mut state = State::new(stdout);
+    let mut total = 0;
     loop {
         let mut buf = [0; 1024];
         let p = if len == 0 { 100 } else { i * 100 / len };
@@ -44,10 +45,10 @@ fn read_to_tree<T: Storage>(
         }
         i += size as u64;
         for c in buf[0..size].iter() {
-            tree.push(*c).to_string_result()?;
+            total += tree.push(*c).to_string_result()?;
         }
     }
-    Ok(tree.end().to_string_result()?.to_base32())
+    Ok(tree.end().to_string_result()?.0.to_base32())
 }
 
 fn print(w: &mut impl Write, s: &str) -> Result<(), String> {

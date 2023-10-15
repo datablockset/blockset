@@ -16,36 +16,37 @@ impl<T: Storage> Tree<T> {
             storage,
         }
     }
-    pub fn push(&mut self, c: u8) -> io::Result<()> {
+    pub fn push(&mut self, c: u8) -> io::Result<u64> {
         let mut i = 0;
         let mut last0 = to_digest(c);
+        let mut total = 0;
         loop {
-            let x = self.storage.store(&last0, i);
-            x?;
+            total += self.storage.store(&last0, i)?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
                     last0 = last1;
                     i += 1;
                 } else {
-                    return Ok(());
+                    return Ok(total);
                 }
             } else {
                 self.state.push(SubTree::new(&last0));
-                return Ok(());
+                return Ok(total);
             }
         }
     }
-    pub fn end(&mut self) -> io::Result<U224> {
+    pub fn end(&mut self) -> io::Result<(U224, u64)> {
         let mut last0 = [0, 0];
+        let mut total = 0;
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
-                self.storage.store(&last0, i)?;
+                total += self.storage.store(&last0, i)?;
             }
             last0 = sub_tree.end(last0);
         }
         let key = compress_one(&last0);
-        self.storage.end(&key, self.state.len())?;
-        Ok(key)
+        total += self.storage.end(&key, self.state.len())?;
+        Ok((key, total))
     }
 }
 
@@ -69,12 +70,12 @@ mod test {
     struct MemStorage(Vec<(U256, usize)>);
 
     impl Storage for MemStorage {
-        fn store(&mut self, digest: &U256, index: usize) -> io::Result<()> {
+        fn store(&mut self, digest: &U256, index: usize) -> io::Result<u64> {
             self.0.push((*digest, index));
-            Ok(())
+            Ok(0)
         }
-        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<()> {
-            Ok(())
+        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<u64> {
+            Ok(0)
         }
     }
 
@@ -88,14 +89,14 @@ mod test {
             t.push(c).unwrap();
         }
         let root = t.end().unwrap();
-        (t.storage.0, root)
+        (t.storage.0, root.0)
     }
 
     #[wasm_bindgen_test]
     #[test]
     fn empty_test() {
         let mut t = tree();
-        assert_eq!(t.end().unwrap(), compress_one(&[0, 0]));
+        assert_eq!(t.end().unwrap(), (compress_one(&[0, 0]), 0));
     }
 
     #[wasm_bindgen_test]
@@ -131,10 +132,10 @@ mod test {
     struct BrokenStorage();
 
     impl Storage for BrokenStorage {
-        fn store(&mut self, _digest: &U256, _index: usize) -> io::Result<()> {
+        fn store(&mut self, _digest: &U256, _index: usize) -> io::Result<u64> {
             Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
         }
-        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<()> {
+        fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<u64> {
             Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
         }
     }
