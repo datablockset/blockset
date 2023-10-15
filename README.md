@@ -6,24 +6,10 @@ Articles:
 - [BLOCKSET v0.2](https://medium.com/@sergeyshandar/blockset-v0-2-b43c03bac182),
 - [Content Dependent-Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
 
-## For Developers
-
-Internal documentation: https://blockset.pages.dev/.
-
-### Best practices
-
-- Avoid `unsafe` code. Currently, we don't have `unsafe` code.
-- Avoid using macros. Allowed macros: `derive`, `cfg`, `test`, `assert..`, `wasm_bindgen_test`.
-- Make `const` functions if possible.
-- No I/O is allowed in a library. We have 100% code coverage.
-- Avoid using dependencies, especially if they use I/O directly.
-
-### Testing `blockset` from the `main` branch
-
 Installation:
 
 ```console
-cargo install --git https://github.com/datablockset/blockset
+cargo install blockset
 ```
 
 Uninstall the `blockset`:
@@ -50,3 +36,29 @@ cargo uninstall blockset
   ```console
   blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./old.md
   ```
+
+## For Developers
+
+Internal documentation: https://blockset.pages.dev/.
+
+### Best practices
+
+- Avoid `unsafe` code. Currently, we don't have `unsafe` code.
+- Avoid using macros. Allowed macros: `derive`, `cfg`, `test`, `assert..`, `wasm_bindgen_test`.
+- Make `const` functions if possible.
+- No I/O is allowed in a library. We have 100% code coverage.
+- Avoid using dependencies, especially if they use I/O directly.
+
+### Testing `blockset` from the `main` branch
+
+Installation:
+
+```console
+cargo install --git https://github.com/datablockset/blockset
+```
+
+Uninstall the `blockset`:
+
+```console
+cargo uninstall blockset
+```
