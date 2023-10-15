@@ -4,7 +4,7 @@ The `blockset` application is a command line program that can store and retrieve
 
 Articles:
 - [BLOCKSET v0.2](https://medium.com/@sergeyshandar/blockset-v0-2-b43c03bac182),
-- [Content Dependent-Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
+- [Content Dependent Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
 
 Install the latest stable version from [crates.io](https://crates.io/crates/blockset):
 
