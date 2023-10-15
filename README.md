@@ -6,13 +6,13 @@ Articles:
 - [BLOCKSET v0.2](https://medium.com/@sergeyshandar/blockset-v0-2-b43c03bac182),
 - [Content Dependent-Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
 
-Installation of a stable version:
+Install the latest stable version from [crates.io](https://crates.io/crates/blockset):
 
 ```console
 cargo install blockset
 ```
 
-Installation of the current version from the `main` branch:
+Install the current version from the `main` branch:
 
 ```console
 cargo install --git https://github.com/datablockset/blockset
