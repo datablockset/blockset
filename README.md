@@ -11,8 +11,9 @@ Articles:
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install).
-- For Windows:
-  - [C and C++ support for Visual Studio](https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170).
+- For Windows, you may need Visual C++. You can get either either 
+  - by installing [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/),
+  - or adding [Desktop development with C++](https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170) to Visual Studio.
 
 ## Installation
 
