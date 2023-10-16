@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.2.4
 
-- Fix a progress message.
+- Fix a progress message. PR [#85](https://github.com/datablockset/blockset/pull/85).
 
 ## 0.2.3
 
