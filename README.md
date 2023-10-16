@@ -6,19 +6,29 @@ Articles:
 - [BLOCKSET v0.2](https://medium.com/@sergeyshandar/blockset-v0-2-b43c03bac182),
 - [Content Dependent Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
 
-Install the latest stable version from [crates.io](https://crates.io/crates/blockset):
+## Usage
+
+## Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install).
+- For Windows:
+  - [C and C++ support for Visual Studio](https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170).
+
+## Installation
+
+To install the latest stable version from [crates.io](https://crates.io/crates/blockset), run:
 
 ```console
 cargo install blockset
 ```
 
-Install the current version from the `main` branch:
+To install the current version from the `main` branch, run:
 
 ```console
 cargo install --git https://github.com/datablockset/blockset
 ```
 
-Uninstall the `blockset`:
+To unininstall the `blockset`, run:
 
 ```console
 cargo uninstall blockset
