@@ -116,6 +116,19 @@ fn not_found() -> io::Error {
     io::Error::new(io::ErrorKind::NotFound, "file not found")
 }
 
+fn check_path(a: &str) -> io::Result<()> {
+    if a.chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '/' || c == '_' || c == '.')
+    {
+        Ok(())
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "invalid file name",
+        ))
+    }
+}
+
 impl Io for VirtualIo {
     type File = MemFile;
     type Stdout = VecRef;
@@ -137,21 +150,23 @@ impl Io for VirtualIo {
         let mut fs = self.fs.borrow_mut();
         fs.check_dir(path)?;
         let vec_ref = VecRef::default();
+        check_path(path)?;
         fs.file_map.insert(path.to_string(), vec_ref.clone());
         Ok(MemFile::new(vec_ref))
-    }
-    fn open(&self, path: &str) -> io::Result<Self::File> {
-        let fs = self.fs.borrow();
-        fs.check_dir(path)?;
-        fs.file_map
-            .get(path)
-            .map(|v| MemFile::new(v.clone()))
-            .ok_or_else(not_found)
     }
     fn create_dir(&self, path: &str) -> io::Result<()> {
         let mut fs = self.fs.borrow_mut();
         fs.directory_set.insert(path.to_string());
         Ok(())
+    }
+    fn open(&self, path: &str) -> io::Result<Self::File> {
+        let fs = self.fs.borrow();
+        fs.check_dir(path)?;
+        check_path(path)?;
+        fs.file_map
+            .get(path)
+            .map(|v| MemFile::new(v.clone()))
+            .ok_or_else(not_found)
     }
     fn stdout(&self) -> VecRef {
         self.stdout.clone()
