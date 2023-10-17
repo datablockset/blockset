@@ -12,7 +12,7 @@ pub struct FileTable<'a, T: Io>(pub &'a T);
 pub const DIR: &str = "cdt0";
 
 fn path(t: Type, key: &U224) -> String {
-    DIR.to_owned() + "/" + ["", "_"][t as usize] + &key.to_base32()
+    DIR.to_owned() + "/" + ["roots", "parts"][t as usize] + "/" + &key.to_base32()
 }
 
 impl<'a, T: Io> Table for FileTable<'a, T> {
