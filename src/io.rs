@@ -49,7 +49,7 @@ pub trait Io {
     fn write_recursively(&self, path: &str, data: &[u8]) -> io::Result<()> {
         let e = self.write(path, data);
         if let Err(er) = e {
-            return if let Some((p, _)) = path.split_once('/') {
+            return if let Some((p, _)) = path.rsplit_once('/') {
                 self.create_dir_recursively(p)?;
                 self.write(path, data)
             } else {
