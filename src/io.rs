@@ -36,6 +36,27 @@ pub trait Io {
         file.write_all(data)?;
         Ok(())
     }
+    fn create_dir_recursively(&self, path: &str) -> io::Result<()> {
+        let mut x = String::default();
+        let mut e = Ok(());
+        for i in path.split('/') {
+            x += i;
+            e = self.create_dir(&x);
+            x += "/";
+        }
+        e
+    }
+    fn write_recursively(&self, path: &str, data: &[u8]) -> io::Result<()> {
+        if let Err(er) = self.write(&path, data) {
+            return if let Some((p, _)) = path.split_once('/') {
+                self.create_dir_recursively(p)?;
+                self.write(&path, data)
+            } else {
+                Err(er)
+            }
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]

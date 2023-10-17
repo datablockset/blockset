@@ -32,7 +32,7 @@ impl<'a, T: Io> Table for FileTable<'a, T> {
     ) -> io::Result<()> {
         let x = value.collect::<Vec<_>>();
         let p = path(t, key);
-        self.0.write(&p, &x)
+        self.0.write_recursively(&p, &x)
     }
 }
 

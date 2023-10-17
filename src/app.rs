@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 
 use crate::{
     base32::{StrEx, ToBase32},
-    file_table::{FileTable, DIR},
+    file_table::FileTable,
     io::Io,
     level_storage::LevelStorage,
     state::{mb, progress, State},
@@ -96,15 +96,7 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             Ok(())
         }
         "address" => add(io, &mut a, |_| Null(), false),
-        "add" => add(
-            io,
-            &mut a,
-            |io| {
-                let _ = io.create_dir(DIR);
-                LevelStorage::new(FileTable(io))
-            },
-            true,
-        ),
+        "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
         "get" => {
             let b32 = a.next().ok_or("missing address")?;
             let d = b32.from_base32::<U224>().ok_or("invalid address")?;
