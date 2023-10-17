@@ -79,6 +79,20 @@ mod test {
 
     #[wasm_bindgen_test]
     #[test]
+    fn test_dir_fail() {
+        let io = VirtualIo::new(&[]);
+        assert!(io.write("a/test.txt", "Hello, world!".as_bytes()).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_dir_rec() {
+        let io = VirtualIo::new(&[]);
+        assert!(io.write_recursively("a/b/test.txt", "Hello, world!".as_bytes()).is_ok());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
     fn test_err() {
         let io = VirtualIo::new(&[]);
         assert!(io
