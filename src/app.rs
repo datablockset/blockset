@@ -193,7 +193,9 @@ mod test {
         ];
         let s = compress_one(&d).to_base32();
         assert_eq!(io.stdout.to_string(), s.clone() + "\n");
-        let v = io.read(&("cdt0/roots/".to_owned() + &s)).unwrap();
+        let v = io
+            .read(&("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]))
+            .unwrap();
         assert_eq!(v, " Hello, world!".as_bytes());
     }
 
@@ -208,7 +210,7 @@ mod test {
         let mut io = VirtualIo::new(&["get", s.as_str(), "b.txt"]);
         // io.create_dir("cdt0").unwrap();
         io.write_recursively(
-            &("cdt0/roots/".to_owned() + &s),
+            &("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]),
             " Hello, world!".as_bytes(),
         )
         .unwrap();
