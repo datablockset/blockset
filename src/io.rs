@@ -47,13 +47,14 @@ pub trait Io {
         e
     }
     fn write_recursively(&self, path: &str, data: &[u8]) -> io::Result<()> {
-        if let Err(er) = self.write(&path, data) {
+        let e = self.write(path, data);
+        if let Err(er) = e {
             return if let Some((p, _)) = path.split_once('/') {
                 self.create_dir_recursively(p)?;
-                self.write(&path, data)
+                self.write(path, data)
             } else {
                 Err(er)
-            }
+            };
         }
         Ok(())
     }
@@ -74,5 +75,14 @@ mod test {
         io.write("test.txt", "Hello, world!".as_bytes()).unwrap();
         let result = io.read_to_string("test.txt").unwrap();
         assert_eq!(result, "Hello, world!");
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_err() {
+        let io = VirtualIo::new(&[]);
+        assert!(io
+            .write_recursively("?", "Hello, world!".as_bytes())
+            .is_err());
     }
 }
