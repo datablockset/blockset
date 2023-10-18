@@ -103,7 +103,8 @@ fn calculate_total(io: &impl Io, d: &str, mut total: u64) -> io::Result<u64> {
                 let s = "size: ~".to_string()
                     + &(e as u64).to_string()
                     + " B. "
-                    + &((p * 100.0) as u64).to_string();
+                    + &((p * 100.0) as u64).to_string()
+                    + "&.";
                 state.set(&s)?;
             }
         }
