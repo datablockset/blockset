@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     io::{self, Read, Write},
     iter::once,
     rc::Rc,
@@ -12,11 +12,15 @@ use crate::io::Io;
 #[derive(Debug, Clone)]
 pub struct Metadata {
     len: u64,
+    is_dir: bool,
 }
 
 impl crate::io::Metadata for Metadata {
     fn len(&self) -> u64 {
         self.len
+    }
+    fn is_dir(&self) -> bool {
+        self.is_dir
     }
 }
 
@@ -48,19 +52,46 @@ impl Write for VecRef {
 }
 
 #[derive(Debug, Default)]
+enum Entity {
+    #[default]
+    Dir,
+    File(VecRef),
+}
+
+impl Entity {
+    fn metadata(&self) -> Metadata {
+        match self {
+            Entity::Dir => Metadata {
+                len: 0,
+                is_dir: true,
+            },
+            Entity::File(x) => Metadata {
+                len: x.0.borrow().len() as u64,
+                is_dir: false,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct FileSystem {
-    directory_set: HashSet<String>,
-    file_map: HashMap<String, VecRef>,
+    entity_map: HashMap<String, Entity>,
 }
 
 impl FileSystem {
     pub fn check_dir(&self, path: &str) -> io::Result<()> {
-        if let Some(d) = path.rfind('/').map(|i| &path[..i]) {
-            if !self.directory_set.contains(d) {
-                return Err(not_found());
-            }
+        if let Some(Entity::Dir) = self.entity_map.get(path) {
+            Ok(())
+        } else {
+            Err(not_found())
         }
-        Ok(())
+    }
+    pub fn check_parent(&self, path: &str) -> io::Result<()> {
+        if let Some(d) = path.rfind('/').map(|i| &path[..i]) {
+            self.check_dir(d)
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -156,33 +187,39 @@ impl Io for VirtualIo {
     }
     fn metadata(&self, path: &str) -> io::Result<Metadata> {
         let fs = self.fs.borrow();
-        fs.file_map
+        fs.entity_map
             .get(path)
-            .map(|v| Metadata {
-                len: v.0.borrow().len() as u64,
-            })
+            .map(Entity::metadata)
             .ok_or_else(not_found)
     }
     fn create(&self, path: &str) -> io::Result<Self::File> {
         let mut fs = self.fs.borrow_mut();
-        fs.check_dir(path)?;
+        fs.check_parent(path)?;
         let vec_ref = VecRef::default();
         check_path(path)?;
-        fs.file_map.insert(path.to_string(), vec_ref.clone());
+        fs.entity_map
+            .insert(path.to_string(), Entity::File(vec_ref.clone()));
         Ok(MemFile::new(vec_ref))
     }
     fn create_dir(&self, path: &str) -> io::Result<()> {
         let mut fs = self.fs.borrow_mut();
-        fs.directory_set.insert(path.to_string());
+        fs.entity_map.insert(path.to_string(), Entity::Dir);
         Ok(())
     }
     fn open(&self, path: &str) -> io::Result<Self::File> {
         let fs = self.fs.borrow();
-        fs.check_dir(path)?;
+        fs.check_parent(path)?;
         check_path(path)?;
-        fs.file_map
+        fs.entity_map
             .get(path)
-            .map(|v| MemFile::new(v.clone()))
+            .map(|v| {
+                if let Entity::File(x) = v {
+                    Some(MemFile::new(x.to_owned()))
+                } else {
+                    None
+                }
+            })
+            .flatten()
             .ok_or_else(not_found)
     }
     fn stdout(&self) -> VecRef {
@@ -191,17 +228,11 @@ impl Io for VirtualIo {
 
     fn read_dir(&self, path: &str) -> io::Result<Vec<DirEntry>> {
         let fs = self.fs.borrow();
-        let d = fs.directory_set.iter().map(|d| DirEntry {
-            path: d.to_string(),
-            metadata: Metadata { len: 0 },
+        fs.check_dir(path)?;
+        let i = fs.entity_map.iter().map(|(p, e)| DirEntry {
+            path: p.to_owned(),
+            metadata: e.metadata(),
         });
-        let f = fs.file_map.iter().map(|(k, v)| DirEntry {
-            path: k.to_owned(),
-            metadata: Metadata {
-                len: v.0.borrow().len() as u64,
-            },
-        });
-        let i = d.chain(f);
         let x = i
             .filter(|p| {
                 if let Some((a, _)) = p.path.rsplit_once('/') {

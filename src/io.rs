@@ -6,6 +6,7 @@ use std::{
 #[allow(clippy::len_without_is_empty)]
 pub trait Metadata {
     fn len(&self) -> u64;
+    fn is_dir(&self) -> bool;
 }
 
 pub trait DirEntry {
@@ -65,6 +66,15 @@ pub trait Io {
             };
         }
         Ok(())
+    }
+    fn read_dir_type(&self, path: &str, is_dir: bool) -> io::Result<Vec<Self::DirEntry>> {
+        let mut result = Vec::default();
+        for i in self.read_dir(path)? {
+            if i.metadata()?.is_dir() == is_dir {
+                result.push(i);
+            }
+        }
+        Ok(result)
     }
 }
 

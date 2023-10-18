@@ -84,15 +84,19 @@ fn add<'a, T: Io, S: 'a + Storage>(
 
 fn calculate_total(io: &impl Io, d: &str, extra: u64) -> io::Result<u64> {
     let stdout = &mut io.stdout();
-    let a = io.read_dir(&("cdt0/".to_owned() + d))?;
+    let a = io.read_dir_type(&("cdt0/".to_owned() + d), true);
+    let a = match a {
+        Ok(a) => a,
+        Err(_) => return Ok(extra),
+    };
     let an = a.len() as u64;
     let mut total = 0;
     let state = &mut State::new(stdout);
     for (ai, ia) in a.iter().enumerate() {
-        let b = io.read_dir(&ia.path())?;
+        let b = io.read_dir_type(&ia.path(), true)?;
         let bn = b.len() as u64;
         for (bi, ib) in b.iter().enumerate() {
-            let c = io.read_dir(&ib.path())?;
+            let c = io.read_dir_type(&ib.path(), false)?;
             for ic in c.iter() {
                 let d = ic.metadata()?.len();
                 total += d;
@@ -269,6 +273,8 @@ mod test {
             " Hello, world!".as_bytes(),
         )
         .unwrap();
+        io.write_recursively("cdt0/roots/ab", " Hello, world!".as_bytes())
+            .unwrap();
         run(&mut io).unwrap();
     }
 
