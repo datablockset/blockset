@@ -93,21 +93,18 @@ fn calculate_total(io: &impl Io, d: &str, extra: u64) -> io::Result<u64> {
         let bn = b.len() as u64;
         for (bi, ib) in b.iter().enumerate() {
             let c = io.read_dir(&ib.path())?;
-            let cn = c.len() as u64;
-            for (ci, ic) in c.iter().enumerate() {
+            for ic in c.iter() {
                 let d = ic.metadata()?.len();
                 total += d;
-                //
-                let p =
-                    ((bn * ai as u64 + bi as u64) * cn + ci as u64) as f64 / (an * bn * cn) as f64;
-                let e = (total as f64) / p;
-                let s = "size: ~".to_string()
-                    + &(extra + e as u64).to_string()
-                    + " B. "
-                    + &((p * 100.0) as u64).to_string()
-                    + "%.";
-                state.set(&s)?;
             }
+            let p = (bn * ai as u64 + bi as u64) as f64 / (an * bn) as f64;
+            let e = (extra + total as f64) / p;
+            let s = "size: ~".to_string()
+                + &mb(extra + e as u64)
+                + ". "
+                + &((p * 100.0) as u64).to_string()
+                + "%.";
+            state.set(&s)?;
         }
     }
     Ok(extra + total)
