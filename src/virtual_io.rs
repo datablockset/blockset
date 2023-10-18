@@ -204,7 +204,11 @@ impl Io for VirtualIo {
         let i = d.chain(f);
         let x = i
             .filter(|p| {
-                if let Some((a, _)) = p.path.rsplit_once('/') { a == path } else { false }
+                if let Some((a, _)) = p.path.rsplit_once('/') {
+                    a == path
+                } else {
+                    false
+                }
             })
             .collect();
         Ok(x)

@@ -6,7 +6,7 @@ use std::{
     io::{self, Stdout},
 };
 
-use crate::{Io, Metadata, io::DirEntry};
+use crate::{io::DirEntry, Io, Metadata};
 
 impl Metadata for fs::Metadata {
     fn len(&self) -> u64 {

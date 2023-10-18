@@ -13,7 +13,8 @@ pub trait U224Ex {
 
 impl U224Ex for &U224 {
     fn parity_bit(self) -> u8 {
-        self.iter().fold(0, |a, b| a ^ b.count_ones()) as u8 & 1
+        let r = self.iter().fold(0, |a, b| a ^ b).count_ones() & 1;
+        r as u8
     }
 }
 
