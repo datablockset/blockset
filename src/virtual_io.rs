@@ -63,6 +63,16 @@ impl FileSystem {
     }
 }
 
+pub struct DirEntry {
+    path: String,
+}
+
+impl crate::io::DirEntry for DirEntry {
+    fn path(&self) -> String {
+        self.path.clone()
+    }
+}
+
 pub struct VirtualIo {
     pub args: Vec<String>,
     pub fs: RefCell<FileSystem>,
@@ -134,6 +144,7 @@ impl Io for VirtualIo {
     type Stdout = VecRef;
     type Args = vec::IntoIter<String>;
     type Metadata = Metadata;
+    type DirEntry = DirEntry;
     fn args(&self) -> Self::Args {
         self.args.clone().into_iter()
     }
@@ -170,5 +181,16 @@ impl Io for VirtualIo {
     }
     fn stdout(&self) -> VecRef {
         self.stdout.clone()
+    }
+
+    fn read_dir(&self, path: &str) -> io::Result<Vec<DirEntry>> {
+        let fs = self.fs.borrow();
+        let i = fs.directory_set.iter().chain(fs.file_map.keys());
+        let x = i
+            .filter_map(|p| p.rsplit_once('/'))
+            .filter(|(a, _)| a == &path)
+            .map(|(_, b)| DirEntry { path: b.to_string() })
+            .collect();
+        Ok(x)
     }
 }

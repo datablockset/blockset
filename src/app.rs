@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use crate::{
     base32::{StrEx, ToBase32},
     file_table::FileTable,
-    io::Io,
+    io::{Io, DirEntry},
     level_storage::LevelStorage,
     state::{mb, progress, State},
     storage::{Null, Storage},
@@ -106,6 +106,23 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             table
                 .restore(Type::Main, &d, &mut f, stdout)
                 .to_string_result()?;
+            Ok(())
+        }
+        "info" => {
+            let a = io.read_dir("cdt0/parts/").to_string_result()?;
+            let mut ca = 0;
+            let mut cb = 0;
+            for ia in a {
+                let b = io.read_dir(&ia.path()).to_string_result()?;
+                for ib in b {
+                    let c = io.read_dir(&ib.path()).to_string_result()?;
+                    for ic in c {
+                        println(stdout, &ic.path())?;
+                    }
+                    cb += 1;
+                }
+                ca += 1;
+            }
             Ok(())
         }
         _ => Err("unknown command".to_string()),

@@ -6,11 +6,17 @@ use std::{
     io::{self, Stdout},
 };
 
-use crate::{Io, Metadata};
+use crate::{Io, Metadata, io::DirEntry};
 
 impl Metadata for fs::Metadata {
     fn len(&self) -> u64 {
         self.len()
+    }
+}
+
+impl DirEntry for fs::DirEntry {
+    fn path(&self) -> String {
+        self.path().to_str().unwrap().to_string()
     }
 }
 
@@ -23,6 +29,7 @@ impl Io for RealIo {
     type Stdout = Stdout;
     type File = File;
     type Metadata = fs::Metadata;
+    type DirEntry = fs::DirEntry;
 
     fn args(&self) -> Self::Args {
         args()
@@ -38,6 +45,10 @@ impl Io for RealIo {
 
     fn metadata(&self, path: &str) -> io::Result<fs::Metadata> {
         fs::metadata(path)
+    }
+
+    fn read_dir(&self, path: &str) -> io::Result<Vec<Self::DirEntry>> {
+        fs::read_dir(path)?.collect()
     }
 
     fn create_dir(&self, path: &str) -> io::Result<()> {
