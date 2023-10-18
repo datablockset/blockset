@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.3.2
+
+- improved info progress message. PR [#104](https://github.com/datablockset/blockset/pull/104).
+- fixed "Not a directory" info bug. PR [#106](https://github.com/datablockset/blockset/pull/106).
+
 ## 0.3.1
 
 - `info` command. PR [#99](https://github.com/datablockset/blockset/pull/99).
