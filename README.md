@@ -11,7 +11,7 @@ Articles:
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install).
-- For Windows, you may need Visual C++. You can get either either 
+- For Windows, you may need Visual C++. You can get either either
   - by installing [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/),
   - or adding [Desktop development with C++](https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170) to Visual Studio.
 
@@ -52,6 +52,10 @@ cargo uninstall blockset
 - get a file by address
   ```console
   blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./old.md
+  ```
+- information about the repository
+  ```console
+  blockset info
   ```
 
 ## For Developers
