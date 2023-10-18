@@ -9,6 +9,7 @@ use std::{
 
 use crate::io::Io;
 
+#[derive(Debug, Clone)]
 pub struct Metadata {
     len: u64,
 }
@@ -65,11 +66,16 @@ impl FileSystem {
 
 pub struct DirEntry {
     path: String,
+    metadata: Metadata,
 }
 
 impl crate::io::DirEntry for DirEntry {
+    type Metadata = Metadata;
     fn path(&self) -> String {
         self.path.clone()
+    }
+    fn metadata(&self) -> io::Result<Self::Metadata> {
+        Ok(self.metadata.clone())
     }
 }
 
@@ -185,11 +191,21 @@ impl Io for VirtualIo {
 
     fn read_dir(&self, path: &str) -> io::Result<Vec<DirEntry>> {
         let fs = self.fs.borrow();
-        let i = fs.directory_set.iter().chain(fs.file_map.keys());
+        let d = fs.directory_set.iter().map(|d| DirEntry {
+            path: d.to_string(),
+            metadata: Metadata { len: 0 },
+        });
+        let f = fs.file_map.iter().map(|(k, v)| DirEntry {
+            path: k.to_owned(),
+            metadata: Metadata {
+                len: v.0.borrow().len() as u64,
+            },
+        });
+        let i = d.chain(f);
         let x = i
-            .filter_map(|p| p.rsplit_once('/'))
-            .filter(|(a, _)| a == &path)
-            .map(|(_, b)| DirEntry { path: b.to_string() })
+            .filter(|p| {
+                if let Some((a, _)) = p.path.rsplit_once('/') { a == path } else { false }
+            })
             .collect();
         Ok(x)
     }

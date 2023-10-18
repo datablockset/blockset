@@ -15,8 +15,12 @@ impl Metadata for fs::Metadata {
 }
 
 impl DirEntry for fs::DirEntry {
+    type Metadata = fs::Metadata;
     fn path(&self) -> String {
         self.path().to_str().unwrap().to_string()
+    }
+    fn metadata(&self) -> io::Result<Self::Metadata> {
+        self.metadata()
     }
 }
 

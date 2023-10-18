@@ -9,7 +9,9 @@ pub trait Metadata {
 }
 
 pub trait DirEntry {
+    type Metadata: Metadata;
     fn path(&self) -> String;
+    fn metadata(&self) -> io::Result<Self::Metadata>;
 }
 
 pub trait Io {
