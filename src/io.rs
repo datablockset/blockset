@@ -8,11 +8,18 @@ pub trait Metadata {
     fn len(&self) -> u64;
 }
 
+pub trait DirEntry {
+    type Metadata: Metadata;
+    fn path(&self) -> String;
+    fn metadata(&self) -> io::Result<Self::Metadata>;
+}
+
 pub trait Io {
     type Args: Iterator<Item = String>;
     type File: Read + Write + fmt::Debug;
     type Stdout: Write;
     type Metadata: Metadata;
+    type DirEntry: DirEntry;
     fn args(&self) -> Self::Args;
     fn stdout(&self) -> Self::Stdout;
     fn metadata(&self, path: &str) -> io::Result<Self::Metadata>;
@@ -25,6 +32,7 @@ pub trait Io {
         file.read_to_end(&mut result)?;
         Ok(result)
     }
+    fn read_dir(&self, path: &str) -> io::Result<Vec<Self::DirEntry>>;
     fn read_to_string(&self, path: &str) -> io::Result<String> {
         let mut file = self.open(path)?;
         let mut result = String::default();

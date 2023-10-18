@@ -21,6 +21,11 @@ impl<'a, T: Write> State<'a, T> {
         let mut vec = Vec::default();
         vec.resize(self.prior, 8);
         vec.extend_from_slice(s.as_bytes());
+        if s.len() < self.prior {
+            let len = self.prior - s.len();
+            vec.resize(self.prior * 2, 0x20);
+            vec.resize(vec.len() + len, 8);
+        }
         self.stdout.write_all(&vec)?;
         self.prior = s.len();
         Ok(())

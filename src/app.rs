@@ -1,9 +1,9 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 
 use crate::{
     base32::{StrEx, ToBase32},
     file_table::FileTable,
-    io::Io,
+    io::{DirEntry, Io},
     level_storage::LevelStorage,
     state::{mb, progress, State},
     storage::{Null, Storage},
@@ -82,6 +82,35 @@ fn add<'a, T: Io, S: 'a + Storage>(
     Ok(())
 }
 
+fn calculate_total(io: &impl Io, d: &str, mut total: u64) -> io::Result<u64> {
+    let stdout = &mut io.stdout();
+    let a = io.read_dir(&("cdt0/".to_owned() + d))?;
+    let an = a.len() as u64;
+    let state = &mut State::new(stdout);
+    for (ai, ia) in a.iter().enumerate() {
+        let b = io.read_dir(&ia.path())?;
+        let bn = b.len() as u64;
+        for (bi, ib) in b.iter().enumerate() {
+            let c = io.read_dir(&ib.path())?;
+            let cn = c.len() as u64;
+            for (ci, ic) in c.iter().enumerate() {
+                let d = ic.metadata()?.len();
+                total += d;
+                //
+                let p =
+                    ((bn * ai as u64 + bi as u64) * cn + ci as u64) as f64 / (an * bn * cn) as f64;
+                let e = (total as f64) / p;
+                let s = "size: ~".to_string()
+                    + &(e as u64).to_string()
+                    + " B. "
+                    + &((p * 100.0) as u64).to_string();
+                state.set(&s)?;
+            }
+        }
+    }
+    Ok(total)
+}
+
 pub fn run(io: &impl Io) -> Result<(), String> {
     let stdout = &mut io.stdout();
     let mut a = io.args();
@@ -106,6 +135,13 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             table
                 .restore(Type::Main, &d, &mut f, stdout)
                 .to_string_result()?;
+            Ok(())
+        }
+        "info" => {
+            let r = calculate_total(io, "roots", 0).to_string_result()?;
+            let total = calculate_total(io, "parts", r).to_string_result()?;
+            let s = "size: ".to_owned() + &total.to_string() + " B.";
+            println(stdout, &s)?;
             Ok(())
         }
         _ => Err("unknown command".to_string()),
@@ -217,6 +253,24 @@ mod test {
         run(&mut io).unwrap();
         let v = io.read("b.txt").unwrap();
         assert_eq!(v, "Hello, world!".as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_info() {
+        let d: U256 = [
+            0x00000021_646c726f_77202c6f_6c6c6548,
+            0x68000000_00000000_00000000_00000000,
+        ];
+        let s = compress_one(&d).to_base32();
+        let mut io = VirtualIo::new(&["info"]);
+        // io.create_dir("cdt0").unwrap();
+        io.write_recursively(
+            &("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]),
+            " Hello, world!".as_bytes(),
+        )
+        .unwrap();
+        run(&mut io).unwrap();
     }
 
     #[wasm_bindgen_test]

@@ -9,6 +9,7 @@ use std::{
 
 use crate::io::Io;
 
+#[derive(Debug, Clone)]
 pub struct Metadata {
     len: u64,
 }
@@ -60,6 +61,21 @@ impl FileSystem {
             }
         }
         Ok(())
+    }
+}
+
+pub struct DirEntry {
+    path: String,
+    metadata: Metadata,
+}
+
+impl crate::io::DirEntry for DirEntry {
+    type Metadata = Metadata;
+    fn path(&self) -> String {
+        self.path.clone()
+    }
+    fn metadata(&self) -> io::Result<Self::Metadata> {
+        Ok(self.metadata.clone())
     }
 }
 
@@ -134,6 +150,7 @@ impl Io for VirtualIo {
     type Stdout = VecRef;
     type Args = vec::IntoIter<String>;
     type Metadata = Metadata;
+    type DirEntry = DirEntry;
     fn args(&self) -> Self::Args {
         self.args.clone().into_iter()
     }
@@ -170,5 +187,30 @@ impl Io for VirtualIo {
     }
     fn stdout(&self) -> VecRef {
         self.stdout.clone()
+    }
+
+    fn read_dir(&self, path: &str) -> io::Result<Vec<DirEntry>> {
+        let fs = self.fs.borrow();
+        let d = fs.directory_set.iter().map(|d| DirEntry {
+            path: d.to_string(),
+            metadata: Metadata { len: 0 },
+        });
+        let f = fs.file_map.iter().map(|(k, v)| DirEntry {
+            path: k.to_owned(),
+            metadata: Metadata {
+                len: v.0.borrow().len() as u64,
+            },
+        });
+        let i = d.chain(f);
+        let x = i
+            .filter(|p| {
+                if let Some((a, _)) = p.path.rsplit_once('/') {
+                    a == path
+                } else {
+                    false
+                }
+            })
+            .collect();
+        Ok(x)
     }
 }
