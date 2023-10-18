@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.3.0
+
+- Breaking change in the repository directory structure. Issue: [#78](https://github.com/datablockset/blockset/issues/78).
+
 ## 0.2.4
 
 - Fix a progress message. PR [#85](https://github.com/datablockset/blockset/pull/85).
