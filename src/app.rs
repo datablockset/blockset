@@ -82,10 +82,11 @@ fn add<'a, T: Io, S: 'a + Storage>(
     Ok(())
 }
 
-fn calculate_total(io: &impl Io, d: &str, mut total: u64) -> io::Result<u64> {
+fn calculate_total(io: &impl Io, d: &str, extra: u64) -> io::Result<u64> {
     let stdout = &mut io.stdout();
     let a = io.read_dir(&("cdt0/".to_owned() + d))?;
     let an = a.len() as u64;
+    let mut total = 0;
     let state = &mut State::new(stdout);
     for (ai, ia) in a.iter().enumerate() {
         let b = io.read_dir(&ia.path())?;
@@ -101,7 +102,7 @@ fn calculate_total(io: &impl Io, d: &str, mut total: u64) -> io::Result<u64> {
                     ((bn * ai as u64 + bi as u64) * cn + ci as u64) as f64 / (an * bn * cn) as f64;
                 let e = (total as f64) / p;
                 let s = "size: ~".to_string()
-                    + &(e as u64).to_string()
+                    + &(extra + e as u64).to_string()
                     + " B. "
                     + &((p * 100.0) as u64).to_string()
                     + "%.";
@@ -109,7 +110,7 @@ fn calculate_total(io: &impl Io, d: &str, mut total: u64) -> io::Result<u64> {
             }
         }
     }
-    Ok(total)
+    Ok(extra + total)
 }
 
 pub fn run(io: &impl Io) -> Result<(), String> {
