@@ -12,6 +12,9 @@ impl Metadata for fs::Metadata {
     fn len(&self) -> u64 {
         self.len()
     }
+    fn is_dir(&self) -> bool {
+        self.is_dir()
+    }
 }
 
 impl DirEntry for fs::DirEntry {
