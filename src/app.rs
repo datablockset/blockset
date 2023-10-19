@@ -2,7 +2,7 @@ use std::io::{self, Read, Write};
 
 use crate::{
     base32::{StrEx, ToBase32},
-    file_table::FileTable,
+    file_table::{FileTable, CDT0, PARTS, ROOTS},
     io::{DirEntry, Io},
     level_storage::LevelStorage,
     state::{mb, progress, State},
@@ -82,13 +82,14 @@ fn add<'a, T: Io, S: 'a + Storage>(
     Ok(())
 }
 
-fn calculate_total(io: &impl Io, d: &str, extra: u64) -> io::Result<u64> {
+fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
-    let a = io.read_dir_type(&("cdt0/".to_owned() + d), true);
-    let a = match a {
-        Ok(a) => a,
-        Err(_) => return Ok(extra),
+    let f = |d| {
+        io.read_dir_type(&(CDT0.to_owned() + "/" + d), true)
+            .unwrap_or_default()
     };
+    let mut a = f(ROOTS);
+    a.extend(f(PARTS));
     let an = a.len() as u64;
     let mut total = 0;
     let state = &mut State::new(stdout);
@@ -101,17 +102,17 @@ fn calculate_total(io: &impl Io, d: &str, extra: u64) -> io::Result<u64> {
                 let d = ic.metadata()?.len();
                 total += d;
             }
-            let p = (bn * ai as u64 + bi as u64) as f64 / (an * bn) as f64;
-            let e = (extra + total) as f64 / p;
+            let p = (bn * ai as u64 + bi as u64 + 1) as f64 / (an * bn) as f64;
+            let e = total as f64 / p;
             let s = "size: ~".to_string()
-                + &mb(extra + e as u64)
+                + &mb(e as u64)
                 + ". "
                 + &((p * 100.0) as u64).to_string()
                 + "%.";
             state.set(&s)?;
         }
     }
-    Ok(extra + total)
+    Ok(total)
 }
 
 pub fn run(io: &impl Io) -> Result<(), String> {
@@ -141,8 +142,7 @@ pub fn run(io: &impl Io) -> Result<(), String> {
             Ok(())
         }
         "info" => {
-            let r = calculate_total(io, "roots", 0).to_string_result()?;
-            let total = calculate_total(io, "parts", r).to_string_result()?;
+            let total = calculate_total(io).to_string_result()?;
             let s = "size: ".to_owned() + &total.to_string() + " B.";
             println(stdout, &s)?;
             Ok(())
