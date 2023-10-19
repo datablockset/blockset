@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.3.3
+
+- Another bug fix in `info`.
+
 ## 0.3.2
 
 - An improved info progress message. PR [#104](https://github.com/datablockset/blockset/pull/104).

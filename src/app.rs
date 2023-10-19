@@ -101,8 +101,8 @@ fn calculate_total(io: &impl Io, d: &str, extra: u64) -> io::Result<u64> {
                 let d = ic.metadata()?.len();
                 total += d;
             }
-            let p = (bn * ai as u64 + bi as u64) as f64 / (an * bn) as f64;
-            let e = (extra + total) as f64 / p;
+            let p = (bn * ai as u64 + bi as u64 + 1) as f64 / (an * bn) as f64;
+            let e = total as f64 / p;
             let s = "size: ~".to_string()
                 + &mb(extra + e as u64)
                 + ". "
