@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.3.3
 
-- Another bug fix in `info`.
+- Another bug fix in `info` (division by zero). PR [#108](https://github.com/datablockset/blockset/pull/108).
 
 ## 0.3.2
 
