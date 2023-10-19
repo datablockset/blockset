@@ -9,13 +9,17 @@ use crate::{
 
 pub struct FileTable<'a, T: Io>(pub &'a T);
 
-pub const DIR: &str = "cdt0";
+pub const CDT0: &str = "cdt0";
+
+pub const ROOTS: &str = "roots";
+
+pub const PARTS: &str = "parts";
 
 fn path(t: Type, key: &U224) -> String {
     let s = key.to_base32();
-    DIR.to_owned()
+    CDT0.to_owned()
         + "/"
-        + ["roots", "parts"][t as usize]
+        + [ROOTS, PARTS][t as usize]
         + "/"
         + &s[..2]
         + "/"

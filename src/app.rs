@@ -2,7 +2,7 @@ use std::io::{self, Read, Write};
 
 use crate::{
     base32::{StrEx, ToBase32},
-    file_table::FileTable,
+    file_table::{FileTable, CDT0, PARTS, ROOTS},
     io::{DirEntry, Io},
     level_storage::LevelStorage,
     state::{mb, progress, State},
@@ -85,11 +85,11 @@ fn add<'a, T: Io, S: 'a + Storage>(
 fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
     let f = |d| {
-        io.read_dir_type(&("cdt0/".to_owned() + d), true)
+        io.read_dir_type(&(CDT0.to_owned() + "/" + d), true)
             .unwrap_or_default()
     };
-    let mut a = f("roots");
-    a.extend(f("parts"));
+    let mut a = f(ROOTS);
+    a.extend(f(PARTS));
     let an = a.len() as u64;
     let mut total = 0;
     let state = &mut State::new(stdout);
