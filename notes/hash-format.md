@@ -37,7 +37,7 @@ fn get_data(a: U256) -> U256 {
     a & ((1 << 248) - 1)
 }
 
-fn merge(a: U256, b: U225) -> U256 {
+fn merge(a: U256, b: U256) -> U256 {
     let len_a = len(a);
     let len_b = len(b);
     let len = len_a + len_b;
