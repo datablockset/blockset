@@ -14,7 +14,7 @@ const MAX_LEN: u32 = 248;
 // a length of the sequence in bits.
 // The function returns 255 if the digest is a hash.
 fn len(a: U256) -> u32 {
-    (a >> 248) as u32
+    (a >> MAX_LEN) as u32
 }
 
 const HASH_MASK = 0xFFFF_FFFF << 224;
@@ -28,7 +28,7 @@ fn hash_to_digest(hash: U224) -> U256 {
 
 ```rust
 fn byte_to_digest(b: u8) -> U256 {
-    (b as U256) | (0x08 << 248)
+    (b as U256) | (0x08 << MAX_LEN)
 }
 ```
 
@@ -47,7 +47,7 @@ fn merge(a: U256, b: U256) -> U256 {
     let len = len_a + len_b;
     if len <= MAX_LEN {
         let data = get_data(a) | (get_data(b) << len_a);
-        data | (len << 248)
+        data | (len << MAX_LEN)
     } else {
         hash_to_digest(sha224(a, b))
     }
