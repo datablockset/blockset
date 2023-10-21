@@ -22,7 +22,7 @@ fn to_digest(hash: U224) -> U256 {
 
 ## From byte to item
 
-`(b as U256) | (0x01 << 248)`
+`(b as U256) | (0x08 << 248)`
 
 ## Merge function
 
