@@ -15,14 +15,18 @@ fn len(a: U256) -> u8 {
     (a >> 248) as u8
 }
 
-fn to_digest(hash: U224) -> U256 {
+fn hash_to_digest(hash: U224) -> U256 {
      (hash as U256) | (0xFF << 248)   
 }
 ```
 
-## From byte to item
+## From byte to digest
 
-`(b as U256) | (0x08 << 248)`
+```rust
+fn byte_to_digest(b: u8) -> U256 {
+    (b as U256) | (0x08 << 248)
+}
+```
 
 ## Merge function
 
