@@ -14,6 +14,9 @@ A tag is eight highest bits, `item >> 248`:
 fn len(a: U256) -> u8 {
     (a >> 248) as u8
 }
+
+fn to_digest(hash: U224) -> U256 {
+}
 ```
 
 ## From byte to item
@@ -23,7 +26,6 @@ fn len(a: U256) -> u8 {
 ## Merge function
 
 ```rust
-fn f(a: U256, b: U256) -> U256 {
-    
+fn merge(a: U256, b: U225) -> U256 {
 }
 ```
