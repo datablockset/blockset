@@ -5,12 +5,14 @@ Each tree node contains a digest.
 A digest is a 256-bit unsigned integer, `U256`.
 
 A tag is eight highest bits, `item >> 248`:
-- `0..=248`: a byte sequence. In this case, a tag is the length of the sequence.
+- `0..=248`: a bit sequence. In this case, a tag is the length of the sequence.
 - `255`: a hash.
 
 ```rust
-fn f(a: U256) -> u8 {
-    (a >> 258) as u8
+// a length of the sequence in bits.
+// The function returns 255 if the digest is a hash.
+fn len(a: U256) -> u8 {
+    (a >> 248) as u8
 }
 ```
 
