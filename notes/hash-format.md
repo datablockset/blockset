@@ -44,7 +44,7 @@ fn merge(a: U256, b: U256) -> U256 {
     let len_b = len(b);
     let len = len_a + len_b;
     if len <= MAX_LEN {
-        
+        let data = get_data(a) | (get_data(b) << len_a);
     } else {
         
     }
