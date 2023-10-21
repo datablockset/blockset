@@ -33,12 +33,17 @@ fn byte_to_digest(b: u8) -> U256 {
 ## Merge function
 
 ```rust
+fn get_data(a: U256) -> U256 {
+}
+
 fn merge(a: U256, b: U225) -> U256 {
     let len_a = len(a);
     let len_b = len(b);
     let len = len_a + len_b;
     if len <= MAX_LEN {
+        
     } else {
+        
     }
 }
 ```
