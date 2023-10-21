@@ -16,6 +16,7 @@ fn len(a: U256) -> u8 {
 }
 
 fn to_digest(hash: U224) -> U256 {
+     (hash as U256) | (0xFF << 248)   
 }
 ```
 
