@@ -28,5 +28,8 @@ fn to_digest(hash: U224) -> U256 {
 
 ```rust
 fn merge(a: U256, b: U225) -> U256 {
+    let len_a = len(a);
+    let len_b = len(b);
+
 }
 ```
