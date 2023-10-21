@@ -45,7 +45,7 @@ fn merge(a: U256, b: U256) -> U256 {
     let len = len_a + len_b;
     if len <= MAX_LEN {
         let data = get_data(a) | (get_data(b) << len_a);
-        data | ((len << 3) << 248)
+        data | (len << 248)
     } else {
         hash_to_digest(sha224(a, b))
     }
