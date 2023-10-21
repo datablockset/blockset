@@ -34,6 +34,7 @@ fn byte_to_digest(b: u8) -> U256 {
 
 ```rust
 fn get_data(a: U256) -> U256 {
+    a & ((1 << 248) - 1)
 }
 
 fn merge(a: U256, b: U225) -> U256 {
