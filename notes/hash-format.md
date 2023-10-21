@@ -9,10 +9,12 @@ A tag is eight highest bits, `item >> 248`:
 - `255`: a hash.
 
 ```rust
+const MAX_LEN: u32 = 248;
+
 // a length of the sequence in bits.
 // The function returns 255 if the digest is a hash.
-fn len(a: U256) -> u8 {
-    (a >> 248) as u8
+fn len(a: U256) -> u32 {
+    (a >> 248) as u32
 }
 
 fn hash_to_digest(hash: U224) -> U256 {
@@ -34,6 +36,9 @@ fn byte_to_digest(b: u8) -> U256 {
 fn merge(a: U256, b: U225) -> U256 {
     let len_a = len(a);
     let len_b = len(b);
-
+    let len = len_a + len_b;
+    if len <= MAX_LEN {
+    } else {
+    }
 }
 ```
