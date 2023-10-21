@@ -20,6 +20,7 @@ mod u224;
 mod u256;
 mod u32;
 mod u512;
+mod async_io;
 
 #[cfg(test)]
 mod mem_table;
