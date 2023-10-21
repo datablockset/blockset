@@ -33,8 +33,10 @@ fn byte_to_digest(b: u8) -> U256 {
 ## Merge function
 
 ```rust
+const DATA_MASK = (1 << 248) - 1;
+
 fn get_data(a: U256) -> U256 {
-    a & ((1 << 248) - 1)
+    a & DATA_MASK
 }
 
 fn merge(a: U256, b: U256) -> U256 {
