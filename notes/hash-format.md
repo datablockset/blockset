@@ -17,8 +17,10 @@ fn len(a: U256) -> u32 {
     (a >> 248) as u32
 }
 
+const HASH_MASK = 0xFFFF_FFFF << 224;
+
 fn hash_to_digest(hash: U224) -> U256 {
-     (hash as U256) | (0xFFFF_FFFF << 224)   
+     (hash as U256) | HASH_MASK
 }
 ```
 
