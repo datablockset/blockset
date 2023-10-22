@@ -1,9 +1,10 @@
-use std::{io, os::windows::raw::HANDLE, ptr::null_mut, ffi::CStr};
+use std::{ffi::CStr, io, os::windows::raw::HANDLE, ptr::null_mut};
 
 use crate::windows_api::{
-    CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetOverlappedResult, ReadFile,
-    WriteFile, ACCESS_MASK, CREATE_ALWAYS, DWORD, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED,
-    GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE, LPCVOID, LPVOID, OPEN_ALWAYS, OVERLAPPED, GetLastError, ERROR_IO_PENDING, BOOL, to_bool,
+    to_bool, CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetLastError,
+    GetOverlappedResult, ReadFile, WriteFile, ACCESS_MASK, BOOL, CREATE_ALWAYS, DWORD,
+    ERROR_IO_PENDING, FILE_FLAG_OVERLAPPED, GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE,
+    LPCVOID, LPVOID, OPEN_ALWAYS, OVERLAPPED,
 };
 
 struct Handle(HANDLE);
@@ -48,7 +49,11 @@ impl Handle {
         Self::create_file(file_name, GENERIC_READ, OPEN_ALWAYS)
     }
 
-    fn to_operation<'a>(&'a mut self, overlapped: &'a mut Overlapped, result: BOOL) -> io::Result<Operation<'a>> {
+    fn create_operation<'a>(
+        &'a mut self,
+        overlapped: &'a mut Overlapped,
+        result: BOOL,
+    ) -> io::Result<Operation<'a>> {
         assert!(!to_bool(result));
         let e = unsafe { GetLastError() };
         if e == ERROR_IO_PENDING {
@@ -75,7 +80,7 @@ impl Handle {
                 &mut overlapped.0,
             )
         };
-        self.to_operation(overlapped, result)
+        self.create_operation(overlapped, result)
     }
 
     pub fn write<'a>(
@@ -92,7 +97,7 @@ impl Handle {
                 &mut overlapped.0,
             )
         };
-        self.to_operation(overlapped, result)
+        self.create_operation(overlapped, result)
     }
 }
 
@@ -142,7 +147,6 @@ mod test {
         //
         let x: CString = CString::new("_test.txt").unwrap();
         {
-
             let mut handle = Handle::create(&x).unwrap();
             let mut overlapped = Overlapped(Default::default());
             let mut operation = handle.write(&mut overlapped, b"Hello World!").unwrap();

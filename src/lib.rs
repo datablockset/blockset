@@ -20,8 +20,8 @@ mod u224;
 mod u256;
 mod u32;
 mod u512;
-mod windows_api;
 mod windows;
+mod windows_api;
 
 #[cfg(test)]
 mod mem_table;

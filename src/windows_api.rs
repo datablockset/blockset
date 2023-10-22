@@ -1,10 +1,13 @@
 #![cfg(target_os = "windows")]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+#![allow(clippy::upper_case_acronyms)]
 
 use std::{
+    io,
     ops::BitOr,
-    os::{raw::c_void, windows::raw::HANDLE}, ptr::null_mut, io,
+    os::{raw::c_void, windows::raw::HANDLE},
+    ptr::null_mut,
 };
 
 pub const INVALID_HANDLE_VALUE: HANDLE = -1isize as HANDLE;
@@ -32,9 +35,9 @@ const TRUE: BOOL = BOOL(1);
 pub const fn to_bool(x: BOOL) -> bool {
     x.0 != FALSE.0
 }
-impl Into<bool> for BOOL {
-    fn into(self) -> bool {
-        to_bool(self)
+impl From<BOOL> for bool {
+    fn from(val: BOOL) -> Self {
+        to_bool(val)
     }
 }
 impl From<bool> for BOOL {
@@ -121,7 +124,6 @@ pub const TRUNCATE_EXISTING: CreationDisposition = CreationDisposition(5);
 #[repr(transparent)]
 pub struct FlagsAndAttributes(DWORD);
 pub const FILE_FLAG_OVERLAPPED: FlagsAndAttributes = FlagsAndAttributes(0x40000000);
-pub const FILE_ATTRIBUTE_NORMAL: FlagsAndAttributes = FlagsAndAttributes(0x00000080);
 impl BitOr for FlagsAndAttributes {
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self {
@@ -130,7 +132,7 @@ impl BitOr for FlagsAndAttributes {
 }
 
 // https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--500-999-
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 #[repr(transparent)]
 pub struct Error(DWORD);
 pub const ERROR_IO_PENDING: Error = Error(997);
@@ -170,11 +172,11 @@ extern "system" {
 #[link(name = "kernel32")]
 extern "system" {
     pub fn WriteFile(
-        hFile: HANDLE,                 // [in]
-        lpBuffer: LPCVOID,             // [in]
-        nNumberOfBytesToWrite: DWORD,  // [in]
+        hFile: HANDLE,                   // [in]
+        lpBuffer: LPCVOID,               // [in]
+        nNumberOfBytesToWrite: DWORD,    // [in]
         lpNumberOfBytesWritten: LPDWORD, // [out, optional]
-        lpOverlapped: LPOVERLAPPED,    // [in, out, optional]
+        lpOverlapped: LPOVERLAPPED,      // [in, out, optional]
     ) -> BOOL;
 }
 
