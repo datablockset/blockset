@@ -157,14 +157,14 @@ mod test {
         let x: CString = CString::new("_test.txt").unwrap();
         {
             let mut handle = Handle::create(&x).unwrap();
-            let mut overlapped = Overlapped(Default::default());
+            let mut overlapped = Overlapped::default();
             let mut operation = handle.write(&mut overlapped, b"Hello World!").unwrap();
             let result = operation.get_result(true).unwrap();
             assert_eq!(result, 12);
         }
         {
             let mut handle = Handle::open(&x).unwrap();
-            let mut overlapped = Overlapped(Default::default());
+            let mut overlapped = Overlapped::default();
             let mut buffer = [0u8; 1024];
             {
                 let mut operation = handle.read(&mut overlapped, &mut buffer).unwrap();
