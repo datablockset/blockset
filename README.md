@@ -1,4 +1,4 @@
-# Data Block Set
+# BLOCKSET
 
 The `blockset` application is a command line program that can store and retrieve data blocks using a content-dependent tree (CDT) hash function as a universal address of the blocks.
 
