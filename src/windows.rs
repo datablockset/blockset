@@ -1,3 +1,4 @@
+#![cfg(target_os = "windows")]
 use std::{ffi::CStr, io, os::windows::raw::HANDLE, ptr::null_mut};
 
 use crate::windows_api::{
