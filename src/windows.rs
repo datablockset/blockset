@@ -55,15 +55,21 @@ impl Handle {
         overlapped: &'a mut Overlapped,
         result: BOOL,
     ) -> io::Result<Operation<'a>> {
-        assert!(!to_bool(result));
-        let e = unsafe { GetLastError() };
-        if e == ERROR_IO_PENDING {
-            Ok(Operation {
+        if result.into() {
+            return Ok(Operation {
                 handle: self,
                 overlapped,
-            })
+            });
         } else {
-            Err(e.to_error())
+            let e = unsafe { GetLastError() };
+            if e == ERROR_IO_PENDING {
+                Ok(Operation {
+                    handle: self,
+                    overlapped,
+                })
+            } else {
+                Err(e.to_error())
+            }
         }
     }
 
@@ -72,6 +78,7 @@ impl Handle {
         overlapped: &'a mut Overlapped,
         buffer: &'a mut [u8], // it's important that the buffer has the same life time as the overlapped!
     ) -> io::Result<Operation<'a>> {
+        *overlapped = Default::default();
         let result = unsafe {
             ReadFile(
                 self.0,
@@ -89,6 +96,7 @@ impl Handle {
         overlapped: &'a mut Overlapped,
         buffer: &'a [u8], // it's important that the buffer has the same life time as the overlapped!
     ) -> io::Result<Operation<'a>> {
+        *overlapped = Default::default();
         let result = unsafe {
             WriteFile(
                 self.0,
