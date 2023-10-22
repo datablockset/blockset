@@ -174,10 +174,6 @@ impl Drop for Handle {
     }
 }
 
-const fn size<T>(v: &[T]) -> DWORD {
-    (v.len() * size_of::<T>()) as DWORD
-}
-
 impl Handle {
     fn create_file(file_name: &str) -> Self {
         Self(unsafe {
@@ -195,13 +191,13 @@ impl Handle {
     fn read_file<'a, 'b, 'c, T>(
         &'a mut self,
         overlapped: &'b mut Overlapped,
-        buffer: &'c mut [T],
-    ) -> io::Result<Operation<'a, 'b, 'c, T>> {
+        buffer: &'c mut [u8],
+    ) -> io::Result<Operation<'a, 'b, 'c>> {
         to_result(unsafe {
             ReadFile(
                 self.0,
                 buffer.as_mut_ptr() as LPVOID,
-                size(buffer),
+                buffer.len() as DWORD,
                 null_mut(),
                 &mut overlapped.0,
             )
@@ -212,16 +208,16 @@ impl Handle {
             _buffer: buffer,
         })
     }
-    fn write_file<'a, 'b, 'c, T>(
+    fn write_file<'a, 'b, 'c>(
         &'a mut self,
         overlapped: &'b mut Overlapped,
-        buffer: &'c [T],
-    ) -> io::Result<Operation<'a, 'b, 'c, T>> {
+        buffer: &'c [u8],
+    ) -> io::Result<Operation<'a, 'b, 'c>> {
         to_result(unsafe {
             WriteFile(
                 self.0,
                 buffer.as_ptr() as LPVOID,
-                size(buffer),
+                buffer.len() as DWORD,
                 null_mut(),
                 &mut overlapped.0,
             )
@@ -236,17 +232,18 @@ impl Handle {
 
 struct Overlapped(OVERLAPPED);
 
-struct Operation<'a, 'b, 'c, T> {
+struct Operation<'a, 'b, 'c> {
     handle: &'a mut Handle,
     overlapped: &'b mut Overlapped,
-    _buffer: &'c mut [T],
+    _buffer: &'c mut [u8],
 }
 
-impl<T> Drop for Operation<'_, '_, '_, T> {
+impl Drop for Operation<'_, '_, '_> {
     fn drop(&mut self) {
         unsafe {
             CancelIoEx(self.handle.0, &mut self.overlapped.0);
         }
+        let _ = self.get_result();
     }
 }
 
@@ -258,7 +255,7 @@ fn to_result(v: BOOL) -> io::Result<()> {
     }
 }
 
-impl<'a, 'b, 'c, T> Operation<'a, 'b, 'c, T> {
+impl<'a, 'b, 'c> Operation<'a, 'b, 'c> {
     fn get_result(&mut self) -> io::Result<usize> {
         let mut result: DWORD = 0;
         to_result(unsafe {
