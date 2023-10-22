@@ -1,4 +1,10 @@
-use std::os::windows::raw::HANDLE;
+use std::{io, os::windows::raw::HANDLE, ptr::null_mut, ffi::CStr};
+
+use crate::windows_api::{
+    CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetOverlappedResult, ReadFile,
+    WriteFile, ACCESS_MASK, CREATE_ALWAYS, DWORD, FILE_ATTRIBUTE_NORMAL, FILE_FLAG_OVERLAPPED,
+    GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE, LPCVOID, LPVOID, OPEN_ALWAYS, OVERLAPPED, GetLastError, ERROR_IO_PENDING, BOOL, to_bool,
+};
 
 struct Handle(HANDLE);
 
@@ -11,25 +17,56 @@ impl Drop for Handle {
 }
 
 impl Handle {
-    fn create_file(file_name: &str) -> Self {
-        Self(unsafe {
+    fn create_file(
+        file_name: &CStr,
+        desired_access: ACCESS_MASK,
+        creation_disposition: CreationDisposition,
+    ) -> io::Result<Self> {
+        let result = unsafe {
             CreateFileA(
-                file_name.as_bytes().as_ptr(),
-                GENERIC_READ | GENERIC_WRITE,
-                ShareMode::default(),
+                file_name.as_ptr(),
+                desired_access,
+                0,
                 null_mut(),
-                CREATE_NEW,
-                FlagsAndAttributes::default(),
+                creation_disposition,
+                FILE_FLAG_OVERLAPPED,
                 null_mut(),
             )
-        })
+        };
+        if result == INVALID_HANDLE_VALUE {
+            let e = io::Error::last_os_error();
+            println!("{}", e);
+            Err(io::Error::last_os_error())
+        } else {
+            Ok(Self(result))
+        }
     }
-    fn read_file<'a, 'b, 'c, T>(
+    pub fn create(file_name: &CStr) -> io::Result<Self> {
+        Self::create_file(file_name, GENERIC_WRITE, CREATE_ALWAYS)
+    }
+    pub fn open(file_name: &CStr) -> io::Result<Self> {
+        Self::create_file(file_name, GENERIC_READ, OPEN_ALWAYS)
+    }
+
+    fn to_operation<'a>(&'a mut self, overlapped: &'a mut Overlapped, result: BOOL) -> io::Result<Operation<'a>> {
+        assert!(!to_bool(result));
+        let e = unsafe { GetLastError() };
+        if e == ERROR_IO_PENDING {
+            Ok(Operation {
+                handle: self,
+                overlapped,
+            })
+        } else {
+            Err(e.to_error())
+        }
+    }
+
+    pub fn read<'a>(
         &'a mut self,
-        overlapped: &'b mut Overlapped,
-        buffer: &'c mut [u8],
-    ) -> io::Result<Operation<'a, 'b, 'c>> {
-        to_result(unsafe {
+        overlapped: &'a mut Overlapped,
+        buffer: &'a mut [u8], // it's important that the buffer has the same life time as the overlapped!
+    ) -> io::Result<Operation<'a>> {
+        let result = unsafe {
             ReadFile(
                 self.0,
                 buffer.as_mut_ptr() as LPVOID,
@@ -37,66 +74,91 @@ impl Handle {
                 null_mut(),
                 &mut overlapped.0,
             )
-        })?;
-        Ok(Operation {
-            handle: self,
-            overlapped,
-            _buffer: buffer,
-        })
+        };
+        self.to_operation(overlapped, result)
     }
-    fn write_file<'a, 'b, 'c>(
+
+    pub fn write<'a>(
         &'a mut self,
-        overlapped: &'b mut Overlapped,
-        buffer: &'c [u8],
-    ) -> io::Result<Operation<'a, 'b, 'c>> {
-        to_result(unsafe {
+        overlapped: &'a mut Overlapped,
+        buffer: &'a [u8], // it's important that the buffer has the same life time as the overlapped!
+    ) -> io::Result<Operation<'a>> {
+        let result = unsafe {
             WriteFile(
                 self.0,
-                buffer.as_ptr() as LPVOID,
+                buffer.as_ptr() as LPCVOID,
                 buffer.len() as DWORD,
                 null_mut(),
                 &mut overlapped.0,
             )
-        })?;
-        Ok(Operation {
-            handle: self,
-            overlapped,
-            _buffer: &mut [],
-        })
+        };
+        self.to_operation(overlapped, result)
     }
 }
 
+#[derive(Default)]
 struct Overlapped(OVERLAPPED);
 
-struct Operation<'a, 'b, 'c> {
+struct Operation<'a> {
     handle: &'a mut Handle,
-    overlapped: &'b mut Overlapped,
-    _buffer: &'c mut [u8],
+    overlapped: &'a mut Overlapped,
 }
 
-impl Drop for Operation<'_, '_, '_> {
+impl Drop for Operation<'_> {
     fn drop(&mut self) {
         unsafe {
             CancelIoEx(self.handle.0, &mut self.overlapped.0);
         }
-        let _ = self.get_result();
+        let _ = self.get_result(true);
     }
 }
 
-fn to_result(v: BOOL) -> io::Result<()> {
-    if v.into() {
-        Ok(())
-    } else {
-        Err(io::Error::last_os_error())
-    }
-}
-
-impl<'a, 'b, 'c> Operation<'a, 'b, 'c> {
-    fn get_result(&mut self) -> io::Result<usize> {
+impl Operation<'_> {
+    fn get_result(&mut self, wait: bool) -> io::Result<usize> {
         let mut result: DWORD = 0;
-        to_result(unsafe {
-            GetOverlappedResult(self.handle.0, &mut self.overlapped.0, &mut result, FALSE)
-        })?;
-        Ok(result as usize)
+        let r = unsafe {
+            GetOverlappedResult(
+                self.handle.0,
+                &mut self.overlapped.0,
+                &mut result,
+                wait.into(),
+            )
+        };
+        if r.into() {
+            Ok(result as usize)
+        } else {
+            Err(io::Error::last_os_error())
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::ffi::CString;
+
+    #[test]
+    fn test() {
+        use super::{Handle, Overlapped};
+        //
+        let x: CString = CString::new("test.txt").unwrap();
+        {
+
+            let mut handle = Handle::create(&x).unwrap();
+            let mut overlapped = Overlapped(Default::default());
+            let mut operation = handle.write(&mut overlapped, b"Hello World!").unwrap();
+            let result = operation.get_result(true).unwrap();
+            assert_eq!(result, 12);
+        }
+        {
+            let mut handle = Handle::open(&x).unwrap();
+            let mut overlapped = Overlapped(Default::default());
+            let mut buffer = [0u8; 1024];
+            {
+                let mut operation = handle.read(&mut overlapped, &mut buffer).unwrap();
+                let result = operation.get_result(true).unwrap();
+                assert_eq!(result, 12);
+            }
+            assert_eq!(&buffer[..12], b"Hello World!");
+        }
     }
 }
