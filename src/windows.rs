@@ -140,7 +140,7 @@ mod test {
     fn test() {
         use super::{Handle, Overlapped};
         //
-        let x: CString = CString::new("test.txt").unwrap();
+        let x: CString = CString::new("_test.txt").unwrap();
         {
 
             let mut handle = Handle::create(&x).unwrap();
