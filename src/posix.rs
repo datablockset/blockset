@@ -37,11 +37,22 @@ impl Drop for Operation<'_> {
     }
 }
 
+enum OperationResult {
+    Ok(usize),
+    Pending,
+    Err(io::Error),
+}
+
 impl Operation<'_> {
-    fn get_result(&mut self) -> io::Result<usize> {
+    fn get_result(&mut self) -> OperationResult {
         match unsafe { aio_error(&self.overlapped.0) } {
-            0 => Ok(unsafe { aio_return(&mut self.overlapped.0) } as usize),
-            _ => Err(io::Error::last_os_error()),
+            0 => OperationResult::Ok(unsafe { aio_return(&mut self.overlapped.0) } as usize),
+            e => {
+                if e == libc::EINPROGRESS {
+                    return OperationResult::Pending;
+                }
+                OperationResult::Err(io::Error::from_raw_os_error(e))
+            },
         }
     }
 }
@@ -61,48 +72,92 @@ impl File {
     pub fn open(path: &CStr) -> io::Result<Self> {
         File::internal_open(path, libc::O_RDONLY)
     }
+    pub fn write<'a>(&'a mut self, overlapped: &'a mut Overlapped, buffer: &'a[u8]) -> io::Result<Operation<'a>> {
+        *overlapped = Default::default();
+        overlapped.0.aio_fildes = self.0;
+        overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
+        overlapped.0.aio_nbytes = buffer.len();
+        let r = unsafe { libc::aio_write(&mut overlapped.0) };
+        if r == -1 {
+            Err(io::Error::last_os_error())
+        } else {
+            Ok(Operation {
+                file: self,
+                overlapped,
+            })
+        }
+    }
+    pub fn read<'a>(&'a mut self, overlapped: &'a mut Overlapped, buffer: &'a mut[u8]) -> io::Result<Operation<'a>> {
+        *overlapped = Default::default();
+        overlapped.0.aio_fildes = self.0;
+        overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
+        overlapped.0.aio_nbytes = buffer.len();
+        let r = unsafe { libc::aio_read(&mut overlapped.0) };
+        if r == -1 {
+            Err(io::Error::last_os_error())
+        } else {
+            Ok(Operation {
+                file: self,
+                overlapped,
+            })
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use std::{ffi::CString, mem::zeroed, thread::sleep, time::Duration};
+    use std::{ffi::CString,  thread::yield_now};
 
-    use libc::{aio_error, aio_return, aiocb, open, O_CREAT, O_TRUNC, O_WRONLY};
+    use super::{File, Overlapped, OperationResult};
 
     #[test]
     fn test() {
         let x: CString = CString::new("_test_posix.txt").unwrap();
-        let fd = unsafe { open(x.as_ptr(), O_WRONLY | O_CREAT | O_TRUNC) };
-        if fd == -1 {
-            panic!();
-        }
-        let buffer = "Hello, world!";
-        let mut aiocb: aiocb = unsafe { zeroed() };
-        aiocb.aio_fildes = fd;
-        aiocb.aio_buf = buffer.as_ptr() as *mut _;
-        aiocb.aio_nbytes = buffer.len();
-
-        let r = unsafe { libc::aio_write(&mut aiocb) };
-        if r == -1 {
-            panic!();
-        }
-
-        loop {
-            match unsafe { aio_error(&mut aiocb) } {
-                libc::EINPROGRESS => {
-                    sleep(Duration::from_millis(100));
-                }
-                0 => {
-                    let bytes_written = unsafe { aio_return(&mut aiocb) };
-                    if bytes_written != buffer.len() as isize {
-                        panic!();
+        let origin = "Hello, world!";
+        {
+            let mut file = File::create(&x).unwrap();
+            let mut overlapped: Overlapped = Overlapped::default();
+            let mut operation = file.write(&mut overlapped, origin.as_bytes()).unwrap();
+            loop {
+                match operation.get_result() {
+                    OperationResult::Ok(bytes_written) => {
+                        if bytes_written != origin.len() {
+                            panic!();
+                        }
+                        break;
                     }
-                    break;
+                    OperationResult::Pending => {
+                        yield_now();
+                    }
+                    OperationResult::Err(e) => {
+                        panic!("e: {}", e);
+                    }
                 }
-                _ => panic!(),
             }
         }
-
-        unsafe { libc::close(fd) };
+        {
+            let mut file = File::open(&x).unwrap();
+            let mut overlapped: Overlapped = Overlapped::default();
+            let mut buffer = [0u8; 1024];
+            let mut len = 0;
+            {
+                let mut operation = file.read(&mut overlapped, &mut buffer).unwrap();
+                loop {
+                    match operation.get_result() {
+                        OperationResult::Ok(bytes_read) => {
+                            len = bytes_read;
+                            break;
+                        }
+                        OperationResult::Pending => {
+                            yield_now();
+                        }
+                        OperationResult::Err(e) => {
+                            panic!("e: {}", e);
+                        }
+                    }
+                }
+            }
+            assert_eq!(&buffer[..len], origin.as_bytes());
+        }
     }
 }
