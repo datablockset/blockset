@@ -22,6 +22,7 @@ mod u32;
 mod u512;
 mod windows;
 mod windows_api;
+mod posix;
 
 #[cfg(test)]
 mod mem_table;
