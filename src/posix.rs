@@ -2,7 +2,7 @@
 
 use std::{ffi::CStr, io, mem::zeroed, thread::yield_now};
 
-use libc::{close, open, aiocb, aio_cancel, aio_error, aio_return, AIO_NOTCANCELED};
+use libc::{aio_cancel, aio_error, aio_return, aiocb, close, open, AIO_NOTCANCELED};
 
 struct File(i32);
 
@@ -32,14 +32,14 @@ impl Drop for Operation<'_> {
         let mut e = unsafe { aio_cancel(self.file.0, &mut self.overlapped.0) };
         while e == AIO_NOTCANCELED {
             yield_now();
-            e = unsafe { aio_error(&mut self.overlapped.0) };
+            e = unsafe { aio_error(&self.overlapped.0) };
         }
     }
 }
 
 impl Operation<'_> {
-    fn get_result(&mut self, wait: bool) -> io::Result<usize> {
-        match unsafe { aio_error(&mut self.overlapped.0) } {
+    fn get_result(&mut self) -> io::Result<usize> {
+        match unsafe { aio_error(&self.overlapped.0) } {
             0 => Ok(unsafe { aio_return(&mut self.overlapped.0) } as usize),
             _ => Err(io::Error::last_os_error()),
         }
