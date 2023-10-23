@@ -9,7 +9,7 @@ mod test {
     #[test]
     fn test() {
         let x: CString = CString::new("_test_posix.txt").unwrap();
-        let fd = unsafe { open(x.as_ptr(), O_WRONLY | O_CREAT | O_TRUNC, 0o644) };
+        let fd = unsafe { open(x.as_ptr(), O_WRONLY | O_CREAT | O_TRUNC) };
         if fd == -1 {
             panic!();
         }
