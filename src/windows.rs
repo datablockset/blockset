@@ -1,4 +1,4 @@
-#![cfg(target_os = "windows")]
+#![cfg(target_family = "windows")]
 #![cfg(not(tarpaulin_include))]
 use std::{ffi::CStr, io, os::windows::raw::HANDLE, ptr::null_mut};
 
