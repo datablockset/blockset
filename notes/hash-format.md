@@ -53,3 +53,5 @@ fn merge(a: U256, b: U256) -> U256 {
     }
 }
 ```
+
+Test vectors: https://github.com/datablockset/blockset/blob/main/src/digest.rs#L59
