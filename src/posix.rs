@@ -84,8 +84,7 @@ impl File {
         overlapped.0.aio_fildes = self.0;
         overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
         overlapped.0.aio_nbytes = buffer.len();
-        let r = unsafe { f(&mut overlapped.0) };
-        if r == -1 {
+        if unsafe { f(&mut overlapped.0) } == -1 {
             Err(io::Error::last_os_error())
         } else {
             Ok(Operation {
