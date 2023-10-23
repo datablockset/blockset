@@ -2,14 +2,14 @@
 
 #[cfg(test)]
 mod test {
-    use std::{ffi::CString, mem::zeroed, time::Duration, thread::sleep};
+    use std::{ffi::CString, mem::zeroed, thread::sleep, time::Duration};
 
-    use libc::{open, aiocb, O_WRONLY, O_CREAT, O_TRUNC, aio_error, aio_return, };
+    use libc::{aio_error, aio_return, aiocb, open, O_CREAT, O_TRUNC, O_WRONLY};
 
     #[test]
     fn test() {
         let x: CString = CString::new("_test_posix.txt").unwrap();
-        let fd = unsafe { open(x.as_ptr(), O_WRONLY|O_CREAT|O_TRUNC, 0o644) };
+        let fd = unsafe { open(x.as_ptr(), O_WRONLY | O_CREAT | O_TRUNC, 0o644) };
         if fd == -1 {
             panic!();
         }
@@ -28,14 +28,14 @@ mod test {
             match unsafe { aio_error(&mut aiocb) } {
                 libc::EINPROGRESS => {
                     sleep(Duration::from_millis(100));
-                },
+                }
                 0 => {
                     let bytes_written = unsafe { aio_return(&mut aiocb) };
                     if bytes_written != buffer.len() as isize {
                         panic!();
                     }
-                    break
-                },
+                    break;
+                }
                 _ => panic!(),
             }
         }

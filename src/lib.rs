@@ -7,6 +7,7 @@ mod digest;
 mod file_table;
 mod io;
 mod level_storage;
+mod posix;
 mod real_io;
 mod sha224;
 mod sigma32;
@@ -22,7 +23,6 @@ mod u32;
 mod u512;
 mod windows;
 mod windows_api;
-mod posix;
 
 #[cfg(test)]
 mod mem_table;
