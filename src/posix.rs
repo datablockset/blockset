@@ -1,3 +1,5 @@
+#![cfg(not(target_os = "windows"))]
+
 #[cfg(test)]
 mod test {
     use std::{ffi::CString, mem::zeroed, time::Duration, thread::sleep};
@@ -7,7 +9,7 @@ mod test {
     #[test]
     fn test() {
         let x: CString = CString::new("_test_posix.txt").unwrap();
-        let fd = unsafe { open(x.as_ptr(), O_WRONLY|O_CREAT|O_TRUNC) };
+        let fd = unsafe { open(x.as_ptr(), O_WRONLY|O_CREAT|O_TRUNC, 0o644) };
         if fd == -1 {
             panic!();
         }
