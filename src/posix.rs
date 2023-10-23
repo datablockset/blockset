@@ -59,7 +59,7 @@ impl Operation<'_> {
 
 impl File {
     fn internal_open(path: &CStr, oflag: i32) -> io::Result<Self> {
-        let fd = unsafe { open(path.as_ptr(), oflag) };
+        let fd = unsafe { open(path.as_ptr(), oflag, 0o644) };
         if fd == -1 {
             Err(io::Error::last_os_error())
         } else {
