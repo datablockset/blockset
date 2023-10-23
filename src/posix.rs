@@ -2,7 +2,9 @@
 
 use std::{ffi::CStr, io, mem::zeroed, thread::yield_now};
 
-use libc::{aio_cancel, aio_error, aio_return, aiocb, close, open, AIO_NOTCANCELED};
+use libc::{
+    aio_cancel, aio_error, aio_read, aio_return, aio_write, aiocb, close, open, AIO_NOTCANCELED,
+};
 
 struct File(i32);
 
@@ -72,16 +74,17 @@ impl File {
     pub fn open(path: &CStr) -> io::Result<Self> {
         File::internal_open(path, libc::O_RDONLY)
     }
-    pub fn write<'a>(
+    fn create_operation<'a>(
         &'a mut self,
         overlapped: &'a mut Overlapped,
         buffer: &'a [u8],
+        f: unsafe extern "C" fn(*mut aiocb) -> i32,
     ) -> io::Result<Operation<'a>> {
         *overlapped = Default::default();
         overlapped.0.aio_fildes = self.0;
         overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
         overlapped.0.aio_nbytes = buffer.len();
-        let r = unsafe { libc::aio_write(&mut overlapped.0) };
+        let r = unsafe { f(&mut overlapped.0) };
         if r == -1 {
             Err(io::Error::last_os_error())
         } else {
@@ -91,24 +94,19 @@ impl File {
             })
         }
     }
+    pub fn write<'a>(
+        &'a mut self,
+        overlapped: &'a mut Overlapped,
+        buffer: &'a [u8],
+    ) -> io::Result<Operation<'a>> {
+        self.create_operation(overlapped, buffer, aio_write)
+    }
     pub fn read<'a>(
         &'a mut self,
         overlapped: &'a mut Overlapped,
         buffer: &'a mut [u8],
     ) -> io::Result<Operation<'a>> {
-        *overlapped = Default::default();
-        overlapped.0.aio_fildes = self.0;
-        overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
-        overlapped.0.aio_nbytes = buffer.len();
-        let r = unsafe { libc::aio_read(&mut overlapped.0) };
-        if r == -1 {
-            Err(io::Error::last_os_error())
-        } else {
-            Ok(Operation {
-                file: self,
-                overlapped,
-            })
-        }
+        self.create_operation(overlapped, buffer, aio_read)
     }
 }
 
