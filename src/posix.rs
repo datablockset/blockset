@@ -52,7 +52,7 @@ impl Operation<'_> {
                     return OperationResult::Pending;
                 }
                 OperationResult::Err(io::Error::from_raw_os_error(e))
-            },
+            }
         }
     }
 }
@@ -72,7 +72,11 @@ impl File {
     pub fn open(path: &CStr) -> io::Result<Self> {
         File::internal_open(path, libc::O_RDONLY)
     }
-    pub fn write<'a>(&'a mut self, overlapped: &'a mut Overlapped, buffer: &'a[u8]) -> io::Result<Operation<'a>> {
+    pub fn write<'a>(
+        &'a mut self,
+        overlapped: &'a mut Overlapped,
+        buffer: &'a [u8],
+    ) -> io::Result<Operation<'a>> {
         *overlapped = Default::default();
         overlapped.0.aio_fildes = self.0;
         overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
@@ -87,7 +91,11 @@ impl File {
             })
         }
     }
-    pub fn read<'a>(&'a mut self, overlapped: &'a mut Overlapped, buffer: &'a mut[u8]) -> io::Result<Operation<'a>> {
+    pub fn read<'a>(
+        &'a mut self,
+        overlapped: &'a mut Overlapped,
+        buffer: &'a mut [u8],
+    ) -> io::Result<Operation<'a>> {
         *overlapped = Default::default();
         overlapped.0.aio_fildes = self.0;
         overlapped.0.aio_buf = buffer.as_ptr() as *mut _;
@@ -106,9 +114,9 @@ impl File {
 
 #[cfg(test)]
 mod test {
-    use std::{ffi::CString,  thread::yield_now};
+    use std::{ffi::CString, thread::yield_now};
 
-    use super::{File, Overlapped, OperationResult};
+    use super::{File, OperationResult, Overlapped};
 
     #[test]
     fn test() {
