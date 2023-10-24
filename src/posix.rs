@@ -6,7 +6,7 @@ use libc::{
     aio_cancel, aio_error, aio_read, aio_return, aio_write, aiocb, close, open, AIO_NOTCANCELED,
 };
 
-use crate::io::OperationResult;
+use crate::io::{AsyncFile, AsyncIo, AsyncOperation, OperationResult};
 
 struct File(i32);
 
@@ -102,6 +102,49 @@ impl File {
         buffer: &'a mut [u8],
     ) -> io::Result<Operation<'a>> {
         self.create_operation(overlapped, buffer, aio_read)
+    }
+}
+
+impl AsyncOperation for Operation<'_> {
+    fn get_result(&mut self) -> OperationResult {
+        self.get_result()
+    }
+}
+
+struct AFile {
+    file: File,
+    overlapped: Overlapped,
+}
+
+impl AsyncFile for AFile {
+    type Operation<'a> = Operation<'a>;
+
+    fn read<'a>(&'a mut self, buffer: &'a mut [u8]) -> io::Result<Self::Operation<'a>> {
+        self.file.read(&mut self.overlapped, buffer)
+    }
+
+    fn write<'a>(&'a mut self, buffer: &'a [u8]) -> io::Result<Self::Operation<'a>> {
+        self.file.write(&mut self.overlapped, buffer)
+    }
+}
+
+struct AIo();
+
+impl AsyncIo for AIo {
+    type File = AFile;
+
+    fn create(&self, path: &CStr) -> io::Result<Self::File> {
+        Ok(AFile {
+            file: File::create(path)?,
+            overlapped: Default::default(),
+        })
+    }
+
+    fn open(&self, path: &CStr) -> io::Result<Self::File> {
+        Ok(AFile {
+            file: File::open(path)?,
+            overlapped: Default::default(),
+        })
     }
 }
 

@@ -1,4 +1,5 @@
 use std::{
+    ffi::CStr,
     fmt,
     io::{self, Read, Write},
 };
@@ -84,22 +85,22 @@ pub enum OperationResult {
     Err(io::Error),
 }
 
-trait Operation {
+pub trait AsyncOperation {
     fn get_result(&mut self) -> OperationResult;
 }
 
-trait AsyncFile {
-    type Operation<'a>: Operation
+pub trait AsyncFile {
+    type Operation<'a>: AsyncOperation
     where
         Self: 'a;
     fn read<'a>(&'a mut self, buffer: &'a mut [u8]) -> io::Result<Self::Operation<'a>>;
     fn write<'a>(&'a mut self, buffer: &'a [u8]) -> io::Result<Self::Operation<'a>>;
 }
 
-trait AsyncIo {
+pub trait AsyncIo {
     type File: AsyncFile;
-    fn create(&self, path: &str) -> io::Result<Self::File>;
-    fn open(&self, path: &str) -> io::Result<Self::File>;
+    fn create(&self, path: &CStr) -> io::Result<Self::File>;
+    fn open(&self, path: &CStr) -> io::Result<Self::File>;
 }
 
 #[cfg(test)]
