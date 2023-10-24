@@ -78,6 +78,30 @@ pub trait Io {
     }
 }
 
+pub enum OperationResult {
+    Ok(usize),
+    Pending,
+    Err(io::Error),
+}
+
+trait Operation {
+    fn get_result(&mut self) -> OperationResult;
+}
+
+trait AsyncFile {
+    type Operation<'a>: Operation
+    where
+        Self: 'a;
+    fn read<'a>(&'a mut self, buffer: &'a mut [u8]) -> io::Result<Self::Operation<'a>>;
+    fn write<'a>(&'a mut self, buffer: &'a [u8]) -> io::Result<Self::Operation<'a>>;
+}
+
+trait AsyncIo {
+    type File: AsyncFile;
+    fn create(&self, path: &str) -> io::Result<Self::File>;
+    fn open(&self, path: &str) -> io::Result<Self::File>;
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;

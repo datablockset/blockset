@@ -6,6 +6,8 @@ use libc::{
     aio_cancel, aio_error, aio_read, aio_return, aio_write, aiocb, close, open, AIO_NOTCANCELED,
 };
 
+use crate::io::OperationResult;
+
 struct File(i32);
 
 impl Drop for File {
@@ -37,12 +39,6 @@ impl Drop for Operation<'_> {
             e = unsafe { aio_error(&self.overlapped.0) };
         }
     }
-}
-
-enum OperationResult {
-    Ok(usize),
-    Pending,
-    Err(io::Error),
 }
 
 impl Operation<'_> {
