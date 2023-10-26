@@ -1,7 +1,7 @@
 # Subtree
 
 Every node of a [main tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415) may have multiple branches. 
-The structure of a main node is like this `[a0, a1, a2, ..., aN]`.
+The structure of a main node is like this `[a0, a1, a2, ..., aN]`. `a0..aN` are all numbers (digests) of the previous level.
 
 Subtree building algorithm works for a sorted finite list of items.
 
