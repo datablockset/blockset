@@ -1,5 +1,7 @@
 # Subtree
 
+Every node of a [main tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415) may have multiple branches.
+
 Subtree building algorithm works for a sorted finite list of items.
 
 For each two items we define a `dif` value which is `dif(a, b) = (a ^ b).leading_zeros()`. For any sorted numbers `[a, b, c]`
