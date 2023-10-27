@@ -1,4 +1,4 @@
-use std::{io, ffi::CStr};
+use std::{ffi::CStr, io};
 
 use crate::async_io::{AsyncFile, AsyncIo};
 
@@ -49,7 +49,7 @@ impl AsyncIo for AIo {
 mod test {
     use std::{ffi::CString, thread::yield_now};
 
-    use crate::async_io::{OperationResult, AsyncOperation};
+    use crate::async_io::{AsyncOperation, OperationResult};
 
     #[test]
     fn test() {
