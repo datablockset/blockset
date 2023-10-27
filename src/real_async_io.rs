@@ -6,7 +6,7 @@ use crate::async_io::{AsyncFile, AsyncIo};
 use crate::windows::*;
 
 #[cfg(target_family = "unix")]
-use crate::posix::*;
+use crate::unix::*;
 
 struct AFile {
     file: File,

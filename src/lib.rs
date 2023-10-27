@@ -8,7 +8,7 @@ mod digest;
 mod file_table;
 mod io;
 mod level_storage;
-mod posix;
+mod unix;
 mod real_async_io;
 mod real_io;
 mod sha224;
