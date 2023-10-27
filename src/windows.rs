@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-struct File(HANDLE);
+pub struct File(HANDLE);
 
 impl Drop for File {
     fn drop(&mut self) {
@@ -118,9 +118,9 @@ impl File {
 }
 
 #[derive(Default)]
-struct Overlapped(OVERLAPPED);
+pub struct Overlapped(OVERLAPPED);
 
-struct Operation<'a> {
+pub struct Operation<'a> {
     handle: &'a mut File,
     overlapped: &'a mut Overlapped,
 }
