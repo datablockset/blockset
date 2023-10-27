@@ -153,6 +153,7 @@ pub fn run(io: &impl Io) -> Result<(), String> {
 
 #[cfg(test)]
 mod test {
+    use io_test::VirtualIo;
     use io_trait::Io;
     use wasm_bindgen_test::wasm_bindgen_test;
 
@@ -161,7 +162,6 @@ mod test {
         run,
         sha224::{compress, compress_one},
         u256::{to_u224, U256},
-        virtual_io::VirtualIo,
     };
 
     #[wasm_bindgen_test]
