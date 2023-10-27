@@ -9,6 +9,7 @@ mod file_table;
 mod io;
 mod level_storage;
 mod posix;
+mod real_async_io;
 mod real_io;
 mod sha224;
 mod sigma32;

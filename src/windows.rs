@@ -12,9 +12,9 @@ use crate::{
     },
 };
 
-struct Handle(HANDLE);
+struct File(HANDLE);
 
-impl Drop for Handle {
+impl Drop for File {
     fn drop(&mut self) {
         unsafe {
             CloseHandle(self.0);
@@ -35,7 +35,7 @@ fn to_operation_result(v: BOOL) -> OperationResult {
     }
 }
 
-impl Handle {
+impl File {
     fn create_file(
         file_name: &CStr,
         desired_access: ACCESS_MASK,
@@ -121,7 +121,7 @@ impl Handle {
 struct Overlapped(OVERLAPPED);
 
 struct Operation<'a> {
-    handle: &'a mut Handle,
+    handle: &'a mut File,
     overlapped: &'a mut Overlapped,
 }
 
@@ -165,7 +165,7 @@ impl AsyncOperation for Operation<'_> {
 }
 
 struct AFile {
-    file: Handle,
+    file: File,
     overlapped: Overlapped,
 }
 
@@ -188,14 +188,14 @@ impl AsyncIo for AIo {
 
     fn create(&self, path: &CStr) -> io::Result<Self::File> {
         Ok(AFile {
-            file: Handle::create(path)?,
+            file: File::create(path)?,
             overlapped: Default::default(),
         })
     }
 
     fn open(&self, path: &CStr) -> io::Result<Self::File> {
         Ok(AFile {
-            file: Handle::open(path)?,
+            file: File::open(path)?,
             overlapped: Default::default(),
         })
     }
@@ -209,12 +209,12 @@ mod test {
 
     #[test]
     fn test() {
-        use super::{Handle, Overlapped};
+        use super::{File, Overlapped};
         //
         let x: CString = CString::new("_test.txt").unwrap();
         let origin = b"Hello World!";
         {
-            let mut handle = Handle::create(&x).unwrap();
+            let mut handle = File::create(&x).unwrap();
             let mut overlapped = Overlapped::default();
             let mut operation = handle.write(&mut overlapped, origin).unwrap();
             loop {
@@ -237,7 +237,7 @@ mod test {
             // assert_eq!(result, 12);
         }
         {
-            let mut handle = Handle::open(&x).unwrap();
+            let mut handle = File::open(&x).unwrap();
             let mut overlapped = Overlapped::default();
             let mut buffer = [0u8; 1024];
             {
