@@ -216,7 +216,7 @@ mod test {
             0x68000000_00000000_00000000_00000000,
         ];
         let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
-        assert_eq!(io.stdout.to_string(), s + "\n");
+        assert_eq!(io.stdout.to_stdout(), s + "\n");
     }
 
     #[wasm_bindgen_test]
@@ -231,7 +231,7 @@ mod test {
             0x68000000_00000000_00000000_00000000,
         ];
         let s = compress_one(&d).to_base32();
-        assert_eq!(io.stdout.to_string(), s.clone() + "\n");
+        assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
         let v = io
             .read(&("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]))
             .unwrap();
@@ -287,7 +287,7 @@ mod test {
         assert_eq!(e, Ok(()));
         let d: U256 = [0, 0];
         let s = compress_one(&d).to_base32();
-        assert_eq!(io.stdout.to_string(), s.clone() + "\n");
+        assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
     }
 
     #[wasm_bindgen_test]
@@ -305,7 +305,7 @@ mod test {
         io.write("a.txt", src.as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
-        let x = &io.stdout.to_string()[..45];
+        let x = &io.stdout.to_stdout()[..45];
         io.args = ["blockset", "get", x, "b.txt"]
             .iter()
             .map(|s| s.to_string())
