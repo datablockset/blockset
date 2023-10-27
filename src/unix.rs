@@ -2,11 +2,10 @@
 
 use std::{ffi::CStr, io, mem::zeroed, thread::yield_now};
 
+use io_trait::{OperationResult, AsyncOperation};
 use libc::{
     aio_cancel, aio_error, aio_read, aio_return, aio_write, aiocb, close, open, AIO_NOTCANCELED,
 };
-
-use crate::async_io::{AsyncFile, AsyncIo, AsyncOperation, OperationResult};
 
 pub struct File(i32);
 
