@@ -6,7 +6,6 @@ mod bit_vec;
 mod digest;
 mod file_table;
 mod level_storage;
-mod real_async_io;
 mod sha224;
 mod sigma32;
 mod state;
@@ -19,9 +18,6 @@ mod u224;
 mod u256;
 mod u32;
 mod u512;
-mod unix;
-mod windows;
-mod windows_api;
 
 #[cfg(test)]
 mod mem_table;
