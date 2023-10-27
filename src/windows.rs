@@ -2,7 +2,7 @@
 #![cfg(not(tarpaulin_include))]
 use std::{ffi::CStr, io, os::windows::raw::HANDLE, ptr::null_mut};
 
-use io_trait::{OperationResult, AsyncOperation};
+use io_trait::{AsyncOperation, OperationResult};
 
 use crate::windows_api::{
     to_bool, CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetLastError,
