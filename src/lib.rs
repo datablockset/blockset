@@ -1,6 +1,7 @@
 mod app;
 mod array;
 mod ascii;
+mod async_io;
 mod base32;
 mod bit_vec;
 mod digest;

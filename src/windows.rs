@@ -3,7 +3,7 @@
 use std::{ffi::CStr, io, os::windows::raw::HANDLE, ptr::null_mut};
 
 use crate::{
-    io::{AsyncFile, AsyncIo, AsyncOperation, OperationResult},
+    async_io::{AsyncFile, AsyncIo, AsyncOperation, OperationResult},
     windows_api::{
         to_bool, CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetLastError,
         GetOverlappedResult, ReadFile, WriteFile, ACCESS_MASK, BOOL, CREATE_ALWAYS, DWORD,
@@ -205,7 +205,7 @@ impl AsyncIo for AIo {
 mod test {
     use std::{ffi::CString, thread::yield_now};
 
-    use crate::io::OperationResult;
+    use crate::async_io::OperationResult;
 
     #[test]
     fn test() {
