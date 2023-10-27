@@ -9,6 +9,9 @@ authors = ["Sergey Shandar"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+io-trait = "0.1.4"
+io-impl = "0.1.5"
 
 [dev-dependencies]
+io-test = "0.2.0"
 wasm-bindgen-test = "0.3.37"

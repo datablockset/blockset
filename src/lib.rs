@@ -5,9 +5,7 @@ mod base32;
 mod bit_vec;
 mod digest;
 mod file_table;
-mod io;
 mod level_storage;
-mod real_io;
 mod sha224;
 mod sigma32;
 mod state;
@@ -25,9 +23,5 @@ mod u512;
 mod mem_table;
 #[cfg(test)]
 mod static_assert;
-#[cfg(test)]
-mod virtual_io;
 
 pub use app::run;
-pub use io::{Io, Metadata};
-pub use real_io::RealIo;
