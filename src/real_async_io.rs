@@ -49,11 +49,11 @@ impl AsyncIo for AIo {
 mod test {
     use std::{ffi::CString, thread::yield_now};
 
+    use super::{File, Overlapped};
     use crate::async_io::{AsyncOperation, OperationResult};
 
     #[test]
     fn test() {
-        use super::{File, Overlapped};
         //
         let x: CString = CString::new("_test.txt").unwrap();
         let origin = b"Hello World!";
@@ -106,6 +106,57 @@ mod test {
                 // assert_eq!(result, 12);
             }
             assert_eq!(&buffer[..12], b"Hello World!");
+        }
+    }
+
+    #[test]
+    fn test2() {
+        let x: CString = CString::new("_test_posix.txt").unwrap();
+        let origin = "Hello, world!";
+        {
+            let mut file = File::create(&x).unwrap();
+            let mut overlapped: Overlapped = Overlapped::default();
+            let mut operation = file.write(&mut overlapped, origin.as_bytes()).unwrap();
+            loop {
+                match operation.get_result() {
+                    OperationResult::Ok(bytes_written) => {
+                        if bytes_written != origin.len() {
+                            panic!();
+                        }
+                        break;
+                    }
+                    OperationResult::Pending => {
+                        yield_now();
+                    }
+                    OperationResult::Err(e) => {
+                        panic!("e: {}", e);
+                    }
+                }
+            }
+        }
+        {
+            let mut file = File::open(&x).unwrap();
+            let mut overlapped: Overlapped = Overlapped::default();
+            let mut buffer = [0u8; 1024];
+            let mut len = 0;
+            {
+                let mut operation = file.read(&mut overlapped, &mut buffer).unwrap();
+                loop {
+                    match operation.get_result() {
+                        OperationResult::Ok(bytes_read) => {
+                            len = bytes_read;
+                            break;
+                        }
+                        OperationResult::Pending => {
+                            yield_now();
+                        }
+                        OperationResult::Err(e) => {
+                            panic!("e: {}", e);
+                        }
+                    }
+                }
+            }
+            assert_eq!(&buffer[..len], origin.as_bytes());
         }
     }
 }
