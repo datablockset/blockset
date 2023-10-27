@@ -6,26 +6,7 @@ use std::{
     io::{self, Stdout},
 };
 
-use crate::{io::DirEntry, Io, Metadata};
-
-impl Metadata for fs::Metadata {
-    fn len(&self) -> u64 {
-        self.len()
-    }
-    fn is_dir(&self) -> bool {
-        self.is_dir()
-    }
-}
-
-impl DirEntry for fs::DirEntry {
-    type Metadata = fs::Metadata;
-    fn path(&self) -> String {
-        self.path().to_str().unwrap().to_string()
-    }
-    fn metadata(&self) -> io::Result<Self::Metadata> {
-        self.metadata()
-    }
-}
+use io_trait::Io;
 
 #[derive(Default)]
 pub struct RealIo();

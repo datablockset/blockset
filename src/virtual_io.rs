@@ -7,7 +7,7 @@ use std::{
     vec,
 };
 
-use crate::io::Io;
+use io_trait::Io;
 
 #[derive(Debug, Clone)]
 pub struct Metadata {
@@ -15,7 +15,7 @@ pub struct Metadata {
     is_dir: bool,
 }
 
-impl crate::io::Metadata for Metadata {
+impl io_trait::Metadata for Metadata {
     fn len(&self) -> u64 {
         self.len
     }
@@ -100,7 +100,7 @@ pub struct DirEntry {
     metadata: Metadata,
 }
 
-impl crate::io::DirEntry for DirEntry {
+impl io_trait::DirEntry for DirEntry {
     type Metadata = Metadata;
     fn path(&self) -> String {
         self.path.clone()

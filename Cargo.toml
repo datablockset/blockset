@@ -10,6 +10,7 @@ authors = ["Sergey Shandar"]
 
 [dependencies]
 libc = "0.2.149"
+io-trait = "0.1.1"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"

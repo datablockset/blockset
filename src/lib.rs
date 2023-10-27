@@ -34,5 +34,4 @@ mod static_assert;
 mod virtual_io;
 
 pub use app::run;
-pub use io::{Io, Metadata};
 pub use real_io::RealIo;

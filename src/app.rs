@@ -1,16 +1,16 @@
 use std::io::{self, Read, Write};
 
+use io_trait::{DirEntry, Io, Metadata};
+
 use crate::{
     base32::{StrEx, ToBase32},
     file_table::{FileTable, CDT0, PARTS, ROOTS},
-    io::{DirEntry, Io},
     level_storage::LevelStorage,
     state::{mb, progress, State},
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
     u224::U224,
-    Metadata,
 };
 
 trait ResultEx {
@@ -153,6 +153,7 @@ pub fn run(io: &impl Io) -> Result<(), String> {
 
 #[cfg(test)]
 mod test {
+    use io_trait::Io;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -161,7 +162,6 @@ mod test {
         sha224::{compress, compress_one},
         u256::{to_u224, U256},
         virtual_io::VirtualIo,
-        Io,
     };
 
     #[wasm_bindgen_test]
