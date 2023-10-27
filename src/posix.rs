@@ -8,7 +8,7 @@ use libc::{
 
 use crate::async_io::{AsyncFile, AsyncIo, AsyncOperation, OperationResult};
 
-struct File(i32);
+pub struct File(i32);
 
 impl Drop for File {
     fn drop(&mut self) {
@@ -18,7 +18,7 @@ impl Drop for File {
     }
 }
 
-struct Overlapped(aiocb);
+pub struct Overlapped(aiocb);
 
 impl Default for Overlapped {
     fn default() -> Self {
@@ -26,7 +26,7 @@ impl Default for Overlapped {
     }
 }
 
-struct Operation<'a> {
+pub struct Operation<'a> {
     file: &'a mut File,
     overlapped: &'a mut Overlapped,
 }
