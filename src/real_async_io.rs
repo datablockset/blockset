@@ -111,7 +111,7 @@ mod test {
 
     #[test]
     fn test2() {
-        let x: CString = CString::new("_test_posix.txt").unwrap();
+        let x: CString = CString::new("_test2.txt").unwrap();
         let origin = "Hello, world!";
         {
             let mut file = File::create(&x).unwrap();
