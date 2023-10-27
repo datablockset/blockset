@@ -9,7 +9,6 @@ mod file_table;
 mod io;
 mod level_storage;
 mod real_async_io;
-mod real_io;
 mod sha224;
 mod sigma32;
 mod state;
@@ -34,4 +33,3 @@ mod static_assert;
 mod virtual_io;
 
 pub use app::run;
-pub use real_io::RealIo;
