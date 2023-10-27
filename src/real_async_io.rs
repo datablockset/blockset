@@ -1,6 +1,6 @@
 use std::{ffi::CStr, io};
 
-use crate::async_io::{AsyncFile, AsyncIo};
+use io_trait::{AsyncFile, AsyncIo};
 
 #[cfg(target_family = "windows")]
 use crate::windows::*;
@@ -50,7 +50,7 @@ mod test {
     use std::{ffi::CString, thread::yield_now};
 
     use super::{File, Overlapped};
-    use crate::async_io::{AsyncOperation, OperationResult};
+    use io_trait::{AsyncOperation, OperationResult};
 
     #[test]
     fn test() {

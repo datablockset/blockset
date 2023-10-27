@@ -2,14 +2,13 @@
 #![cfg(not(tarpaulin_include))]
 use std::{ffi::CStr, io, os::windows::raw::HANDLE, ptr::null_mut};
 
-use crate::{
-    async_io::{AsyncFile, AsyncIo, AsyncOperation, OperationResult},
-    windows_api::{
-        to_bool, CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetLastError,
-        GetOverlappedResult, ReadFile, WriteFile, ACCESS_MASK, BOOL, CREATE_ALWAYS, DWORD,
-        ERROR_IO_PENDING, FILE_FLAG_OVERLAPPED, GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE,
-        LPCVOID, LPVOID, OPEN_ALWAYS, OVERLAPPED,
-    },
+use io_trait::{OperationResult, AsyncOperation};
+
+use crate::windows_api::{
+    to_bool, CancelIoEx, CloseHandle, CreateFileA, CreationDisposition, GetLastError,
+    GetOverlappedResult, ReadFile, WriteFile, ACCESS_MASK, BOOL, CREATE_ALWAYS, DWORD,
+    ERROR_IO_PENDING, FILE_FLAG_OVERLAPPED, GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE,
+    LPCVOID, LPVOID, OPEN_ALWAYS, OVERLAPPED,
 };
 
 pub struct File(HANDLE);
