@@ -7,6 +7,7 @@ version = "0.3.3"
 edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["Sergey Shandar"]
+repository = "https://github.com/datablockset/blockset"
 
 [workspace.dependencies]
 io-trait = "0.3.0"
