@@ -10,7 +10,7 @@ authors = ["Sergey Shandar"]
 
 [dependencies]
 io-trait = "0.3.0"
-io-impl = "0.3.0"
+io-impl = "0.3.1"
 
 [dev-dependencies]
 io-test = "0.3.0"
