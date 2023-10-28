@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cargo install wasm-pack
-      - run: wasm-pack test --node --release
+      - run: wasm-pack test --node --release ./blockset-lib
 
   test:
     strategy:
