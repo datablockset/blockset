@@ -1,17 +1,16 @@
-[package]
-name = "blockset"
-description = "Data Block Set"
-version = "0.3.3"
+[workspace]
+members = ["blockset", "blockset-lib"]
+resolver = "2"
+
+[workspace.package]
+version = "0.3.5"
 edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["Sergey Shandar"]
+repository = "https://github.com/datablockset/blockset"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-io-trait = "0.1.4"
-io-impl = "0.1.5"
-
-[dev-dependencies]
-io-test = "0.2.0"
+[workspace.dependencies]
+io-trait = "0.3.0"
+io-impl = "0.3.1"
+io-test = "0.3.0"
 wasm-bindgen-test = "0.3.37"

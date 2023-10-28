@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.3.5
+
+- Two packages `blockset` and `blockset-cli`. PR [#121](https://github.com/datablockset/blockset/pull/121).
+
 ## 0.3.3
 
 - Another bug fix in `info` (division by zero). PR [#108](https://github.com/datablockset/blockset/pull/108).
