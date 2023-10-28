@@ -1,5 +1,5 @@
 [workspace]
-members = ["blockset"]
+members = ["blockset", "blockset-lib"]
 resolver = "2"
 
 [workspace.package]

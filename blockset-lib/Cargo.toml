@@ -1,6 +1,5 @@
 [package]
-name = "blockset"
-description = "Data Block Set"
+name = "blockset-lib"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,5 +9,8 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-blockset-lib = { path = "../blockset-lib" }
-io-impl.workspace = true
+io-trait.workspace = true
+
+[dev-dependencies]
+io-test.workspace = true
+wasm-bindgen-test.workspace = true
