@@ -1,5 +1,7 @@
 # Design
 
+## Dependencies
+
 ```mermaid
 graph TD
   io-trait
