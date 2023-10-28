@@ -1,6 +1,6 @@
 [package]
 name = "blockset"
-description = "Data Block Set"
+description = "BLOCKSET command line tool"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

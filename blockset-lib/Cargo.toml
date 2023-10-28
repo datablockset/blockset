@@ -1,5 +1,6 @@
 [package]
 name = "blockset-lib"
+description = "BLOCKSET internal library"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
