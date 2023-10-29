@@ -10,7 +10,7 @@ authors = ["Sergey Shandar"]
 repository = "https://github.com/datablockset/blockset"
 
 [workspace.dependencies]
-io-trait = "0.3.0"
-io-impl = "0.3.1"
-io-test = "0.3.0"
+io-trait = "0.4.0"
+io-impl = "0.4.0"
+io-test = "0.4.0"
 wasm-bindgen-test = "0.3.37"
