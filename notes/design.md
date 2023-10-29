@@ -28,8 +28,6 @@ graph TD
     wasm-bindgen-test
     libc
   end
-  br -.-> ior
-  ior -.-> tpl
   blockset-lib-test --> wasm-bindgen-test & io-test
   blockset-lib --> io-trait
   blockset --> io-impl
