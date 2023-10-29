@@ -13,7 +13,7 @@ graph TD
 ```
 
 ```mermaid
-graph TD
+flowchart TD
   subgraph br [blockset repository]
     blockset-lib-test[blockset-lib\ntests]
     blockset-lib
