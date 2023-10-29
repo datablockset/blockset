@@ -11,3 +11,24 @@ graph TD
   blockset-lib --> io-trait
   blockset --> blockset-lib & io-impl
 ```
+
+```mermaid
+graph TD
+  subgraph br [blockset repository]
+    blockset-lib-test[blockset-lib\ntests]
+    blockset-lib
+    blockset
+  end
+  subgraph ior [io repository]
+    io-test
+    io-trait
+    io-impl
+  end
+  subgraph tpl [third-party libraries]
+    wasm-bindgen-test
+    clib
+  end
+  br -.-> ior
+  ior -.-> tpl
+  blockset-lib-test --> wasm-bindgen-test & io-test & blockset-lib
+```
