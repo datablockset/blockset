@@ -26,9 +26,12 @@ graph TD
   end
   subgraph tpl [third-party libraries]
     wasm-bindgen-test
-    clib
+    libc
   end
   br -.-> ior
   ior -.-> tpl
-  blockset-lib-test --> wasm-bindgen-test & io-test & blockset-lib
+  blockset-lib-test --> wasm-bindgen-test & io-test
+  blockset-lib --> io-trait
+  blockset --> io-impl
+  io-impl --> libc
 ```
