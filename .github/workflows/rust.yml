@@ -26,7 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cargo install wasm-pack
+      - uses: cargo-bins/cargo-binstall@v1.4.4
+      - run: cargo binstall --no-confirm wasm-pack
       - run: wasm-pack test --node --release ./blockset-lib
 
   test:
@@ -44,7 +45,8 @@ jobs:
     runs-on: macos-13
     steps:
     - uses: actions/checkout@v4
-    - run: cargo install cargo-tarpaulin
+    - uses: cargo-bins/cargo-binstall@v1.4.4
+    - run: cargo binstall --no-confirm cargo-tarpaulin
     - run: cargo c
     - uses: actions/upload-artifact@v3
       with:
