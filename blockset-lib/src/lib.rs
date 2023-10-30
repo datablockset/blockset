@@ -18,6 +18,7 @@ mod u224;
 mod u256;
 mod u32;
 mod u512;
+mod eol;
 
 #[cfg(test)]
 mod mem_table;

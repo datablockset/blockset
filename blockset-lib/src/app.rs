@@ -75,6 +75,11 @@ fn add<'a, T: Io, S: 'a + Storage>(
 ) -> Result<(), String> {
     let stdout = &mut io.stdout();
     let path = a.next().ok_or("missing file name")?;
+    let to_posix_eol = if let Some(option) = a.next() {
+        option == "--to-posix-eol"
+    } else {
+        false
+    };
     let len = io.metadata(&path).to_string_result()?.len();
     let f = io.open(&path).to_string_result()?;
     let k = read_to_tree(storage(io), f, len, stdout, display_new)?;
