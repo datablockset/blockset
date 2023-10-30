@@ -4,6 +4,7 @@ use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
     base32::{StrEx, ToBase32},
+    eol::ToPosixEol,
     file_table::{FileTable, CDT0, PARTS, ROOTS},
     level_storage::LevelStorage,
     state::{mb, progress, State},
@@ -82,7 +83,15 @@ fn add<'a, T: Io, S: 'a + Storage>(
     };
     let len = io.metadata(&path).to_string_result()?.len();
     let f = io.open(&path).to_string_result()?;
-    let k = read_to_tree(storage(io), f, len, stdout, display_new)?;
+    let s = storage(io);
+    let k = if to_posix_eol {
+        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
+        // is smaller than `len`. Proposed solution:
+        // a Read implementation which can also report a progress.
+        read_to_tree(s, ToPosixEol::new(f), len, stdout, display_new)?
+    } else {
+        read_to_tree(s, f, len, stdout, display_new)?
+    };
     println(stdout, &k)?;
     Ok(())
 }

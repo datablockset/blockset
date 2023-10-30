@@ -1,26 +1,39 @@
 use std::io::{self, Read};
 
-struct ToPosixEol<R: Read> {
+trait ReadEx: Read {
+    fn read_byte(&mut self) -> io::Result<Option<u8>> {
+        let mut buf = [0];
+        match self.read(&mut buf)? {
+            0 => Ok(None),
+            1 => Ok(Some(buf[0])),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<R: Read> ReadEx for R {}
+
+pub struct ToPosixEol<R: Read> {
     read: R,
     last: Option<u8>,
 }
 
 impl<R: Read> ToPosixEol<R> {
-    fn new(read: R) -> Self {
+    pub fn new(read: R) -> Self {
         Self { read, last: None }
     }
     fn next(&mut self) -> io::Result<Option<u8>> {
         // read the last item
         let mut last = if let Some(last) = self.last.take() {
             last
-        } else if let Some(last) = read_one(&mut self.read)? {
+        } else if let Some(last) = self.read.read_byte()? {
             last
         } else {
             return Ok(None);
         };
         //
         if last == b'\r' {
-            if let Some(next) = read_one(&mut self.read)? {
+            if let Some(next) = self.read.read_byte()? {
                 if next == b'\n' {
                     last = b'\n';
                 } else {
@@ -29,15 +42,6 @@ impl<R: Read> ToPosixEol<R> {
             }
         }
         return Ok(Some(last));
-    }
-}
-
-fn read_one(read: &mut impl Read) -> io::Result<Option<u8>> {
-    let mut buf = [0];
-    match read.read(&mut buf)? {
-        0 => Ok(None),
-        1 => Ok(Some(buf[0])),
-        _ => unreachable!(),
     }
 }
 
