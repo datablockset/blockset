@@ -4,6 +4,7 @@ use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
     base32::{StrEx, ToBase32},
+    eol::ToPosixEol,
     file_table::{FileTable, CDT0, PARTS, ROOTS},
     level_storage::LevelStorage,
     state::{mb, progress, State},
@@ -75,9 +76,26 @@ fn add<'a, T: Io, S: 'a + Storage>(
 ) -> Result<(), String> {
     let stdout = &mut io.stdout();
     let path = a.next().ok_or("missing file name")?;
+    let to_posix_eol = if let Some(option) = a.next() {
+        if option != "--to-posix-eol" {
+            return Err("unknown option".to_string());
+        } else {
+            true
+        }
+    } else {
+        false
+    };
     let len = io.metadata(&path).to_string_result()?.len();
     let f = io.open(&path).to_string_result()?;
-    let k = read_to_tree(storage(io), f, len, stdout, display_new)?;
+    let s = storage(io);
+    let k = if to_posix_eol {
+        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
+        // is smaller than `len`. Proposed solution:
+        // a Read implementation which can also report a progress.
+        read_to_tree(s, ToPosixEol::new(f), len, stdout, display_new)?
+    } else {
+        read_to_tree(s, f, len, stdout, display_new)?
+    };
     println(stdout, &k)?;
     Ok(())
 }
@@ -300,8 +318,12 @@ mod test {
         assert_eq!(e, Ok(()));
     }
 
-    fn add_get(src: String) {
-        let mut io = VirtualIo::new(&["add", "a.txt"]);
+    fn add_get_expected(src: &str, to_posix_eol: bool, expected: &str) {
+        let mut io = VirtualIo::new(if to_posix_eol {
+            &["add", "a.txt", "--to-posix-eol"]
+        } else {
+            &["add", "a.txt"]
+        });
         io.write("a.txt", src.as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
@@ -313,20 +335,45 @@ mod test {
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let v = io.read("b.txt").unwrap();
-        assert_eq!(v, src.as_bytes());
+        assert_eq!(v, expected.as_bytes());
+    }
+
+    fn add_get(src: String, to_posix_eol: bool) {
+        add_get_expected(&src, to_posix_eol, &src);
     }
 
     #[wasm_bindgen_test]
     #[test]
     fn test_big() {
-        add_get("Hello, world!".repeat(95000));
+        add_get("Hello, world!".repeat(95000), false);
+        add_get("Hello, world!".repeat(95000), true);
     }
 
     #[wasm_bindgen_test]
     #[test]
     fn test_repeat() {
         for i in 0..1000 {
-            add_get("X".repeat(i));
+            add_get("X".repeat(i), false);
+            add_get("X".repeat(i), true);
         }
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_eol() {
+        add_get_expected(
+            "Hello\rworld!\r\nGoodbye!\n\r\n",
+            true,
+            "Hello\rworld!\nGoodbye!\n\n",
+        );
+        add_get("Hello\rworld!\r\nGoodbye!\n\r\n".to_string(), false);
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_unknown_option() {
+        let mut io = VirtualIo::new(&["add", "a.txt", "--x"]);
+        let e = run(&mut io);
+        assert_eq!(e, Err("unknown option".to_string()));
     }
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.3.6
+
+- Option `--to-posix-eol` for converting Windows line endings to POSIX line endings. Issue [#133](https://github.com/datablockset/blockset/issues/131).
+
 ## 0.3.5
 
 - Two packages `blockset` and `blockset-cli`. PR [#121](https://github.com/datablockset/blockset/pull/121).

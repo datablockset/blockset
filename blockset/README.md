@@ -14,7 +14,8 @@ The `blockset` application is a command line program that can store and retrieve
   ```
 - add a data block to the local storage `cdt0/`:
   ```console
-  blockset add ./LICENSE
+  blockset add ./README.md
+  blockset add ./LICENSE --to-posix-eol
   ```
 - get a file by address
   ```console
