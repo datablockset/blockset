@@ -3,11 +3,11 @@ use std::io::{self, Read};
 trait ReadEx: Read {
     fn read_byte(&mut self) -> io::Result<Option<u8>> {
         let mut buf = [0];
-        match self.read(&mut buf)? {
-            0 => Ok(None),
-            1 => Ok(Some(buf[0])),
-            _ => unreachable!(),
-        }
+        Ok(if self.read(&mut buf)? == 1 {
+            Some(buf[0])
+        } else {
+            None
+        })
     }
 }
 
@@ -68,7 +68,7 @@ mod test {
 
     #[test]
     fn test() {
-        let mut cursor = Cursor::new(b"abc\r\ndef\r\n\r\nghi\r\n\re");
+        let cursor = Cursor::new(b"abc\r\ndef\r\n\r\nghi\r\n\re");
         let mut x = ToPosixEol::new(cursor);
         let mut b = Default::default();
         x.read_to_end(&mut b).unwrap();
@@ -77,7 +77,7 @@ mod test {
     #[test]
     fn test_overflow() {
         let c = b"\r\r";
-        let mut cursor = Cursor::new(c);
+        let cursor = Cursor::new(c);
         let mut x = ToPosixEol::new(cursor);
         let mut b = Default::default();
         x.read_to_end(&mut b).unwrap();
