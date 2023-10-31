@@ -368,4 +368,12 @@ mod test {
         );
         add_get("Hello\rworld!\r\nGoodbye!\n\r\n".to_string(), false);
     }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_unknown_option() {
+        let mut io = VirtualIo::new(&["add", "a.txt", "--x"]);
+        let e = run(&mut io);
+        assert_eq!(e, Err("unknown option".to_string()));
+    }
 }
