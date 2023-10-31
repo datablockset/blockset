@@ -77,7 +77,11 @@ fn add<'a, T: Io, S: 'a + Storage>(
     let stdout = &mut io.stdout();
     let path = a.next().ok_or("missing file name")?;
     let to_posix_eol = if let Some(option) = a.next() {
-        option == "--to-posix-eol"
+        if option != "--to-posix-eol" {
+            return Err("unknown option".to_string());
+        } else {
+            true
+        }
     } else {
         false
     };
@@ -314,8 +318,12 @@ mod test {
         assert_eq!(e, Ok(()));
     }
 
-    fn add_get(src: String) {
-        let mut io = VirtualIo::new(&["add", "a.txt"]);
+    fn add_get_expected(src: &str, to_posix_eol: bool, expected: &str) {
+        let mut io = VirtualIo::new(if to_posix_eol {
+            &["add", "a.txt", "--to-posix-eol"]
+        } else {
+            &["add", "a.txt"]
+        });
         io.write("a.txt", src.as_bytes()).unwrap();
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
@@ -327,20 +335,37 @@ mod test {
         let e = run(&mut io);
         assert_eq!(e, Ok(()));
         let v = io.read("b.txt").unwrap();
-        assert_eq!(v, src.as_bytes());
+        assert_eq!(v, expected.as_bytes());
+    }
+
+    fn add_get(src: String, to_posix_eol: bool) {
+        add_get_expected(&src, to_posix_eol, &src);
     }
 
     #[wasm_bindgen_test]
     #[test]
     fn test_big() {
-        add_get("Hello, world!".repeat(95000));
+        add_get("Hello, world!".repeat(95000), false);
+        add_get("Hello, world!".repeat(95000), true);
     }
 
     #[wasm_bindgen_test]
     #[test]
     fn test_repeat() {
         for i in 0..1000 {
-            add_get("X".repeat(i));
+            add_get("X".repeat(i), false);
+            add_get("X".repeat(i), true);
         }
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_eol() {
+        add_get_expected(
+            "Hello\rworld!\r\nGoodbye!\n\r\n",
+            true,
+            "Hello\rworld!\nGoodbye!\n\n",
+        );
+        add_get("Hello\rworld!\r\nGoodbye!\n\r\n".to_string(), false);
     }
 }
