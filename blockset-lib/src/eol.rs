@@ -41,7 +41,7 @@ impl<R: Read> ToPosixEol<R> {
                 }
             }
         }
-        return Ok(Some(last));
+        Ok(Some(last))
     }
 }
 
