@@ -68,7 +68,7 @@ mod test {
 
     #[test]
     fn test() {
-        let mut cursor = Cursor::new(b"abc\r\ndef\r\n\r\nghi\r\n\re");
+        let cursor = Cursor::new(b"abc\r\ndef\r\n\r\nghi\r\n\re");
         let mut x = ToPosixEol::new(cursor);
         let mut b = Default::default();
         x.read_to_end(&mut b).unwrap();
@@ -77,7 +77,7 @@ mod test {
     #[test]
     fn test_overflow() {
         let c = b"\r\r";
-        let mut cursor = Cursor::new(c);
+        let cursor = Cursor::new(c);
         let mut x = ToPosixEol::new(cursor);
         let mut b = Default::default();
         x.read_to_end(&mut b).unwrap();

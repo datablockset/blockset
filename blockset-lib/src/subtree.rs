@@ -1,7 +1,7 @@
 use crate::{
     array::ArrayEx,
     digest::merge,
-    u256::{less, U256},
+    u256::{great, U256},
 };
 
 // It should work faster than (a ^ b).leading_zeros().
@@ -32,6 +32,11 @@ impl Node {
     }
 }
 
+#[inline(always)]
+fn group(last1: &U256, last0: &U256) -> bool {
+    great(last1, last0)
+}
+
 #[derive(Default)]
 pub struct SubTree(Vec<Node>);
 
@@ -43,7 +48,7 @@ impl SubTree {
         let mut height10 = 0;
         if let Some(mut last1) = self.0.pop() {
             // last0 >= last1.last
-            if !less(last0, &last1.last) {
+            if !group(&last1.last, last0) {
                 return Some(self.end(merge(&last1.root, last0)));
             }
             height10 = height(&last1.last, last0);
