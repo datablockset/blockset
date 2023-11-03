@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Replace `Result<T, String>` to `io::Result<T>`. Issue [#70](https://github.com/datablockset/blockset/issues/70).
+
 ## 0.3.6
 
 - Option `--to-posix-eol` for converting Windows line endings to POSIX line endings. Issue [#133](https://github.com/datablockset/blockset/issues/131).
