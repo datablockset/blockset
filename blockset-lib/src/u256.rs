@@ -7,6 +7,7 @@ pub const fn u32x8_add(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [u32x4_add(a0, b0), u32x4_add(a1, b1)]
 }
 
+#[inline(always)]
 pub const fn shl(&[lo, hi]: &U256, i: usize) -> U256 {
     if i < 128 {
         if i == 0 {
@@ -21,17 +22,24 @@ pub const fn shl(&[lo, hi]: &U256, i: usize) -> U256 {
     }
 }
 
+#[inline(always)]
 pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [a0 | b0, a1 | b1]
 }
 
 // Don't use `<` for `U256` because it's not LE comparison.
+#[inline(always)]
 pub const fn less(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
     if a1 == b1 {
         a0 < b0
     } else {
         a1 < b1
     }
+}
+
+#[inline(always)]
+pub const fn great(a: &U256, b: &U256) -> bool {
+    less(b, a)
 }
 
 pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
