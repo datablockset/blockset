@@ -7,6 +7,7 @@ use crate::{
     eol::ToPosixEol,
     file_table::{FileTable, CDT0, PARTS, ROOTS},
     level_storage::LevelStorage,
+    progress::{Progress, self},
     state::{mb, progress, State},
     storage::{Null, Storage},
     table::{Table, Type},
@@ -16,32 +17,35 @@ use crate::{
 
 fn read_to_tree<T: Storage>(
     s: T,
-    mut file: impl Read,
-    len: u64,
+    mut file: impl Read + Progress,
     stdout: &mut impl Write,
     display_new: bool,
 ) -> io::Result<String> {
     let mut tree = Tree::new(s);
-    let mut i = 0;
     let mut state = State::new(stdout);
-    let mut total = 0;
+    let mut new = 0;
     loop {
+        let pr = file.progress();
+        let progress::State { current, total } = pr?;
         let mut buf = [0; 1024];
-        let p = if len == 0 { 100 } else { i * 100 / len };
+        let p = if total == 0 {
+            100
+        } else {
+            current * 100 / total
+        };
         let s = if display_new {
-            "New data: ".to_owned() + &mb(total) + ". "
+            "New data: ".to_owned() + &mb(new) + ". "
         } else {
             String::new()
         } + "Processed: "
-            + &progress(i, p as u8);
+            + &progress(current, p as u8);
         state.set(&s)?;
         let size = file.read(buf.as_mut())?;
         if size == 0 {
             break;
         }
-        i += size as u64;
         for c in buf[0..size].iter() {
-            total += tree.push(*c)?;
+            new += tree.push(*c)?;
         }
     }
     Ok(tree.end()?.0.to_base32())
@@ -76,16 +80,16 @@ fn add<'a, T: Io, S: 'a + Storage>(
     } else {
         false
     };
-    let len = io.metadata(&path)?.len();
+    // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
     let s = storage(io);
     let k = if to_posix_eol {
         // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
         // is smaller than `len`. Proposed solution:
         // a Read implementation which can also report a progress.
-        read_to_tree(s, ToPosixEol::new(f), len, stdout, display_new)?
+        read_to_tree(s, ToPosixEol::new(f), stdout, display_new)?
     } else {
-        read_to_tree(s, f, len, stdout, display_new)?
+        read_to_tree(s, f, stdout, display_new)?
     };
     println(stdout, &k)?;
     Ok(())

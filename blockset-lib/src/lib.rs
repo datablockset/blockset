@@ -7,6 +7,7 @@ mod digest;
 mod eol;
 mod file_table;
 mod level_storage;
+mod progress;
 mod sha224;
 mod sigma32;
 mod state;
