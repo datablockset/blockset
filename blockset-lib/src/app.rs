@@ -7,7 +7,7 @@ use crate::{
     eol::ToPosixEol,
     file_table::{FileTable, CDT0, PARTS, ROOTS},
     level_storage::LevelStorage,
-    progress::{Progress, self},
+    progress::{self, Progress},
     state::{mb, progress, State},
     storage::{Null, Storage},
     table::{Table, Type},
