@@ -1,4 +1,4 @@
-use std::io::{self, Read, Write};
+use std::io::{self, ErrorKind, Read, Write};
 
 use io_trait::{DirEntry, Io, Metadata};
 
@@ -14,25 +14,13 @@ use crate::{
     u224::U224,
 };
 
-trait ResultEx {
-    type T;
-    fn to_string_result(self) -> Result<Self::T, String>;
-}
-
-impl<T, E: ToString> ResultEx for Result<T, E> {
-    type T = T;
-    fn to_string_result(self) -> Result<Self::T, String> {
-        self.map_err(|e| e.to_string())
-    }
-}
-
 fn read_to_tree<T: Storage>(
     s: T,
     mut file: impl Read,
     len: u64,
     stdout: &mut impl Write,
     display_new: bool,
-) -> Result<String, String> {
+) -> io::Result<String> {
     let mut tree = Tree::new(s);
     let mut i = 0;
     let mut state = State::new(stdout);
@@ -46,26 +34,30 @@ fn read_to_tree<T: Storage>(
             String::new()
         } + "Processed: "
             + &progress(i, p as u8);
-        state.set(&s).to_string_result()?;
-        let size = file.read(buf.as_mut()).to_string_result()?;
+        state.set(&s)?;
+        let size = file.read(buf.as_mut())?;
         if size == 0 {
             break;
         }
         i += size as u64;
         for c in buf[0..size].iter() {
-            total += tree.push(*c).to_string_result()?;
+            total += tree.push(*c)?;
         }
     }
-    Ok(tree.end().to_string_result()?.0.to_base32())
+    Ok(tree.end()?.0.to_base32())
 }
 
-fn print(w: &mut impl Write, s: &str) -> Result<(), String> {
-    w.write_all(s.as_bytes()).to_string_result()
+fn print(w: &mut impl Write, s: &str) -> io::Result<()> {
+    w.write_all(s.as_bytes())
 }
 
-fn println(w: &mut impl Write, s: &str) -> Result<(), String> {
+fn println(w: &mut impl Write, s: &str) -> io::Result<()> {
     print(w, s)?;
     print(w, "\n")
+}
+
+fn invalid_input(s: &str) -> io::Error {
+    io::Error::new(ErrorKind::InvalidInput, s)
 }
 
 fn add<'a, T: Io, S: 'a + Storage>(
@@ -73,20 +65,19 @@ fn add<'a, T: Io, S: 'a + Storage>(
     a: &mut T::Args,
     storage: impl Fn(&'a T) -> S,
     display_new: bool,
-) -> Result<(), String> {
+) -> io::Result<()> {
     let stdout = &mut io.stdout();
-    let path = a.next().ok_or("missing file name")?;
+    let path = a.next().ok_or(invalid_input("missing file name"))?;
     let to_posix_eol = if let Some(option) = a.next() {
         if option != "--to-posix-eol" {
-            return Err("unknown option".to_string());
-        } else {
-            true
+            return Err(invalid_input("unknown option"));
         }
+        true
     } else {
         false
     };
-    let len = io.metadata(&path).to_string_result()?.len();
-    let f = io.open(&path).to_string_result()?;
+    let len = io.metadata(&path)?.len();
+    let f = io.open(&path)?;
     let s = storage(io);
     let k = if to_posix_eol {
         // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
@@ -133,15 +124,17 @@ fn calculate_total(io: &impl Io) -> io::Result<u64> {
     Ok(total)
 }
 
-pub fn run(io: &impl Io) -> Result<(), String> {
+pub fn run(io: &impl Io) -> io::Result<()> {
     let stdout = &mut io.stdout();
     let mut a = io.args();
     a.next().unwrap();
-    let command = a.next().ok_or("missing command")?;
+    let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
         "validate" => {
-            let b32 = a.next().ok_or("missing address")?;
-            let d = b32.from_base32::<U224>().ok_or("invalid address")?;
+            let b32 = a.next().ok_or(invalid_input("missing address"))?;
+            let d = b32
+                .from_base32::<U224>()
+                .ok_or(invalid_input("invalid address"))?;
             print(stdout, "valid: ")?;
             println(stdout, &d.to_base32())?;
             Ok(())
@@ -149,23 +142,23 @@ pub fn run(io: &impl Io) -> Result<(), String> {
         "address" => add(io, &mut a, |_| Null(), false),
         "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
         "get" => {
-            let b32 = a.next().ok_or("missing address")?;
-            let d = b32.from_base32::<U224>().ok_or("invalid address")?;
-            let path = a.next().ok_or("missing file name")?;
-            let mut f = io.create(&path).to_string_result()?;
+            let b32 = a.next().ok_or(invalid_input("missing address"))?;
+            let d = b32
+                .from_base32::<U224>()
+                .ok_or(invalid_input("invalid address"))?;
+            let path = a.next().ok_or(invalid_input("missing file name"))?;
+            let mut f = io.create(&path)?;
             let table = FileTable(io);
-            table
-                .restore(Type::Main, &d, &mut f, stdout)
-                .to_string_result()?;
+            table.restore(Type::Main, &d, &mut f, stdout)?;
             Ok(())
         }
         "info" => {
-            let total = calculate_total(io).to_string_result()?;
+            let total = calculate_total(io)?;
             let s = "size: ".to_owned() + &total.to_string() + " B.";
             println(stdout, &s)?;
             Ok(())
         }
-        _ => Err("unknown command".to_string()),
+        _ => Err(invalid_input("unknown command")),
     }
 }
 
@@ -187,7 +180,7 @@ mod test {
     fn test() {
         let mut io = VirtualIo::new(&[]);
         let e = run(&mut io);
-        assert_eq!(e, Err("missing command".to_string()));
+        assert_eq!(e.unwrap_err().to_string(), "missing command");
     }
 
     #[wasm_bindgen_test]
@@ -195,7 +188,7 @@ mod test {
     fn test_unknown_command() {
         let mut io = VirtualIo::new(&["x"]);
         let e = run(&mut io);
-        assert_eq!(e, Err("unknown command".to_string()));
+        assert_eq!(e.unwrap_err().to_string(), "unknown command");
     }
 
     #[wasm_bindgen_test]
@@ -203,7 +196,7 @@ mod test {
     fn test_missing_address() {
         let mut io = VirtualIo::new(&["validate"]);
         let e = run(&mut io);
-        assert_eq!(e, Err("missing address".to_string()));
+        assert_eq!(e.unwrap_err().to_string(), "missing address");
     }
 
     #[wasm_bindgen_test]
@@ -211,7 +204,7 @@ mod test {
     fn test_invalid_address() {
         let mut io = VirtualIo::new(&["validate", "0"]);
         let e = run(&mut io);
-        assert_eq!(e, Err("invalid address".to_string()));
+        assert_eq!(e.unwrap_err().to_string(), "invalid address");
     }
 
     #[wasm_bindgen_test]
@@ -219,7 +212,7 @@ mod test {
     fn test_valid_address() {
         let mut io = VirtualIo::new(&["validate", "3Vld4j94scaseqgcyzrOha5dxa9rx6ppnfbndck97iack"]);
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
     }
 
     #[wasm_bindgen_test]
@@ -228,7 +221,7 @@ mod test {
         let mut io = VirtualIo::new(&["address", "a.txt"]);
         io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
         let d: U256 = [
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
@@ -243,7 +236,7 @@ mod test {
         let mut io = VirtualIo::new(&["add", "a.txt"]);
         io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
         let d: U256 = [
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
@@ -302,7 +295,7 @@ mod test {
         let mut io = VirtualIo::new(&["add", "a.txt"]);
         io.write("a.txt", "".as_bytes()).unwrap();
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
         let d: U256 = [0, 0];
         let s = compress_one(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
@@ -315,7 +308,7 @@ mod test {
         let s = compress_one(&d).to_base32();
         let mut io = VirtualIo::new(&["get", &s, "a.txt"]);
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
     }
 
     fn add_get_expected(src: &str, to_posix_eol: bool, expected: &str) {
@@ -326,14 +319,14 @@ mod test {
         });
         io.write("a.txt", src.as_bytes()).unwrap();
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
         let x = &io.stdout.to_stdout()[..45];
         io.args = ["blockset", "get", x, "b.txt"]
             .iter()
             .map(|s| s.to_string())
             .collect();
         let e = run(&mut io);
-        assert_eq!(e, Ok(()));
+        assert!(e.is_ok());
         let v = io.read("b.txt").unwrap();
         assert_eq!(v, expected.as_bytes());
     }
@@ -374,6 +367,6 @@ mod test {
     fn test_unknown_option() {
         let mut io = VirtualIo::new(&["add", "a.txt", "--x"]);
         let e = run(&mut io);
-        assert_eq!(e, Err("unknown option".to_string()));
+        assert_eq!(e.unwrap_err().to_string(), "unknown option");
     }
 }
