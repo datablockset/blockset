@@ -3,11 +3,11 @@ use std::io::{self, Read};
 trait ReadEx: Read {
     fn read_byte(&mut self) -> io::Result<Option<u8>> {
         let mut buf = [0];
-        match self.read(&mut buf)? {
-            0 => Ok(None),
-            1 => Ok(Some(buf[0])),
-            _ => unreachable!(),
-        }
+        Ok(if self.read(&mut buf)? == 1 {
+            Some(buf[0])
+        } else {
+            None
+        })
     }
 }
 
