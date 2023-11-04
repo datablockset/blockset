@@ -1,8 +1,11 @@
 use std::io;
 
-use io_trait::{Io, DirEntry, Metadata};
+use io_trait::{DirEntry, Io, Metadata};
 
-use crate::{file_table::{CDT0, ROOTS, PARTS}, state::{State, mb}};
+use crate::{
+    file_table::{CDT0, PARTS, ROOTS},
+    state::{mb, State},
+};
 
 pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
