@@ -6,6 +6,7 @@ mod bit_vec;
 mod digest;
 mod eol;
 mod file_table;
+mod info;
 mod level_storage;
 mod progress;
 mod sha224;
