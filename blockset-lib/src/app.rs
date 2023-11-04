@@ -12,7 +12,7 @@ use crate::{
     storage::{Null, Storage},
     table::{Table, Type},
     tree::Tree,
-    u224::U224,
+    uint::u224::U224,
 };
 
 fn read_to_tree<T: Storage>(
@@ -176,7 +176,7 @@ mod test {
         base32::ToBase32,
         run,
         sha224::{compress, compress_one},
-        u256::{to_u224, U256},
+        uint::u256::{to_u224, U256},
     };
 
     #[wasm_bindgen_test]

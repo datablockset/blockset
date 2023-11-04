@@ -53,10 +53,8 @@ impl FromBase32 for U224 {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{
-        base32::{StrEx, ToBase32},
-        u224::{U224Ex, U224},
-    };
+    use super::{U224Ex, U224};
+    use crate::base32::{StrEx, ToBase32};
 
     #[wasm_bindgen_test]
     #[test]

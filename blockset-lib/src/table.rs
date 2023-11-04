@@ -3,8 +3,7 @@ use std::io::{self, Write};
 use crate::{
     sha224::compress_one,
     state::{progress, State},
-    u224::U224,
-    u32::from_u8x4,
+    uint::{u224::U224, u32::from_u8x4},
 };
 
 #[derive(Debug, Clone, Copy)]

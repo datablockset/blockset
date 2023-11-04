@@ -5,9 +5,11 @@ use crate::{
     sha224::compress_one,
     storage::Storage,
     table::{Table, Type},
-    u224::U224,
-    u256::{to_u224, U256},
-    u32::to_u8x4,
+    uint::{
+        u224::U224,
+        u256::{to_u224, U256},
+        u32::to_u8x4,
+    },
 };
 
 #[derive(Default)]
@@ -134,7 +136,7 @@ mod test {
         storage::Storage,
         table::{Table, Type},
         tree::Tree,
-        u224::U224,
+        uint::u224::U224,
     };
 
     use super::LevelStorage;

@@ -1,6 +1,6 @@
 use crate::{
     sha224::compress,
-    u256::{bitor, shl, U256},
+    uint::u256::{bitor, shl, U256},
 };
 
 const LEN_MAX: usize = 0xF8;
@@ -51,7 +51,7 @@ mod test {
 
     use crate::{
         digest::{len, merge, remove_len, to_digest, LEN_HI_POS},
-        u256::{shl, U256},
+        uint::u256::{shl, U256},
     };
 
     #[wasm_bindgen_test]

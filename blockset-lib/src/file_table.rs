@@ -5,7 +5,7 @@ use io_trait::Io;
 use crate::{
     base32::ToBase32,
     table::{Table, Type},
-    u224::U224,
+    uint::u224::U224,
 };
 
 pub struct FileTable<'a, T: Io>(pub &'a T);

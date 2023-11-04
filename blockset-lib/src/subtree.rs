@@ -1,7 +1,7 @@
 use crate::{
     array::ArrayEx,
     digest::merge,
-    u256::{great, U256},
+    uint::u256::{great, U256},
 };
 
 // It should work faster than (a ^ b).leading_zeros().
@@ -84,7 +84,7 @@ mod test {
     use crate::{
         digest::{merge, to_digest},
         subtree::Node,
-        u256::U256,
+        uint::u256::U256,
     };
 
     use super::{height, SubTree};
