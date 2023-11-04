@@ -1,4 +1,4 @@
-use crate::u256::U256;
+use crate::uint::u256::U256;
 
 pub type U512 = [U256; 2];
 

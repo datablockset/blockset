@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::{u224::U224, u256::U256};
+use crate::uint::{u224::U224, u256::U256};
 
 pub trait Storage {
     fn store(&mut self, key: &U256, level: usize) -> io::Result<u64>;

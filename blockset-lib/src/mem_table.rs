@@ -2,7 +2,7 @@ use std::{collections::HashMap, io};
 
 use crate::{
     table::{Table, Type},
-    u224::U224,
+    uint::u224::U224,
 };
 
 pub type MemTable = [HashMap<U224, Vec<u8>>; 2];

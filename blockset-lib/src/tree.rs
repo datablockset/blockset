@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::{
-    digest::to_digest, sha224::compress_one, storage::Storage, subtree::SubTree, u224::U224,
+    digest::to_digest, sha224::compress_one, storage::Storage, subtree::SubTree, uint::u224::U224,
 };
 
 pub struct Tree<T: Storage> {
@@ -61,8 +61,7 @@ mod test {
         digest::{merge, to_digest},
         sha224::compress_one,
         storage::Storage,
-        u224::U224,
-        u256::U256,
+        uint::{u224::U224, u256::U256},
     };
 
     use super::Tree;

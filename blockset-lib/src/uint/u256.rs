@@ -1,4 +1,4 @@
-use crate::u128::{to_u32x4, u32x4_add};
+use crate::uint::u128::{to_u32x4, u32x4_add};
 
 pub type U256 = [u128; 2];
 
@@ -54,10 +54,8 @@ pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{
-        digest::to_digest,
-        u256::{shl, U256},
-    };
+    use super::{shl, U256};
+    use crate::digest::to_digest;
 
     use super::to_u224;
 
