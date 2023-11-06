@@ -32,11 +32,11 @@ impl BitOrAssign for Entry {
 
 type EntryMap = BTreeMap<String, Entry>;
 
-fn insert(map: &mut EntryMap, path: &str, entry: Entry) {
-    if let Some(e) = map.get_mut(path) {
+fn insert(map: &mut EntryMap, file_name: &str, entry: Entry) {
+    if let Some(e) = map.get_mut(file_name) {
         *e |= entry;
     } else {
-        map.insert(path.to_owned(), entry);
+        map.insert(file_name.to_owned(), entry);
     }
 }
 
@@ -55,7 +55,7 @@ fn get_dir<T: Io>(
         io.read_dir_type(&(CDT0.to_owned() + "/" + desired.dir() + path), is_dir)
             .unwrap_or_default()
             .into_iter()
-            .map(|v| (v, entry)),
+            .map(|v| (v, desired)),
     );
 }
 
@@ -66,11 +66,15 @@ fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: Entry) -> Vec<(T:
     result
 }
 
+fn file_name(path: &str) -> &str {
+    path.rsplit_once('/').map(|(_, b)| b).unwrap_or(path)
+}
+
 fn create_map(io: &impl Io, path: &str, is_dir: bool, e: Entry) -> EntryMap {
     let x = get_all_dir(io, path, is_dir, e);
     let mut map = EntryMap::default();
     for (de, e) in x {
-        insert(&mut map, &de.path(), e);
+        insert(&mut map, file_name(&de.path()), e);
     }
     map
 }
@@ -81,11 +85,12 @@ pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let state = &mut State::new(stdout);
     let a = create_map(io, "", true, ENTRY_ALL);
     let an = a.len() as u64;
-    for (ai, (p, &e)) in a.iter().enumerate() {
-        let b = create_map(io, p, true, e);
+    for (ai, (af, &e)) in a.iter().enumerate() {
+        let ap = "/".to_owned() + af;
+        let b = create_map(io, &ap, true, e);
         let bn = b.len() as u64;
-        for (bi, (p, &e)) in b.iter().enumerate() {
-            let c = get_all_dir(io, p, false, e);
+        for (bi, (bf, &e)) in b.iter().enumerate() {
+            let c = get_all_dir(io, &(ap.to_owned() + "/" + bf), false, e);
             for (ic, _) in c.iter() {
                 let d = ic.metadata()?.len();
                 total += d;
