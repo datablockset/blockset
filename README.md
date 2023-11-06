@@ -6,8 +6,6 @@ Articles:
 - [BLOCKSET v0.2](https://medium.com/@sergeyshandar/blockset-v0-2-b43c03bac182),
 - [Content Dependent Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
 
-## Usage
-
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install).
