@@ -1,4 +1,4 @@
-use std::{io, collections::BTreeMap, ops::BitOrAssign};
+use std::{collections::BTreeMap, io, ops::BitOrAssign};
 
 use io_trait::{DirEntry, Io, Metadata};
 
@@ -40,31 +40,69 @@ fn insert(map: &mut EntryMap, path: &str, entry: Entry) {
     }
 }
 
-fn insert_range(map: &mut EntryMap, i: impl Iterator<Item = String>, entry: Entry) {
-    for j in i {
-        insert(map, &j, entry);
-    }
-}
-
-fn insert_dir(map: &mut EntryMap, io: &impl Io, path:&str,  is_dir: bool, desired: Entry, entry: Entry) -> () {
+fn get_dir<T: Io>(
+    io: &T,
+    path: &str,
+    is_dir: bool,
+    desired: Entry,
+    entry: Entry,
+    result: &mut Vec<(T::DirEntry, Entry)>,
+) {
     if entry.0 & desired.0 == 0 {
         return;
     }
-    let v = io.read_dir_type(&(CDT0.to_owned() + "/" + entry.dir() + path), is_dir).unwrap_or_default();
-    insert_range(map, v.iter().map(|x| x.path()), entry);
+    result.extend(
+        io.read_dir_type(&(CDT0.to_owned() + "/" + entry.dir() + "/" + path), is_dir)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|v| (v, entry)),
+    );
+}
+
+fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: Entry) -> Vec<(T::DirEntry, Entry)> {
+    let mut result = Vec::default();
+    get_dir(io, path, is_dir, ENTRY_ROOTS, entry, &mut result);
+    get_dir(io, path, is_dir, ENTRY_PARTS, entry, &mut result);
+    result
 }
 
 fn create_map(io: &impl Io, path: &str, is_dir: bool, e: Entry) -> EntryMap {
+    let x = get_all_dir(io, path, is_dir, e);
     let mut map = EntryMap::default();
-    insert_dir(&mut map, io, path, is_dir, ENTRY_ROOTS, e);
-    insert_dir(&mut map, io, path, is_dir, ENTRY_PARTS, e);
+    for (de, e) in x {
+        insert(&mut map, &de.path(), e);
+    }
     map
 }
 
 pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
-    let map = create_map(io, "", true, ENTRY_ALL);
+    let mut total = 0;
+    let state = &mut State::new(stdout);
+    let a = create_map(io, "", true, ENTRY_ALL);
+    let an = a.len() as u64;
+    for (ai, (p, &e)) in a.iter().enumerate() {
+        let b = create_map(io, p, true, e);
+        let bn = b.len() as u64;
+        for (bi, (p, &e)) in b.iter().enumerate() {
+            let c = get_all_dir(io, p, false, e);
+            for (ic, _) in c.iter() {
+                let d = ic.metadata()?.len();
+                total += d;
+            }
+            let p = (bn * ai as u64 + bi as u64 + 1) as f64 / (an * bn) as f64;
+            let e = total as f64 / p;
+            let s = "size: ~".to_string()
+                + &mb(e as u64)
+                + ". "
+                + &((p * 100.0) as u64).to_string()
+                + "%.";
+            state.set(&s)?;
+        }
+    }
+    Ok(total)
 
+    /*
     //
     let f = |d| {
         io.read_dir_type(&(CDT0.to_owned() + "/" + d), true)
@@ -95,4 +133,5 @@ pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
         }
     }
     Ok(total)
+    */
 }
