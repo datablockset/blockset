@@ -76,7 +76,12 @@ fn get_dir<T: Io>(
     );
 }
 
-fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: EntrySet) -> Vec<(T::DirEntry, Entry)> {
+fn get_all_dir<T: Io>(
+    io: &T,
+    path: &str,
+    is_dir: bool,
+    entry: EntrySet,
+) -> Vec<(T::DirEntry, Entry)> {
     let mut result = Vec::default();
     get_dir(io, path, is_dir, Entry::Roots, entry, &mut result);
     get_dir(io, path, is_dir, Entry::Parts, entry, &mut result);
