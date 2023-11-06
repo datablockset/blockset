@@ -7,14 +7,28 @@ use crate::{
     state::{mb, State},
 };
 
+#[repr(u8)]
+enum Entry {
+    Roots = 0,
+    Parts = 1,
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
-struct Entry(u8);
+struct EntrySet(u8);
 
-const ENTRY_ROOTS: Entry = Entry(1);
-const ENTRY_PARTS: Entry = Entry(2);
-const ENTRY_ALL: Entry = Entry(3);
+const fn entry_set(t: Entry) -> EntrySet {
+    EntrySet(1 << t as u8)
+}
 
-impl Entry {
+const fn union(a: EntrySet, b: EntrySet) -> EntrySet {
+    EntrySet(a.0 | b.0)
+}
+
+const ENTRY_ROOTS: EntrySet = entry_set(Entry::Roots);
+const ENTRY_PARTS: EntrySet = entry_set(Entry::Parts);
+const ENTRY_ALL: EntrySet = union(ENTRY_PARTS, ENTRY_PARTS);
+
+impl EntrySet {
     fn dir(&self) -> &str {
         if *self == ENTRY_ROOTS {
             ROOTS
@@ -24,15 +38,15 @@ impl Entry {
     }
 }
 
-impl BitOrAssign for Entry {
+impl BitOrAssign for EntrySet {
     fn bitor_assign(&mut self, rhs: Self) {
         self.0 |= rhs.0;
     }
 }
 
-type EntryMap = BTreeMap<String, Entry>;
+type EntryMap = BTreeMap<String, EntrySet>;
 
-fn insert(map: &mut EntryMap, file_name: &str, entry: Entry) {
+fn insert(map: &mut EntryMap, file_name: &str, entry: EntrySet) {
     if let Some(e) = map.get_mut(file_name) {
         *e |= entry;
     } else {
@@ -44,9 +58,9 @@ fn get_dir<T: Io>(
     io: &T,
     path: &str,
     is_dir: bool,
-    desired: Entry,
-    entry: Entry,
-    result: &mut Vec<(T::DirEntry, Entry)>,
+    desired: EntrySet,
+    entry: EntrySet,
+    result: &mut Vec<(T::DirEntry, EntrySet)>,
 ) {
     if entry.0 & desired.0 == 0 {
         return;
@@ -59,7 +73,7 @@ fn get_dir<T: Io>(
     );
 }
 
-fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: Entry) -> Vec<(T::DirEntry, Entry)> {
+fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: EntrySet) -> Vec<(T::DirEntry, EntrySet)> {
     let mut result = Vec::default();
     get_dir(io, path, is_dir, ENTRY_ROOTS, entry, &mut result);
     get_dir(io, path, is_dir, ENTRY_PARTS, entry, &mut result);
@@ -70,7 +84,7 @@ fn file_name(path: &str) -> &str {
     path.rsplit_once('/').map(|(_, b)| b).unwrap_or(path)
 }
 
-fn create_map(io: &impl Io, path: &str, is_dir: bool, e: Entry) -> EntryMap {
+fn create_map(io: &impl Io, path: &str, is_dir: bool, e: EntrySet) -> EntryMap {
     let x = get_all_dir(io, path, is_dir, e);
     let mut map = EntryMap::default();
     for (de, e) in x {
