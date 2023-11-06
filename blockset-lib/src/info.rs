@@ -52,7 +52,7 @@ fn get_dir<T: Io>(
         return;
     }
     result.extend(
-        io.read_dir_type(&(CDT0.to_owned() + "/" + entry.dir() + "/" + path), is_dir)
+        io.read_dir_type(&(CDT0.to_owned() + "/" + desired.dir() + path), is_dir)
             .unwrap_or_default()
             .into_iter()
             .map(|v| (v, entry)),
