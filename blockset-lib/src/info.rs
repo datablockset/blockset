@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, io, ops::BitOrAssign};
+use std::{collections::BTreeMap, io};
 
 use io_trait::{DirEntry, Io, Metadata};
 
@@ -8,6 +8,7 @@ use crate::{
 };
 
 #[repr(u8)]
+#[derive(Clone, Copy)]
 enum Entry {
     Roots = 0,
     Parts = 1,
@@ -15,6 +16,15 @@ enum Entry {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct EntrySet(u8);
+
+impl Entry {
+    fn dir(&self) -> &str {
+        match self {
+            Entry::Roots => ROOTS,
+            Entry::Parts => PARTS,
+        }
+    }
+}
 
 const fn entry_set(t: Entry) -> EntrySet {
     EntrySet(1 << t as u8)
@@ -26,31 +36,16 @@ const fn union(a: EntrySet, b: EntrySet) -> EntrySet {
 
 const ENTRY_ROOTS: EntrySet = entry_set(Entry::Roots);
 const ENTRY_PARTS: EntrySet = entry_set(Entry::Parts);
-const ENTRY_ALL: EntrySet = union(ENTRY_PARTS, ENTRY_PARTS);
-
-impl EntrySet {
-    fn dir(&self) -> &str {
-        if *self == ENTRY_ROOTS {
-            ROOTS
-        } else {
-            PARTS
-        }
-    }
-}
-
-impl BitOrAssign for EntrySet {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0;
-    }
-}
+const ENTRY_ALL: EntrySet = union(ENTRY_ROOTS, ENTRY_PARTS);
 
 type EntryMap = BTreeMap<String, EntrySet>;
 
-fn insert(map: &mut EntryMap, file_name: &str, entry: EntrySet) {
+fn insert(map: &mut EntryMap, file_name: &str, entry: Entry) {
+    let es = entry_set(entry);
     if let Some(e) = map.get_mut(file_name) {
-        *e |= entry;
+        *e = union(*e, es);
     } else {
-        map.insert(file_name.to_owned(), entry);
+        map.insert(file_name.to_owned(), es);
     }
 }
 
@@ -58,11 +53,11 @@ fn get_dir<T: Io>(
     io: &T,
     path: &str,
     is_dir: bool,
-    desired: EntrySet,
+    desired: Entry,
     entry: EntrySet,
-    result: &mut Vec<(T::DirEntry, EntrySet)>,
+    result: &mut Vec<(T::DirEntry, Entry)>,
 ) {
-    if entry.0 & desired.0 == 0 {
+    if entry.0 & (desired as u8) == 0 {
         return;
     }
     result.extend(
@@ -73,10 +68,10 @@ fn get_dir<T: Io>(
     );
 }
 
-fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: EntrySet) -> Vec<(T::DirEntry, EntrySet)> {
+fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: EntrySet) -> Vec<(T::DirEntry, Entry)> {
     let mut result = Vec::default();
-    get_dir(io, path, is_dir, ENTRY_ROOTS, entry, &mut result);
-    get_dir(io, path, is_dir, ENTRY_PARTS, entry, &mut result);
+    get_dir(io, path, is_dir, Entry::Roots, entry, &mut result);
+    get_dir(io, path, is_dir, Entry::Parts, entry, &mut result);
     result
 }
 
