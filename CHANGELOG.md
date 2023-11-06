@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Replace `Result<T, String>` to `io::Result<T>`. Issue [#70](https://github.com/datablockset/blockset/issues/70).
+## 0.3.7
+
+- Better info estimate. Issue [#138](https://github.com/datablockset/blockset/issues/138).
+- Internal: replace `Result<T, String>` to `io::Result<T>`. Issue [#70](https://github.com/datablockset/blockset/issues/70).
 
 ## 0.3.6
 

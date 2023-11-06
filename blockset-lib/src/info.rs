@@ -1,4 +1,4 @@
-use std::io;
+use std::{collections::BTreeMap, io};
 
 use io_trait::{DirEntry, Io, Metadata};
 
@@ -7,23 +7,113 @@ use crate::{
     state::{mb, State},
 };
 
+#[repr(u8)]
+#[derive(Clone, Copy)]
+enum Entry {
+    Roots = 0,
+    Parts = 1,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+struct EntrySet(u8);
+
+impl Entry {
+    fn dir(&self) -> &str {
+        match self {
+            Entry::Roots => ROOTS,
+            Entry::Parts => PARTS,
+        }
+    }
+}
+
+const fn entry_set(t: Entry) -> EntrySet {
+    EntrySet(1 << t as u8)
+}
+
+const fn union(a: EntrySet, b: EntrySet) -> EntrySet {
+    EntrySet(a.0 | b.0)
+}
+
+const fn intersection(a: EntrySet, b: EntrySet) -> EntrySet {
+    EntrySet(a.0 & b.0)
+}
+
+const fn has(a: EntrySet, b: Entry) -> bool {
+    intersection(a, entry_set(b)).0 != 0
+}
+
+const ENTRY_ROOTS: EntrySet = entry_set(Entry::Roots);
+const ENTRY_PARTS: EntrySet = entry_set(Entry::Parts);
+const ENTRY_ALL: EntrySet = union(ENTRY_ROOTS, ENTRY_PARTS);
+
+type EntryMap = BTreeMap<String, EntrySet>;
+
+fn insert(map: &mut EntryMap, file_name: &str, entry: Entry) {
+    let es = entry_set(entry);
+    if let Some(e) = map.get_mut(file_name) {
+        *e = union(*e, es);
+    } else {
+        map.insert(file_name.to_owned(), es);
+    }
+}
+
+fn get_dir<T: Io>(
+    io: &T,
+    path: &str,
+    is_dir: bool,
+    desired: Entry,
+    entry: EntrySet,
+    result: &mut Vec<(T::DirEntry, Entry)>,
+) {
+    if !has(entry, desired) {
+        return;
+    }
+    result.extend(
+        io.read_dir_type(&(CDT0.to_owned() + "/" + desired.dir() + path), is_dir)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|v| (v, desired)),
+    );
+}
+
+fn get_all_dir<T: Io>(
+    io: &T,
+    path: &str,
+    is_dir: bool,
+    entry: EntrySet,
+) -> Vec<(T::DirEntry, Entry)> {
+    let mut result = Vec::default();
+    get_dir(io, path, is_dir, Entry::Roots, entry, &mut result);
+    get_dir(io, path, is_dir, Entry::Parts, entry, &mut result);
+    result
+}
+
+fn file_name(path: &str) -> &str {
+    path.rsplit_once('/').map(|(_, b)| b).unwrap_or(path)
+}
+
+fn create_map(io: &impl Io, path: &str, is_dir: bool, e: EntrySet) -> EntryMap {
+    let x = get_all_dir(io, path, is_dir, e);
+    let mut map = EntryMap::default();
+    for (de, e) in x {
+        insert(&mut map, file_name(&de.path()), e);
+    }
+    map
+}
+
 pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
-    let f = |d| {
-        io.read_dir_type(&(CDT0.to_owned() + "/" + d), true)
-            .unwrap_or_default()
-    };
-    let mut a = f(ROOTS);
-    a.extend(f(PARTS));
-    let an = a.len() as u64;
     let mut total = 0;
     let state = &mut State::new(stdout);
-    for (ai, ia) in a.iter().enumerate() {
-        let b = io.read_dir_type(&ia.path(), true)?;
+    let a = create_map(io, "", true, ENTRY_ALL);
+    let an = a.len() as u64;
+    for (ai, (af, &e)) in a.iter().enumerate() {
+        let ap = "/".to_owned() + af;
+        let b = create_map(io, &ap, true, e);
         let bn = b.len() as u64;
-        for (bi, ib) in b.iter().enumerate() {
-            let c = io.read_dir_type(&ib.path(), false)?;
-            for ic in c.iter() {
+        for (bi, (bf, &e)) in b.iter().enumerate() {
+            let c = get_all_dir(io, &(ap.to_owned() + "/" + bf), false, e);
+            for (ic, _) in c.iter() {
                 let d = ic.metadata()?.len();
                 total += d;
             }
