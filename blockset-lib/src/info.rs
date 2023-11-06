@@ -14,7 +14,7 @@ enum Entry {
     Parts = 1,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 struct EntrySet(u8);
 
 impl Entry {
@@ -32,6 +32,14 @@ const fn entry_set(t: Entry) -> EntrySet {
 
 const fn union(a: EntrySet, b: EntrySet) -> EntrySet {
     EntrySet(a.0 | b.0)
+}
+
+const fn intersection(a: EntrySet, b: EntrySet) -> EntrySet {
+    EntrySet(a.0 & b.0)
+}
+
+const fn has(a: EntrySet, b: Entry) -> bool {
+    intersection(a, entry_set(b)).0 != 0
 }
 
 const ENTRY_ROOTS: EntrySet = entry_set(Entry::Roots);
@@ -57,7 +65,7 @@ fn get_dir<T: Io>(
     entry: EntrySet,
     result: &mut Vec<(T::DirEntry, Entry)>,
 ) {
-    if entry.0 & (desired as u8) == 0 {
+    if !has(entry, desired) {
         return;
     }
     result.extend(
@@ -68,12 +76,7 @@ fn get_dir<T: Io>(
     );
 }
 
-fn get_all_dir<T: Io>(
-    io: &T,
-    path: &str,
-    is_dir: bool,
-    entry: EntrySet,
-) -> Vec<(T::DirEntry, Entry)> {
+fn get_all_dir<T: Io>(io: &T, path: &str, is_dir: bool, entry: EntrySet) -> Vec<(T::DirEntry, Entry)> {
     let mut result = Vec::default();
     get_dir(io, path, is_dir, Entry::Roots, entry, &mut result);
     get_dir(io, path, is_dir, Entry::Parts, entry, &mut result);

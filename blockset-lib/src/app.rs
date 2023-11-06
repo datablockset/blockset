@@ -336,6 +336,29 @@ mod test {
 
     #[wasm_bindgen_test]
     #[test]
+    fn test_info_big() {
+        let mut io = VirtualIo::new(&["add", "a.txt"]);
+        let mut src = Vec::default();
+        for i in 0..=0xFF {
+            for j in 0..=0xFF {
+                for k in 0..=3 {
+                    src.push(i);
+                    src.push(j);
+                    src.push(k);
+                }
+            }
+        }
+        io.write("a.txt", &src).unwrap();
+        let e = run(&mut io);
+        assert!(e.is_ok());
+        // "hk3c2pnsjyesmj441czj8s60d7vbsg5msyrz1h8kraghx"
+        io.args = ["blockset".to_string(), "info".to_string()].to_vec();
+        let e = run(&mut io);
+        assert!(e.is_ok());
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
     fn test_unknown_option() {
         let mut io = VirtualIo::new(&["add", "a.txt", "--x"]);
         let e = run(&mut io);
