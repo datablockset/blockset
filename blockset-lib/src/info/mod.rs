@@ -1,61 +1,21 @@
-use std::{collections::BTreeMap, io};
+mod entry;
+mod entry_set;
+mod entry_set_map;
+
+use std::io;
 
 use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
-    file_table::{CDT0, PARTS, ROOTS},
+    file_table::CDT0,
     state::{mb, State},
 };
 
-#[repr(u8)]
-#[derive(Clone, Copy)]
-enum Entry {
-    Roots = 0,
-    Parts = 1,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
-struct EntrySet(u8);
-
-impl Entry {
-    fn dir(&self) -> &str {
-        match self {
-            Entry::Roots => ROOTS,
-            Entry::Parts => PARTS,
-        }
-    }
-}
-
-const fn entry_set(t: Entry) -> EntrySet {
-    EntrySet(1 << t as u8)
-}
-
-const fn union(a: EntrySet, b: EntrySet) -> EntrySet {
-    EntrySet(a.0 | b.0)
-}
-
-const fn intersection(a: EntrySet, b: EntrySet) -> EntrySet {
-    EntrySet(a.0 & b.0)
-}
-
-const fn has(a: EntrySet, b: Entry) -> bool {
-    intersection(a, entry_set(b)).0 != 0
-}
-
-const ENTRY_ROOTS: EntrySet = entry_set(Entry::Roots);
-const ENTRY_PARTS: EntrySet = entry_set(Entry::Parts);
-const ENTRY_ALL: EntrySet = union(ENTRY_ROOTS, ENTRY_PARTS);
-
-type EntryMap = BTreeMap<String, EntrySet>;
-
-fn insert(map: &mut EntryMap, file_name: &str, entry: Entry) {
-    let es = entry_set(entry);
-    if let Some(e) = map.get_mut(file_name) {
-        *e = union(*e, es);
-    } else {
-        map.insert(file_name.to_owned(), es);
-    }
-}
+use self::{
+    entry::Entry,
+    entry_set::EntrySet,
+    entry_set_map::{EntrySetMap, EntrySetMapEx},
+};
 
 fn get_dir<T: Io>(
     io: &T,
@@ -65,7 +25,7 @@ fn get_dir<T: Io>(
     entry: EntrySet,
     result: &mut Vec<(T::DirEntry, Entry)>,
 ) {
-    if !has(entry, desired) {
+    if !entry.has(desired) {
         return;
     }
     result.extend(
@@ -92,11 +52,11 @@ fn file_name(path: &str) -> &str {
     path.rsplit_once('/').map(|(_, b)| b).unwrap_or(path)
 }
 
-fn create_map(io: &impl Io, path: &str, is_dir: bool, e: EntrySet) -> EntryMap {
+fn create_map(io: &impl Io, path: &str, is_dir: bool, e: EntrySet) -> EntrySetMap {
     let x = get_all_dir(io, path, is_dir, e);
-    let mut map = EntryMap::default();
+    let mut map = EntrySetMap::default();
     for (de, e) in x {
-        insert(&mut map, file_name(&de.path()), e);
+        map.insert_entry(file_name(&de.path()), e);
     }
     map
 }
@@ -105,7 +65,7 @@ pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
     let mut total = 0;
     let state = &mut State::new(stdout);
-    let a = create_map(io, "", true, ENTRY_ALL);
+    let a = create_map(io, "", true, EntrySet::ALL);
     let an = a.len() as u64;
     for (ai, (af, &e)) in a.iter().enumerate() {
         let ap = "/".to_owned() + af;
