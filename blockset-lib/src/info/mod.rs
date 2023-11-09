@@ -1,6 +1,6 @@
+mod dir_entry_map;
 mod node_type;
 mod node_type_set;
-mod dir_entry_map;
 
 use std::io;
 
@@ -12,9 +12,9 @@ use crate::{
 };
 
 use self::{
+    dir_entry_map::{DirEntryMap, DirEntryMapEx},
     node_type::NodeType,
     node_type_set::NodeTypeSet,
-    dir_entry_map::{DirEntryMap, DirEntryMapEx},
 };
 
 fn get_dir<T: Io>(

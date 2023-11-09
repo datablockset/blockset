@@ -1,7 +1,7 @@
 use std::{io, iter::once, mem::take};
 
 use crate::{
-    digest::len,
+    cdt::node_id::len,
     sha224::compress_one,
     storage::Storage,
     table::{Table, Type},

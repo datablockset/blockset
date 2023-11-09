@@ -1,5 +1,4 @@
-use crate::
-    file_table::{PARTS, ROOTS};
+use crate::file_table::{PARTS, ROOTS};
 
 use super::node_type_set::NodeTypeSet;
 

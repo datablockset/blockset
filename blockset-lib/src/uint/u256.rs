@@ -55,9 +55,6 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use super::{shl, U256};
-    use crate::digest::to_digest;
-
-    use super::to_u224;
 
     #[wasm_bindgen_test]
     #[test]
@@ -104,11 +101,5 @@ mod test {
         assert_eq!(shl(&X, 248), [0, 0x0100_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 255), [0, 0x8000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 256), [0; 2]);
-    }
-
-    #[wasm_bindgen_test]
-    #[test]
-    fn to_u224_test() {
-        assert!(to_u224(&to_digest(5)).is_none());
     }
 }

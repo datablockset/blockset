@@ -3,7 +3,7 @@ mod array;
 mod ascii;
 mod base32;
 mod bit_vec;
-mod digest;
+mod cdt;
 mod eol;
 mod file_table;
 mod info;
@@ -17,7 +17,6 @@ mod subtree;
 mod table;
 mod tree;
 mod uint;
-mod cdt;
 
 #[cfg(test)]
 mod mem_table;

@@ -1,7 +1,8 @@
 use std::io;
 
 use crate::{
-    digest::to_digest, sha224::compress_one, storage::Storage, subtree::SubTree, uint::u224::U224,
+    cdt::node_id::to_node_id, sha224::compress_one, storage::Storage, subtree::SubTree,
+    uint::u224::U224,
 };
 
 pub struct Tree<T: Storage> {
@@ -18,7 +19,7 @@ impl<T: Storage> Tree<T> {
     }
     pub fn push(&mut self, c: u8) -> io::Result<u64> {
         let mut i = 0;
-        let mut last0 = to_digest(c);
+        let mut last0 = to_node_id(c);
         let mut total = 0;
         loop {
             let tmp = self.storage.store(&last0, i);
@@ -58,7 +59,7 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        digest::{merge, to_digest},
+        cdt::node_id::{merge, to_node_id},
         sha224::compress_one,
         storage::Storage,
         uint::{u224::U224, u256::U256},
@@ -212,22 +213,22 @@ mod test {
         let x = tree_from_str(v);
         assert_eq!(x.1, compress_one(&merge(&merge(&a, &b), &c)));
         //
-        let ciu = to_digest(b'I');
-        let cm = to_digest(b'm');
-        let ca = to_digest(b'a');
-        let cg = to_digest(b'g');
-        let ci = to_digest(b'i');
-        let cn = to_digest(b'n');
+        let ciu = to_node_id(b'I');
+        let cm = to_node_id(b'm');
+        let ca = to_node_id(b'a');
+        let cg = to_node_id(b'g');
+        let ci = to_node_id(b'i');
+        let cn = to_node_id(b'n');
         let cium = merge(&ciu, &cm);
         let cag = merge(&ca, &cg);
         let cin = merge(&ci, &cn);
         let ciumagin = merge(&merge(&cium, &cag), &cin);
-        let ce = to_digest(b'e');
-        let csp = to_digest(b' ');
-        let ct = to_digest(b't');
-        let cr = to_digest(b'r');
-        let cc = to_digest(b'c');
-        let cp = to_digest(b'p');
+        let ce = to_node_id(b'e');
+        let csp = to_node_id(b' ');
+        let ct = to_node_id(b't');
+        let cr = to_node_id(b'r');
+        let cc = to_node_id(b'c');
+        let cp = to_node_id(b'p');
         let cespi = merge(&merge(&ce, &csp), &ci);
         let cnt = merge(&cn, &ct);
         let cer = merge(&ce, &cr);
@@ -236,7 +237,7 @@ mod test {
         let cespintercept = merge(&merge(&cespi, &cnt), &merge(&merge(&cer, &cce), &cpt));
         let cgspm = merge(&merge(&cg, &csp), &cm);
         // let cx = to_digest(b'x');
-        let cs = to_digest(b's');
+        let cs = to_node_id(b's');
         let c = [
             (ciu, 0),
             (cm, 0),
