@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::{entry_set::EntrySet, entry::Entry};
+use super::{entry::Entry, entry_set::EntrySet};
 
 pub type EntrySetMap = BTreeMap<String, EntrySet>;
 
