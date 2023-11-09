@@ -10,6 +10,6 @@
 - **`main-tree`**. It's a tree of subtrees. Each node of the tree is a `subtree`.
 - **`sub-tree`**. It's a binary tree of `CDT-node-id`.
 - **`node-id`** is a `256 bit long unsigned integer`.
-- **`node-level`** is two numbers:
-  - **`node-main-level`** is a level of the main tree and it's a `byte`. `0` is a leaf level. Each subtree adds `1` to the level.
-  - **`node-sublevel`** is a level of a subtree and it's a `byte`.
+- **`node-height`** is a tuple of two numbers `[main, sub]`:
+  - **`main`** is a height of a node in a main tree and it's a `byte`. `0` is a leaf layer. Each subtree adds `1` to the main height.
+  - **`sub`** is a height of a node in a subtree and it's a `byte`.
