@@ -103,21 +103,21 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
         "validate" => {
-            let b32 = a.next().ok_or(invalid_input("missing address"))?;
+            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
             let d = b32
                 .from_base32::<U224>()
-                .ok_or(invalid_input("invalid address"))?;
+                .ok_or(invalid_input("invalid hash"))?;
             print(stdout, "valid: ")?;
             println(stdout, &d.to_base32())?;
             Ok(())
         }
-        "address" => add(io, &mut a, |_| Null(), false),
+        "hash" => add(io, &mut a, |_| Null(), false),
         "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
         "get" => {
-            let b32 = a.next().ok_or(invalid_input("missing address"))?;
+            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
             let d = b32
                 .from_base32::<U224>()
-                .ok_or(invalid_input("invalid address"))?;
+                .ok_or(invalid_input("invalid hash"))?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
             let table = FileTable(io);
@@ -163,7 +163,7 @@ mod test {
     fn test_missing_address() {
         let mut io = VirtualIo::new(&["validate"]);
         let e = run(&mut io);
-        assert_eq!(e.unwrap_err().to_string(), "missing address");
+        assert_eq!(e.unwrap_err().to_string(), "missing hash");
     }
 
     #[wasm_bindgen_test]
@@ -171,7 +171,7 @@ mod test {
     fn test_invalid_address() {
         let mut io = VirtualIo::new(&["validate", "0"]);
         let e = run(&mut io);
-        assert_eq!(e.unwrap_err().to_string(), "invalid address");
+        assert_eq!(e.unwrap_err().to_string(), "invalid hash");
     }
 
     #[wasm_bindgen_test]
@@ -185,7 +185,7 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn test_address() {
-        let mut io = VirtualIo::new(&["address", "a.txt"]);
+        let mut io = VirtualIo::new(&["hash", "a.txt"]);
         io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
         let e = run(&mut io);
         assert!(e.is_ok());
