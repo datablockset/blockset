@@ -131,7 +131,7 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::tree::Tree,
+        cdt::main_tree::MainTree,
         mem_table::MemTable,
         storage::Storage,
         table::{Table, Type},
@@ -140,7 +140,7 @@ mod test {
 
     use super::LevelStorage;
 
-    fn tree_from_str<T: Storage>(tree: &mut Tree<T>, s: &str) -> U224 {
+    fn tree_from_str<T: Storage>(tree: &mut MainTree<T>, s: &str) -> U224 {
         for c in s.bytes() {
             tree.push(c).unwrap();
         }
@@ -148,7 +148,7 @@ mod test {
     }
 
     fn add(table: &mut MemTable, c: &str) -> U224 {
-        let mut tree = Tree::new(LevelStorage::new(table));
+        let mut tree = MainTree::new(LevelStorage::new(table));
         tree_from_str(&mut tree, c)
     }
 

@@ -1,20 +1,18 @@
 use std::io;
 
-use crate::{
-    cdt::{
-        node_id::{root, to_node_id},
-        subtree::SubTree,
-    },
-    storage::Storage,
-    uint::u224::U224,
+use crate::{storage::Storage, uint::u224::U224};
+
+use super::{
+    node_id::{root, to_node_id},
+    subtree::SubTree,
 };
 
-pub struct Tree<T: Storage> {
+pub struct MainTree<T: Storage> {
     state: Vec<SubTree>,
     storage: T,
 }
 
-impl<T: Storage> Tree<T> {
+impl<T: Storage> MainTree<T> {
     pub fn new(storage: T) -> Self {
         Self {
             state: Vec::default(),
@@ -68,7 +66,7 @@ mod test {
         uint::{u224::U224, u256::U256},
     };
 
-    use super::Tree;
+    use super::MainTree;
 
     #[derive(Default)]
     struct MemStorage(Vec<(U256, usize)>);
@@ -83,8 +81,8 @@ mod test {
         }
     }
 
-    fn tree() -> Tree<MemStorage> {
-        Tree::new(MemStorage::default())
+    fn tree() -> MainTree<MemStorage> {
+        MainTree::new(MemStorage::default())
     }
 
     pub fn tree_from_str(s: &str) -> (Vec<(U256, usize)>, U224) {
@@ -147,7 +145,7 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn fail_store_test() {
-        let mut t = Tree::new(BrokenStorage());
+        let mut t = MainTree::new(BrokenStorage());
         assert!(t.push(b'a').is_err());
     }
 

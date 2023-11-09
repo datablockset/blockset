@@ -4,7 +4,7 @@ use io_trait::Io;
 
 use crate::{
     base32::{StrEx, ToBase32},
-    cdt::tree::Tree,
+    cdt::main_tree::MainTree,
     eol::ToPosixEol,
     file_table::FileTable,
     info::calculate_total,
@@ -22,7 +22,7 @@ fn read_to_tree<T: Storage>(
     stdout: &mut impl Write,
     display_new: bool,
 ) -> io::Result<String> {
-    let mut tree = Tree::new(s);
+    let mut tree = MainTree::new(s);
     let mut state = State::new(stdout);
     let mut new = 0;
     loop {
