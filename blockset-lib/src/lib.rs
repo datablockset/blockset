@@ -12,9 +12,7 @@ mod progress;
 mod sha2;
 mod state;
 mod storage;
-mod subtree;
 mod table;
-mod tree;
 mod uint;
 
 #[cfg(test)]

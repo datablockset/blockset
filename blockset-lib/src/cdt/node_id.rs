@@ -64,7 +64,7 @@ mod test {
 
     use crate::{
         cdt::node_id::{len, merge, remove_len, to_node_id, LEN_HI_POS},
-        uint::u256::{shl, to_u224, U256},
+        uint::u256::{shl, U256},
     };
 
     #[wasm_bindgen_test]

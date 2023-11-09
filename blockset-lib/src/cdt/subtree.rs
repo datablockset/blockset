@@ -82,8 +82,10 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::node_id::{merge, to_node_id},
-        subtree::Node,
+        cdt::{
+            node_id::{merge, to_node_id},
+            subtree::Node,
+        },
         uint::u256::U256,
     };
 

@@ -1,9 +1,11 @@
 use std::io;
 
 use crate::{
-    cdt::node_id::{root, to_node_id},
+    cdt::{
+        node_id::{root, to_node_id},
+        subtree::SubTree,
+    },
     storage::Storage,
-    subtree::SubTree,
     uint::u224::U224,
 };
 

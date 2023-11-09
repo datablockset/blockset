@@ -131,10 +131,10 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
+        cdt::tree::Tree,
         mem_table::MemTable,
         storage::Storage,
         table::{Table, Type},
-        tree::Tree,
         uint::u224::U224,
     };
 

@@ -4,6 +4,7 @@ use io_trait::Io;
 
 use crate::{
     base32::{StrEx, ToBase32},
+    cdt::tree::Tree,
     eol::ToPosixEol,
     file_table::FileTable,
     info::calculate_total,
@@ -12,7 +13,6 @@ use crate::{
     state::{mb, progress, State},
     storage::{Null, Storage},
     table::{Table, Type},
-    tree::Tree,
     uint::u224::U224,
 };
 
