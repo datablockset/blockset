@@ -1,6 +1,6 @@
-mod entry;
-mod entry_set;
-mod entry_set_map;
+mod node_type;
+mod node_type_set;
+mod dir_entry_map;
 
 use std::io;
 
@@ -12,18 +12,18 @@ use crate::{
 };
 
 use self::{
-    entry::Entry,
-    entry_set::EntrySet,
-    entry_set_map::{EntrySetMap, EntrySetMapEx},
+    node_type::NodeType,
+    node_type_set::NodeTypeSet,
+    dir_entry_map::{DirEntryMap, DirEntryMapEx},
 };
 
 fn get_dir<T: Io>(
     io: &T,
     path: &str,
     is_dir: bool,
-    desired: Entry,
-    entry: EntrySet,
-    result: &mut Vec<(T::DirEntry, Entry)>,
+    desired: NodeType,
+    entry: NodeTypeSet,
+    result: &mut Vec<(T::DirEntry, NodeType)>,
 ) {
     if !entry.has(desired) {
         return;
@@ -40,11 +40,11 @@ fn get_all_dir<T: Io>(
     io: &T,
     path: &str,
     is_dir: bool,
-    entry: EntrySet,
-) -> Vec<(T::DirEntry, Entry)> {
+    entry: NodeTypeSet,
+) -> Vec<(T::DirEntry, NodeType)> {
     let mut result = Vec::default();
-    get_dir(io, path, is_dir, Entry::Roots, entry, &mut result);
-    get_dir(io, path, is_dir, Entry::Parts, entry, &mut result);
+    get_dir(io, path, is_dir, NodeType::Root, entry, &mut result);
+    get_dir(io, path, is_dir, NodeType::Child, entry, &mut result);
     result
 }
 
@@ -52,11 +52,11 @@ fn file_name(path: &str) -> &str {
     path.rsplit_once('/').map(|(_, b)| b).unwrap_or(path)
 }
 
-fn create_map(io: &impl Io, path: &str, is_dir: bool, e: EntrySet) -> EntrySetMap {
+fn create_map(io: &impl Io, path: &str, is_dir: bool, e: NodeTypeSet) -> DirEntryMap {
     let x = get_all_dir(io, path, is_dir, e);
-    let mut map = EntrySetMap::default();
+    let mut map = DirEntryMap::default();
     for (de, e) in x {
-        map.insert_entry(file_name(&de.path()), e);
+        map.insert_dir_entry(file_name(&de.path()), e);
     }
     map
 }
@@ -65,7 +65,7 @@ pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let stdout = &mut io.stdout();
     let mut total = 0;
     let state = &mut State::new(stdout);
-    let a = create_map(io, "", true, EntrySet::ALL);
+    let a = create_map(io, "", true, NodeTypeSet::ALL);
     let an = a.len() as u64;
     for (ai, (af, &e)) in a.iter().enumerate() {
         let ap = "/".to_owned() + af;

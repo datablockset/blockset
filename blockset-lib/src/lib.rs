@@ -17,6 +17,7 @@ mod subtree;
 mod table;
 mod tree;
 mod uint;
+mod cdt;
 
 #[cfg(test)]
 mod mem_table;

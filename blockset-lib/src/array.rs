@@ -1,5 +1,7 @@
 pub trait ArrayEx {
     type Item;
+    /// Move the array into a vector.
+    /// Compare to `.to_vec()`, the function doesn't require `Clone` trait.
     fn move_to_vec(self) -> Vec<Self::Item>;
 }
 
