@@ -140,12 +140,7 @@ mod test {
     use io_trait::Io;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{
-        base32::ToBase32,
-        run,
-        sha224::{compress, compress_one},
-        uint::u256::{to_u224, U256},
-    };
+    use crate::{base32::ToBase32, cdt::node_id::root, run, uint::u256::U256};
 
     #[wasm_bindgen_test]
     #[test]
@@ -198,7 +193,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
+        let s = root(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s + "\n");
     }
 
@@ -213,7 +208,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
         let v = io
             .read(&("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]))
@@ -228,7 +223,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         let mut io = VirtualIo::new(&["get", s.as_str(), "b.txt"]);
         // io.create_dir("cdt0").unwrap();
         io.write_recursively(
@@ -248,7 +243,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         let mut io = VirtualIo::new(&["info"]);
         // io.create_dir("cdt0").unwrap();
         io.write_recursively(
@@ -269,7 +264,7 @@ mod test {
         let e = run(&mut io);
         assert!(e.is_ok());
         let d: U256 = [0, 0];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
     }
 
@@ -277,7 +272,7 @@ mod test {
     #[test]
     fn test_get_empty() {
         let d: U256 = [0, 0];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         let mut io = VirtualIo::new(&["get", &s, "a.txt"]);
         let e = run(&mut io);
         assert!(e.is_ok());

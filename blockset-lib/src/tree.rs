@@ -1,7 +1,9 @@
 use std::io;
 
 use crate::{
-    cdt::node_id::to_node_id, sha224::compress_one, storage::Storage, subtree::SubTree,
+    cdt::node_id::{root, to_node_id},
+    storage::Storage,
+    subtree::SubTree,
     uint::u224::U224,
 };
 
@@ -46,7 +48,7 @@ impl<T: Storage> Tree<T> {
             }
             last0 = sub_tree.end(last0);
         }
-        let key = compress_one(&last0);
+        let key = root(&last0);
         total += self.storage.end(&key, self.state.len())?;
         Ok((key, total))
     }
@@ -59,8 +61,7 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::node_id::{merge, to_node_id},
-        sha224::compress_one,
+        cdt::node_id::{merge, root, to_node_id},
         storage::Storage,
         uint::{u224::U224, u256::U256},
     };
@@ -97,7 +98,7 @@ mod test {
     #[test]
     fn empty_test() {
         let mut t = tree();
-        assert_eq!(t.end().unwrap(), (compress_one(&[0, 0]), 0));
+        assert_eq!(t.end().unwrap(), (root(&[0, 0]), 0));
     }
 
     #[wasm_bindgen_test]
@@ -111,7 +112,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        assert_eq!(x.1, compress_one(&e));
+        assert_eq!(x.1, root(&e));
     }
 
     #[wasm_bindgen_test]
@@ -127,7 +128,7 @@ mod test {
         ];
         // println!("x: {:x?}", x);
         // println!("e: {:x?}", e);
-        assert_eq!(x.1, compress_one(&e));
+        assert_eq!(x.1, root(&e));
     }
 
     struct BrokenStorage();
@@ -211,7 +212,7 @@ mod test {
             0x88000000_00000000_00000000_0000002e,
         ];
         let x = tree_from_str(v);
-        assert_eq!(x.1, compress_one(&merge(&merge(&a, &b), &c)));
+        assert_eq!(x.1, root(&merge(&merge(&a, &b), &c)));
         //
         let ciu = to_node_id(b'I');
         let cm = to_node_id(b'm');

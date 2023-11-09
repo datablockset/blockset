@@ -1,6 +1,10 @@
 use crate::{
-    sha224::compress,
-    uint::u256::{bitor, shl, U256},
+    sha2::{compress::compress, sha224::SHA224},
+    uint::{
+        u128::to_u32x4,
+        u224::U224,
+        u256::{bitor, shl, U256},
+    },
 };
 
 const LEN_MAX: usize = 0xF8;
@@ -37,12 +41,21 @@ pub const fn merge(a: &U256, b: &U256) -> U256 {
     if len <= LEN_MAX {
         set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len)), len)
     } else {
-        compress([*a, *b])
+        let mut x = compress(SHA224, [*a, *b]);
+        x[1] |= 0xFFFF_FFFF << 96;
+        x
     }
 }
 
 pub const fn to_node_id(a: u8) -> U256 {
     set_len(&[a as u128, 0], 8)
+}
+
+pub const fn root(hash: &U256) -> U224 {
+    let [a0, a1] = compress(SHA224, [*hash, [0, 0]]);
+    let [a10, a11, a12, _] = to_u32x4(a1);
+    let [a00, a01, a02, a03] = to_u32x4(a0);
+    [a00, a01, a02, a03, a10, a11, a12]
 }
 
 #[cfg(test)]
@@ -262,11 +275,5 @@ mod test {
             ],
         );
         check_len(merge(&abcdefghabcdea2, &abcdefghabcdea2), 255);
-    }
-
-    #[wasm_bindgen_test]
-    #[test]
-    fn to_u224_test() {
-        assert!(to_u224(&to_node_id(5)).is_none());
     }
 }

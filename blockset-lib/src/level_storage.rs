@@ -1,8 +1,7 @@
 use std::{io, iter::once, mem::take};
 
 use crate::{
-    cdt::node_id::len,
-    sha224::compress_one,
+    cdt::node_id::{len, root},
     storage::Storage,
     table::{Table, Type},
     uint::{
@@ -113,7 +112,7 @@ impl<T: Table> Storage for LevelStorage<T> {
 
     fn end(&mut self, k: &U224, mut i: usize) -> io::Result<u64> {
         if i == 0 {
-            assert_eq!(*k, compress_one(&[0, 0]));
+            assert_eq!(*k, root(&[0, 0]));
             return Ok(0);
         }
         i = if i <= DATA_LEVEL {

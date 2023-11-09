@@ -7,6 +7,9 @@ impl Big {
     }
 }
 
+pub const BIG0: Big = Big(2, 13, 22);
+pub const BIG1: Big = Big(6, 11, 25);
+
 pub struct Small(u32, u32, u8);
 
 impl Small {
@@ -16,7 +19,5 @@ impl Small {
     }
 }
 
-pub const BIG0: Big = Big(2, 13, 22);
-pub const BIG1: Big = Big(6, 11, 25);
 pub const SMALL0: Small = Small(7, 18, 3);
 pub const SMALL1: Small = Small(17, 19, 10);
