@@ -8,13 +8,13 @@ use crate::{
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
-    Main = 0,
-    Parts = 1,
+    Root = 0,
+    Child = 1,
 }
 
 const EMPTY: U224 = root(&[0, 0]);
 
-pub trait Table {
+pub trait Forest {
     fn has_block(&self, t: Type, hash: &U224) -> bool;
     fn get_block(&self, t: Type, hash: &U224) -> io::Result<Vec<u8>>;
     fn set_block(&mut self, t: Type, hash: &U224, value: impl Iterator<Item = u8>)
@@ -79,7 +79,7 @@ pub trait Table {
                     keys.push((kn, size));
                 }
             }
-            t = Type::Parts;
+            t = Type::Child;
         }
         w.write_all(&tail)
     }

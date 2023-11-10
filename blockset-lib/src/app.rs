@@ -4,13 +4,13 @@ use io_trait::Io;
 
 use crate::{
     base32::{StrEx, ToBase32},
-    cdt::main_tree::MainTree,
+    cdt::main_tree::MainTreeAdd,
     eol::ToPosixEol,
     file_table::FileTable,
     forest::{
-        level_storage::LevelStorage,
-        forest::{Table, Type},
-        tree_add_state::TreeAddState,
+        forest_tree_add::LevelStorage,
+        forest::{Forest, Type},
+        tree_add::TreeAdd,
     },
     info::calculate_total,
     progress::{self, Progress},
@@ -18,13 +18,13 @@ use crate::{
     uint::u224::U224,
 };
 
-fn read_to_tree<T: TreeAddState>(
+fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
     stdout: &mut impl Write,
     display_new: bool,
 ) -> io::Result<String> {
-    let mut tree = MainTree::new(s);
+    let mut tree = MainTreeAdd::new(s);
     let mut state = State::new(stdout);
     let mut new = 0;
     loop {
@@ -67,7 +67,7 @@ fn invalid_input(s: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, s)
 }
 
-fn add<'a, T: Io, S: 'a + TreeAddState>(
+fn add<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
     a: &mut T::Args,
     storage: impl Fn(&'a T) -> S,
@@ -123,7 +123,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
             let table = FileTable(io);
-            table.restore(Type::Main, &d, &mut f, stdout)?;
+            table.restore(Type::Root, &d, &mut f, stdout)?;
             Ok(())
         }
         "info" => {

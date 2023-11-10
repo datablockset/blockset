@@ -1,13 +1,13 @@
 use std::{collections::HashMap, io};
 
 use crate::{
-    forest::forest::{Table, Type},
+    forest::forest::{Forest, Type},
     uint::u224::U224,
 };
 
 pub type MemTable = [HashMap<U224, Vec<u8>>; 2];
 
-impl Table for &mut MemTable {
+impl Forest for &mut MemTable {
     fn has_block(&self, t: Type, key: &U224) -> bool {
         self[t as usize].contains_key(key)
     }

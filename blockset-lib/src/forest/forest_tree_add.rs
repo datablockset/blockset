@@ -1,8 +1,8 @@
 use std::{io, iter::once, mem::take};
 
 use super::{
-    forest::{Table, Type},
-    tree_add_state::TreeAddState
+    forest::{Forest, Type},
+    tree_add::TreeAdd
 };
 
 use crate::{
@@ -30,12 +30,12 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> io::Result<u64> {
+    fn store(&mut self, forest: &mut impl Forest, t: Type, i: usize, k: &U224) -> io::Result<u64> {
         let data = take(&mut self.data);
         let data_len = data.len();
         let r = if i == 0 {
             assert!(!data.is_empty());
-            table.check_set_block(t, k, once(0x20).chain(data))?
+            forest.check_set_block(t, k, once(0x20).chain(data))?
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
@@ -55,7 +55,7 @@ impl Levels {
                 assert_eq!(level.last, [0, 0]);
                 return Ok(0); // already stored
             }
-            table.check_set_block(
+            forest.check_set_block(
                 t,
                 k,
                 once(data_len as u8)
@@ -67,12 +67,12 @@ impl Levels {
     }
 }
 
-pub struct LevelStorage<T: Table> {
+pub struct LevelStorage<T: Forest> {
     table: T,
     levels: Levels,
 }
 
-impl<T: Table> LevelStorage<T> {
+impl<T: Forest> LevelStorage<T> {
     pub fn new(table: T) -> Self {
         Self {
             table,
@@ -81,8 +81,8 @@ impl<T: Table> LevelStorage<T> {
     }
 }
 
-impl<T: Table> TreeAddState for LevelStorage<T> {
-    fn add_node(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
+impl<T: Forest> TreeAdd for LevelStorage<T> {
+    fn push(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
         if i < DATA_LEVEL {
             if i == 0 {
                 assert_eq!(digest[1], 0x08000000_00000000_00000000_00000000);
@@ -101,7 +101,7 @@ impl<T: Table> TreeAddState for LevelStorage<T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.table, Type::Parts, i, &k)
+            self.levels.store(&mut self.table, Type::Child, i, &k)
         } else {
             level.last = *digest;
             {
@@ -123,7 +123,7 @@ impl<T: Table> TreeAddState for LevelStorage<T> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.table, Type::Main, i, k)
+        self.levels.store(&mut self.table, Type::Root, i, k)
     }
 }
 
@@ -134,18 +134,18 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::main_tree::MainTree,
+        cdt::main_tree::MainTreeAdd,
         mem_table::MemTable,
         forest::{
-            tree_add_state::TreeAddState,
-            forest::{Table, Type},
+            tree_add::TreeAdd,
+            forest::{Forest, Type},
         },
         uint::u224::U224,
     };
 
     use super::LevelStorage;
 
-    fn tree_from_str<T: TreeAddState>(tree: &mut MainTree<T>, s: &str) -> U224 {
+    fn tree_from_str<T: TreeAdd>(tree: &mut MainTreeAdd<T>, s: &str) -> U224 {
         for c in s.bytes() {
             tree.push(c).unwrap();
         }
@@ -153,14 +153,14 @@ mod test {
     }
 
     fn add(table: &mut MemTable, c: &str) -> U224 {
-        let mut tree = MainTree::new(LevelStorage::new(table));
+        let mut tree = MainTreeAdd::new(LevelStorage::new(table));
         tree_from_str(&mut tree, c)
     }
 
     fn small(c: &str) {
         let mut table = MemTable::default();
         let k = add(&mut table, c);
-        let v = (&mut table).get_block(Type::Main, &k).unwrap();
+        let v = (&mut table).get_block(Type::Root, &k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
@@ -171,7 +171,7 @@ mod test {
         let mut cursor = Cursor::new(&mut v);
         table
             .restore(
-                Type::Main,
+                Type::Root,
                 &k,
                 &mut cursor,
                 &mut Cursor::<Vec<_>>::default(),

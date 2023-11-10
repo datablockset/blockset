@@ -4,7 +4,7 @@ use io_trait::Io;
 
 use crate::{
     base32::ToBase32,
-    forest::forest::{Table, Type},
+    forest::forest::{Forest, Type},
     uint::u224::U224,
 };
 
@@ -29,7 +29,7 @@ fn path(t: Type, key: &U224) -> String {
         + &s[4..]
 }
 
-impl<'a, T: Io> Table for FileTable<'a, T> {
+impl<'a, T: Io> Forest for FileTable<'a, T> {
     fn has_block(&self, t: Type, key: &U224) -> bool {
         self.0.metadata(&path(t, key)).is_ok()
     }
@@ -64,6 +64,6 @@ mod test {
         let k = [
             0x0ae63892, 0xc81cd1b0, 0x4f97a944, 0x891a80e6, 0x9205f2b7, 0xc9d3c292, 0x397b08b5,
         ];
-        path(Type::Main, &k);
+        path(Type::Root, &k);
     }
 }

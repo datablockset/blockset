@@ -1,18 +1,18 @@
 use std::io;
 
-use crate::{forest::tree_add_state::TreeAddState, uint::u224::U224};
+use crate::{forest::tree_add::TreeAdd, uint::u224::U224};
 
 use super::{
     node_id::{root, to_node_id},
     subtree::SubTree,
 };
 
-pub struct MainTree<T: TreeAddState> {
+pub struct MainTreeAdd<T: TreeAdd> {
     state: Vec<SubTree>,
     storage: T,
 }
 
-impl<T: TreeAddState> MainTree<T> {
+impl<T: TreeAdd> MainTreeAdd<T> {
     pub fn new(storage: T) -> Self {
         Self {
             state: Vec::default(),
@@ -24,7 +24,7 @@ impl<T: TreeAddState> MainTree<T> {
         let mut last0 = to_node_id(c);
         let mut total = 0;
         loop {
-            let tmp = self.storage.add_node(&last0, i);
+            let tmp = self.storage.push(&last0, i);
             total += tmp?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
@@ -44,7 +44,7 @@ impl<T: TreeAddState> MainTree<T> {
         let mut total = 0;
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
-                total += self.storage.add_node(&last0, i)?;
+                total += self.storage.push(&last0, i)?;
             }
             last0 = sub_tree.end(last0);
         }
@@ -62,17 +62,17 @@ mod test {
 
     use crate::{
         cdt::node_id::{merge, root, to_node_id},
-        forest::tree_add_state::TreeAddState,
+        forest::tree_add::TreeAdd,
         uint::{u224::U224, u256::U256},
     };
 
-    use super::MainTree;
+    use super::MainTreeAdd;
 
     #[derive(Default)]
     struct MemStorage(Vec<(U256, usize)>);
 
-    impl TreeAddState for MemStorage {
-        fn add_node(&mut self, digest: &U256, index: usize) -> io::Result<u64> {
+    impl TreeAdd for MemStorage {
+        fn push(&mut self, digest: &U256, index: usize) -> io::Result<u64> {
             self.0.push((*digest, index));
             Ok(0)
         }
@@ -81,8 +81,8 @@ mod test {
         }
     }
 
-    fn tree() -> MainTree<MemStorage> {
-        MainTree::new(MemStorage::default())
+    fn tree() -> MainTreeAdd<MemStorage> {
+        MainTreeAdd::new(MemStorage::default())
     }
 
     pub fn tree_from_str(s: &str) -> (Vec<(U256, usize)>, U224) {
@@ -133,8 +133,8 @@ mod test {
 
     struct BrokenStorage();
 
-    impl TreeAddState for BrokenStorage {
-        fn add_node(&mut self, _digest: &U256, _index: usize) -> io::Result<u64> {
+    impl TreeAdd for BrokenStorage {
+        fn push(&mut self, _digest: &U256, _index: usize) -> io::Result<u64> {
             Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
         }
         fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<u64> {
@@ -145,7 +145,7 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn fail_store_test() {
-        let mut t = MainTree::new(BrokenStorage());
+        let mut t = MainTreeAdd::new(BrokenStorage());
         assert!(t.push(b'a').is_err());
     }
 
