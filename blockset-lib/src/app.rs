@@ -11,7 +11,7 @@ use crate::{
     level_storage::LevelStorage,
     progress::{self, Progress},
     state::{mb, progress, State},
-    storage::{Null, Storage},
+    storage::write::{Null, Storage},
     table::{Table, Type},
     uint::u224::U224,
 };

@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::{storage::Storage, uint::u224::U224};
+use crate::{storage::write::Storage, uint::u224::U224};
 
 use super::{
     node_id::{root, to_node_id},
@@ -62,7 +62,7 @@ mod test {
 
     use crate::{
         cdt::node_id::{merge, root, to_node_id},
-        storage::Storage,
+        storage::write::Storage,
         uint::{u224::U224, u256::U256},
     };
 

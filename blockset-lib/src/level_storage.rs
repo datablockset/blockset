@@ -2,7 +2,7 @@ use std::{io, iter::once, mem::take};
 
 use crate::{
     cdt::node_id::{len, root},
-    storage::Storage,
+    storage::write::Storage,
     table::{Table, Type},
     uint::{
         u224::U224,
@@ -133,7 +133,7 @@ mod test {
     use crate::{
         cdt::main_tree::MainTree,
         mem_table::MemTable,
-        storage::Storage,
+        storage::write::Storage,
         table::{Table, Type},
         uint::u224::U224,
     };
