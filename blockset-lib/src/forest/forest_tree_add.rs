@@ -135,8 +135,10 @@ mod test {
 
     use crate::{
         cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
-        forest::forest::{Forest, Type},
-        mem_table::MemTable,
+        forest::{
+            forest::{Forest, Type},
+            mem_table::MemTable,
+        },
         uint::u224::U224,
     };
 

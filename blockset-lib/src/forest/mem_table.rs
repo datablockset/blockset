@@ -1,11 +1,12 @@
-use std::{collections::HashMap, io};
+#![cfg(test)]
+use std::{collections::BTreeMap, io};
 
 use crate::{
     forest::forest::{Forest, Type},
     uint::u224::U224,
 };
 
-pub type MemTable = [HashMap<U224, Vec<u8>>; 2];
+pub type MemTable = [BTreeMap<U224, Vec<u8>>; 2];
 
 impl Forest for &mut MemTable {
     fn has_block(&self, t: Type, key: &U224) -> bool {

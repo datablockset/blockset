@@ -14,8 +14,6 @@ mod state;
 mod uint;
 
 #[cfg(test)]
-mod mem_table;
-#[cfg(test)]
 mod static_assert;
 
 pub use app::run;
