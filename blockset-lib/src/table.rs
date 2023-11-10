@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
 use crate::{
-    sha224::compress_one,
+    cdt::node_id::root,
     state::{progress, State},
     uint::{u224::U224, u32::from_u8x4},
 };
@@ -12,7 +12,7 @@ pub enum Type {
     Parts = 1,
 }
 
-const EMPTY: U224 = compress_one(&[0, 0]);
+const EMPTY: U224 = root(&[0, 0]);
 
 pub trait Table {
     fn has_block(&self, t: Type, key: &U224) -> bool;

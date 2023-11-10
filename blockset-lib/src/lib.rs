@@ -3,19 +3,16 @@ mod array;
 mod ascii;
 mod base32;
 mod bit_vec;
-mod digest;
+mod cdt;
 mod eol;
 mod file_table;
 mod info;
 mod level_storage;
 mod progress;
-mod sha224;
-mod sigma32;
+mod sha2;
 mod state;
 mod storage;
-mod subtree;
 mod table;
-mod tree;
 mod uint;
 
 #[cfg(test)]

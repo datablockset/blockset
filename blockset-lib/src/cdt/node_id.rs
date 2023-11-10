@@ -1,6 +1,10 @@
 use crate::{
-    sha224::compress,
-    uint::u256::{bitor, shl, U256},
+    sha2::{compress::compress, sha224::SHA224},
+    uint::{
+        u128::to_u32x4,
+        u224::U224,
+        u256::{bitor, shl, U256},
+    },
 };
 
 const LEN_MAX: usize = 0xF8;
@@ -37,12 +41,21 @@ pub const fn merge(a: &U256, b: &U256) -> U256 {
     if len <= LEN_MAX {
         set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len)), len)
     } else {
-        compress([*a, *b])
+        let mut x = compress(SHA224, [*a, *b]);
+        x[1] |= 0xFFFF_FFFF << 96;
+        x
     }
 }
 
-pub const fn to_digest(a: u8) -> U256 {
+pub const fn to_node_id(a: u8) -> U256 {
     set_len(&[a as u128, 0], 8)
+}
+
+pub const fn root(hash: &U256) -> U224 {
+    let [a0, a1] = compress(SHA224, [*hash, [0, 0]]);
+    let [a10, a11, a12, _] = to_u32x4(a1);
+    let [a00, a01, a02, a03] = to_u32x4(a0);
+    [a00, a01, a02, a03, a10, a11, a12]
 }
 
 #[cfg(test)]
@@ -50,7 +63,7 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        digest::{len, merge, remove_len, to_digest, LEN_HI_POS},
+        cdt::node_id::{len, merge, remove_len, to_node_id, LEN_HI_POS},
         uint::u256::{shl, U256},
     };
 
@@ -59,8 +72,8 @@ mod test {
     fn bit_test() {
         let r = (8 as u128) << LEN_HI_POS;
         assert_eq!(r, 0x0800_0000_0000_0000_0000_0000_0000_0000);
-        let mut a = to_digest(0x12);
-        let mut b = to_digest(0x34);
+        let mut a = to_node_id(0x12);
+        let mut b = to_node_id(0x34);
         let a_len = len(&a);
         assert_eq!(a_len, 8);
         a = remove_len(&a);
@@ -74,17 +87,17 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn merge_empty_test() {
-        assert_eq!(merge(&to_digest(0x12), &U256::default()), to_digest(0x12));
-        assert_eq!(merge(&U256::default(), &to_digest(0x34)), to_digest(0x34));
+        assert_eq!(merge(&to_node_id(0x12), &U256::default()), to_node_id(0x12));
+        assert_eq!(merge(&U256::default(), &to_node_id(0x34)), to_node_id(0x34));
     }
 
     #[wasm_bindgen_test]
     #[test]
     fn const_test() {
-        const A: U256 = to_digest(0x12);
+        const A: U256 = to_node_id(0x12);
         assert_eq!(A, [0x12, 0x0800_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&A), 8);
-        const B: U256 = to_digest(0x34);
+        const B: U256 = to_node_id(0x34);
         assert_eq!(B, [0x34, 0x0800_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(len(&B), 8);
         const C: U256 = merge(&A, &B);
@@ -137,7 +150,7 @@ mod test {
                 0xF000_3412_3412_3412_3412_3412_3412_3412
             ]
         );
-        const C151: U256 = merge(&C15, &to_digest(0x56));
+        const C151: U256 = merge(&C15, &to_node_id(0x56));
         assert_eq!(
             C151,
             [
@@ -160,12 +173,12 @@ mod test {
             a
         };
         let a = check(
-            to_digest(0xEF),
+            to_node_id(0xEF),
             8,
             [0xEF, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
         let b = check(
-            to_digest(0xCD),
+            to_node_id(0xCD),
             8,
             [0xCD, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
@@ -175,7 +188,7 @@ mod test {
             [0xCDEF, 0x1000_0000_0000_0000_0000_0000_0000_0000],
         );
         let c = check(
-            to_digest(0xAB),
+            to_node_id(0xAB),
             8,
             [0xAB, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
@@ -185,12 +198,12 @@ mod test {
             [0xAB_CDEF, 0x1800_0000_0000_0000_0000_0000_0000_0000],
         );
         let d = check(
-            to_digest(0x89),
+            to_node_id(0x89),
             8,
             [0x89, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
         let e = check(
-            to_digest(0x67),
+            to_node_id(0x67),
             8,
             [0x67, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
@@ -205,17 +218,17 @@ mod test {
             [0x67_89AB_CDEF, 0x2800_0000_0000_0000_0000_0000_0000_0000],
         );
         let f = check(
-            to_digest(0x45),
+            to_node_id(0x45),
             8,
             [0x45, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
         let g = check(
-            to_digest(0x23),
+            to_node_id(0x23),
             8,
             [0x23, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );
         let h = check(
-            to_digest(0x01),
+            to_node_id(0x01),
             8,
             [0x01, 0x0800_0000_0000_0000_0000_0000_0000_0000],
         );

@@ -4,20 +4,20 @@ The `blockset` application is a command line program that can store and retrieve
 
 ## Commands
 
-- address validation:
+- content hash validation:
   ```console
   blockset validate 3v1d4j94scaseqgcyzr0ha5dxa9rx6ppnfbndck971ack
   ```
-- calculate address:
+- calculate a content hash of a file:
   ```console
-  blockset address ./README.md
+  blockset hash ./README.md
   ```
-- add a data block to the local storage `cdt0/`:
+- add content of a file to the local storage `cdt0/`:
   ```console
   blockset add ./README.md
   blockset add ./LICENSE --to-posix-eol
   ```
-- get a file by address
+- get a file by a content hash
   ```console
   blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./old.md
   ```

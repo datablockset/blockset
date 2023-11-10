@@ -1,6 +1,6 @@
 use crate::{
     array::ArrayEx,
-    digest::merge,
+    cdt::node_id::merge,
     uint::u256::{great, U256},
 };
 
@@ -82,8 +82,10 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        digest::{merge, to_digest},
-        subtree::Node,
+        cdt::{
+            node_id::{merge, to_node_id},
+            subtree::Node,
+        },
         uint::u256::U256,
     };
 
@@ -109,9 +111,9 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn subtree_test() {
-        let a = to_digest(0b01);
-        let b = to_digest(0b10);
-        let c = to_digest(0b11);
+        let a = to_node_id(0b01);
+        let b = to_node_id(0b10);
+        let c = to_node_id(0b11);
         {
             let mut t = SubTree::new(&a);
             // assert_eq!(t.push(&a), None);
@@ -143,17 +145,17 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn subtree2_test() {
-        let ff = to_digest(0b1111_1111); // 000
-        let fe = to_digest(0b1111_1110); // 255 000
-        let fd = to_digest(0b1111_1101); // 254
-        let fc = to_digest(0b1111_1100); // 255 254 000
-        let fb = to_digest(0b1111_1011); // 253
-        let fa = to_digest(0b1111_1010); // 255 253
-        let f9 = to_digest(0b1111_1001); // 254
-        let f8 = to_digest(0b1111_1000); // 255 254 253 000
-        let f7 = to_digest(0b1111_0111); // 252
-        let f6 = to_digest(0b1111_0110); // 255 252
-        let f5 = to_digest(0b1111_0100); // 254
+        let ff = to_node_id(0b1111_1111); // 000
+        let fe = to_node_id(0b1111_1110); // 255 000
+        let fd = to_node_id(0b1111_1101); // 254
+        let fc = to_node_id(0b1111_1100); // 255 254 000
+        let fb = to_node_id(0b1111_1011); // 253
+        let fa = to_node_id(0b1111_1010); // 255 253
+        let f9 = to_node_id(0b1111_1001); // 254
+        let f8 = to_node_id(0b1111_1000); // 255 254 253 000
+        let f7 = to_node_id(0b1111_0111); // 252
+        let f6 = to_node_id(0b1111_0110); // 255 252
+        let f5 = to_node_id(0b1111_0100); // 254
         let mut t = SubTree::default();
         assert_eq!(t.push(&ff), None);
         assert_eq!(t.0, [Node::new2(&ff, 0)]);
@@ -239,8 +241,8 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn hi_test() {
-        let a = to_digest(b'a');
-        let b = to_digest(b'b');
+        let a = to_node_id(b'a');
+        let b = to_node_id(b'b');
         let ab = {
             let mut t = SubTree(Vec::default());
             assert_eq!(t.push(&a), None);

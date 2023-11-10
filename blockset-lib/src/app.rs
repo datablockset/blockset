@@ -4,6 +4,7 @@ use io_trait::Io;
 
 use crate::{
     base32::{StrEx, ToBase32},
+    cdt::main_tree::MainTree,
     eol::ToPosixEol,
     file_table::FileTable,
     info::calculate_total,
@@ -12,7 +13,6 @@ use crate::{
     state::{mb, progress, State},
     storage::{Null, Storage},
     table::{Table, Type},
-    tree::Tree,
     uint::u224::U224,
 };
 
@@ -22,7 +22,7 @@ fn read_to_tree<T: Storage>(
     stdout: &mut impl Write,
     display_new: bool,
 ) -> io::Result<String> {
-    let mut tree = Tree::new(s);
+    let mut tree = MainTree::new(s);
     let mut state = State::new(stdout);
     let mut new = 0;
     loop {
@@ -103,21 +103,21 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
         "validate" => {
-            let b32 = a.next().ok_or(invalid_input("missing address"))?;
+            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
             let d = b32
                 .from_base32::<U224>()
-                .ok_or(invalid_input("invalid address"))?;
+                .ok_or(invalid_input("invalid hash"))?;
             print(stdout, "valid: ")?;
             println(stdout, &d.to_base32())?;
             Ok(())
         }
-        "address" => add(io, &mut a, |_| Null(), false),
+        "hash" => add(io, &mut a, |_| Null(), false),
         "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
         "get" => {
-            let b32 = a.next().ok_or(invalid_input("missing address"))?;
+            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
             let d = b32
                 .from_base32::<U224>()
-                .ok_or(invalid_input("invalid address"))?;
+                .ok_or(invalid_input("invalid hash"))?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
             let table = FileTable(io);
@@ -140,12 +140,7 @@ mod test {
     use io_trait::Io;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{
-        base32::ToBase32,
-        run,
-        sha224::{compress, compress_one},
-        uint::u256::{to_u224, U256},
-    };
+    use crate::{base32::ToBase32, cdt::node_id::root, run, uint::u256::U256};
 
     #[wasm_bindgen_test]
     #[test]
@@ -168,7 +163,7 @@ mod test {
     fn test_missing_address() {
         let mut io = VirtualIo::new(&["validate"]);
         let e = run(&mut io);
-        assert_eq!(e.unwrap_err().to_string(), "missing address");
+        assert_eq!(e.unwrap_err().to_string(), "missing hash");
     }
 
     #[wasm_bindgen_test]
@@ -176,7 +171,7 @@ mod test {
     fn test_invalid_address() {
         let mut io = VirtualIo::new(&["validate", "0"]);
         let e = run(&mut io);
-        assert_eq!(e.unwrap_err().to_string(), "invalid address");
+        assert_eq!(e.unwrap_err().to_string(), "invalid hash");
     }
 
     #[wasm_bindgen_test]
@@ -190,7 +185,7 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn test_address() {
-        let mut io = VirtualIo::new(&["address", "a.txt"]);
+        let mut io = VirtualIo::new(&["hash", "a.txt"]);
         io.write("a.txt", "Hello, world!".as_bytes()).unwrap();
         let e = run(&mut io);
         assert!(e.is_ok());
@@ -198,7 +193,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = to_u224(&compress([d, [0, 0]])).unwrap().to_base32();
+        let s = root(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s + "\n");
     }
 
@@ -213,7 +208,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
         let v = io
             .read(&("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]))
@@ -228,7 +223,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         let mut io = VirtualIo::new(&["get", s.as_str(), "b.txt"]);
         // io.create_dir("cdt0").unwrap();
         io.write_recursively(
@@ -248,7 +243,7 @@ mod test {
             0x00000021_646c726f_77202c6f_6c6c6548,
             0x68000000_00000000_00000000_00000000,
         ];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         let mut io = VirtualIo::new(&["info"]);
         // io.create_dir("cdt0").unwrap();
         io.write_recursively(
@@ -269,7 +264,7 @@ mod test {
         let e = run(&mut io);
         assert!(e.is_ok());
         let d: U256 = [0, 0];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
     }
 
@@ -277,7 +272,7 @@ mod test {
     #[test]
     fn test_get_empty() {
         let d: U256 = [0, 0];
-        let s = compress_one(&d).to_base32();
+        let s = root(&d).to_base32();
         let mut io = VirtualIo::new(&["get", &s, "a.txt"]);
         let e = run(&mut io);
         assert!(e.is_ok());
