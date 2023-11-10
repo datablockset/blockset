@@ -7,8 +7,8 @@ use crate::{
 };
 
 pub mod file;
-pub mod tree_add;
 pub mod mem;
+pub mod tree_add;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
