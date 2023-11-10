@@ -1,19 +1,16 @@
 #![cfg(test)]
 use std::{collections::BTreeMap, io};
 
-use crate::{
-    forest::{Forest, Type},
-    uint::u224::U224,
-};
+use crate::{cdt::node_type::NodeType, forest::Forest, uint::u224::U224};
 
 pub type MemForest = [BTreeMap<U224, Vec<u8>>; 2];
 
 impl Forest for &mut MemForest {
-    fn has_block(&self, t: Type, key: &U224) -> bool {
-        self[t as usize].contains_key(key)
+    fn has_block(&self, t: NodeType, hash: &U224) -> bool {
+        self[t as usize].contains_key(hash)
     }
 
-    fn get_block(&self, t: Type, key: &U224) -> io::Result<Vec<u8>> {
+    fn get_block(&self, t: NodeType, key: &U224) -> io::Result<Vec<u8>> {
         self[t as usize]
             .get(key)
             .cloned()
@@ -22,7 +19,7 @@ impl Forest for &mut MemForest {
 
     fn set_block(
         &mut self,
-        t: Type,
+        t: NodeType,
         key: &U224,
         value: impl Iterator<Item = u8>,
     ) -> io::Result<()> {

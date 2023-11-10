@@ -1,10 +1,11 @@
 use std::{io, iter::once, mem::take};
 
-use super::{Forest, Type};
+use super::Forest;
 
 use crate::{
     cdt::{
         node_id::{len, root},
+        node_type::NodeType,
         tree_add::TreeAdd,
     },
     uint::{
@@ -30,7 +31,13 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, forest: &mut impl Forest, t: Type, i: usize, k: &U224) -> io::Result<u64> {
+    fn store(
+        &mut self,
+        forest: &mut impl Forest,
+        t: NodeType,
+        i: usize,
+        k: &U224,
+    ) -> io::Result<u64> {
         let data = take(&mut self.data);
         let data_len = data.len();
         let r = if i == 0 {
@@ -101,7 +108,7 @@ impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.forest, Type::Child, i, &k)
+            self.levels.store(&mut self.forest, NodeType::Child, i, &k)
         } else {
             level.last = *digest;
             {
@@ -123,7 +130,7 @@ impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.forest, Type::Root, i, k)
+        self.levels.store(&mut self.forest, NodeType::Root, i, k)
     }
 }
 
@@ -134,8 +141,8 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
-        forest::{mem::MemForest, Forest, Type},
+        cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
+        forest::{mem::MemForest, Forest},
         uint::u224::U224,
     };
 
@@ -156,7 +163,7 @@ mod test {
     fn small(c: &str) {
         let mut table = MemForest::default();
         let k = add(&mut table, c);
-        let v = (&mut table).get_block(Type::Root, &k).unwrap();
+        let v = (&mut table).get_block(NodeType::Root, &k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
@@ -167,7 +174,7 @@ mod test {
         let mut cursor = Cursor::new(&mut v);
         table
             .restore(
-                Type::Root,
+                NodeType::Root,
                 &k,
                 &mut cursor,
                 &mut Cursor::<Vec<_>>::default(),

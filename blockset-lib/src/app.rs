@@ -4,9 +4,9 @@ use io_trait::Io;
 
 use crate::{
     base32::{StrEx, ToBase32},
-    cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
+    cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
     eol::ToPosixEol,
-    forest::{file::FileForest, tree_add::ForestTreeAdd, Forest, Type},
+    forest::{file::FileForest, tree_add::ForestTreeAdd, Forest},
     info::calculate_total,
     progress::{self, Progress},
     state::{mb, progress, State},
@@ -118,7 +118,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
             let table = FileForest(io);
-            table.restore(Type::Root, &d, &mut f, stdout)?;
+            table.restore(NodeType::Root, &d, &mut f, stdout)?;
             Ok(())
         }
         "info" => {

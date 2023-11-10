@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
 use crate::{
-    cdt::node_id::root,
+    cdt::{node_id::root, node_type::NodeType},
     state::{progress, State},
     uint::{u224::U224, u32::from_u8x4},
 };
@@ -10,26 +10,20 @@ pub mod file;
 pub mod mem;
 pub mod tree_add;
 
-#[derive(Debug, Clone, Copy)]
-pub enum Type {
-    Root = 0,
-    Child = 1,
-}
-
 const EMPTY: U224 = root(&[0, 0]);
 
 pub trait Forest {
-    fn has_block(&self, t: Type, hash: &U224) -> bool;
-    fn get_block(&self, t: Type, hash: &U224) -> io::Result<Vec<u8>>;
+    fn has_block(&self, t: NodeType, hash: &U224) -> bool;
+    fn get_block(&self, t: NodeType, hash: &U224) -> io::Result<Vec<u8>>;
     fn set_block(
         &mut self,
-        t: Type,
+        t: NodeType,
         hash: &U224,
         value: impl Iterator<Item = u8>,
     ) -> io::Result<()>;
     fn check_set_block(
         &mut self,
-        t: Type,
+        t: NodeType,
         key: &U224,
         value: impl Iterator<Item = u8>,
     ) -> io::Result<bool> {
@@ -42,7 +36,7 @@ pub trait Forest {
     // we should extract a state machine from the function and remove `set_progress`.
     fn restore(
         &self,
-        mut t: Type,
+        mut t: NodeType,
         k: &U224,
         w: &mut impl Write,
         stdout: &mut impl Write,
@@ -87,7 +81,7 @@ pub trait Forest {
                     keys.push((kn, size));
                 }
             }
-            t = Type::Child;
+            t = NodeType::Child;
         }
         w.write_all(&tail)
     }
