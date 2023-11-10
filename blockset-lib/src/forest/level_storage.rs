@@ -1,9 +1,12 @@
 use std::{io, iter::once, mem::take};
 
+use super::{
+    forest::{Table, Type},
+    tree_add_state::TreeAddState
+};
+
 use crate::{
     cdt::node_id::{len, root},
-    storage::write::Storage,
-    table::{Table, Type},
     uint::{
         u224::U224,
         u256::{to_u224, U256},
@@ -78,8 +81,8 @@ impl<T: Table> LevelStorage<T> {
     }
 }
 
-impl<T: Table> Storage for LevelStorage<T> {
-    fn store(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
+impl<T: Table> TreeAddState for LevelStorage<T> {
+    fn add_node(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
         if i < DATA_LEVEL {
             if i == 0 {
                 assert_eq!(digest[1], 0x08000000_00000000_00000000_00000000);
@@ -133,14 +136,16 @@ mod test {
     use crate::{
         cdt::main_tree::MainTree,
         mem_table::MemTable,
-        storage::write::Storage,
-        table::{Table, Type},
+        forest::{
+            tree_add_state::TreeAddState,
+            forest::{Table, Type},
+        },
         uint::u224::U224,
     };
 
     use super::LevelStorage;
 
-    fn tree_from_str<T: Storage>(tree: &mut MainTree<T>, s: &str) -> U224 {
+    fn tree_from_str<T: TreeAddState>(tree: &mut MainTree<T>, s: &str) -> U224 {
         for c in s.bytes() {
             tree.push(c).unwrap();
         }

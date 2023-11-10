@@ -1,18 +1,18 @@
 use std::io;
 
-use crate::{storage::write::Storage, uint::u224::U224};
+use crate::{forest::tree_add_state::TreeAddState, uint::u224::U224};
 
 use super::{
     node_id::{root, to_node_id},
     subtree::SubTree,
 };
 
-pub struct MainTree<T: Storage> {
+pub struct MainTree<T: TreeAddState> {
     state: Vec<SubTree>,
     storage: T,
 }
 
-impl<T: Storage> MainTree<T> {
+impl<T: TreeAddState> MainTree<T> {
     pub fn new(storage: T) -> Self {
         Self {
             state: Vec::default(),
@@ -24,7 +24,7 @@ impl<T: Storage> MainTree<T> {
         let mut last0 = to_node_id(c);
         let mut total = 0;
         loop {
-            let tmp = self.storage.store(&last0, i);
+            let tmp = self.storage.add_node(&last0, i);
             total += tmp?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
@@ -44,7 +44,7 @@ impl<T: Storage> MainTree<T> {
         let mut total = 0;
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
-                total += self.storage.store(&last0, i)?;
+                total += self.storage.add_node(&last0, i)?;
             }
             last0 = sub_tree.end(last0);
         }
@@ -62,7 +62,7 @@ mod test {
 
     use crate::{
         cdt::node_id::{merge, root, to_node_id},
-        storage::write::Storage,
+        forest::tree_add_state::TreeAddState,
         uint::{u224::U224, u256::U256},
     };
 
@@ -71,8 +71,8 @@ mod test {
     #[derive(Default)]
     struct MemStorage(Vec<(U256, usize)>);
 
-    impl Storage for MemStorage {
-        fn store(&mut self, digest: &U256, index: usize) -> io::Result<u64> {
+    impl TreeAddState for MemStorage {
+        fn add_node(&mut self, digest: &U256, index: usize) -> io::Result<u64> {
             self.0.push((*digest, index));
             Ok(0)
         }
@@ -133,8 +133,8 @@ mod test {
 
     struct BrokenStorage();
 
-    impl Storage for BrokenStorage {
-        fn store(&mut self, _digest: &U256, _index: usize) -> io::Result<u64> {
+    impl TreeAddState for BrokenStorage {
+        fn add_node(&mut self, _digest: &U256, _index: usize) -> io::Result<u64> {
             Err(io::Error::new(io::ErrorKind::Other, "BrokenStorage"))
         }
         fn end(&mut self, _digest: &U224, _index: usize) -> io::Result<u64> {

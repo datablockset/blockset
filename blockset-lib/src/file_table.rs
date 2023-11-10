@@ -4,7 +4,7 @@ use io_trait::Io;
 
 use crate::{
     base32::ToBase32,
-    table::{Table, Type},
+    forest::forest::{Table, Type},
     uint::u224::U224,
 };
 
@@ -54,7 +54,7 @@ impl<'a, T: Io> Table for FileTable<'a, T> {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::table::Type;
+    use crate::forest::forest::Type;
 
     use super::path;
 

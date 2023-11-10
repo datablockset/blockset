@@ -1,7 +1,7 @@
 use std::{collections::HashMap, io};
 
 use crate::{
-    table::{Table, Type},
+    forest::forest::{Table, Type},
     uint::u224::U224,
 };
 

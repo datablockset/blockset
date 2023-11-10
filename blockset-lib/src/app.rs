@@ -7,16 +7,18 @@ use crate::{
     cdt::main_tree::MainTree,
     eol::ToPosixEol,
     file_table::FileTable,
+    forest::{
+        level_storage::LevelStorage,
+        forest::{Table, Type},
+        tree_add_state::TreeAddState,
+    },
     info::calculate_total,
-    level_storage::LevelStorage,
     progress::{self, Progress},
     state::{mb, progress, State},
-    storage::write::{Null, Storage},
-    table::{Table, Type},
     uint::u224::U224,
 };
 
-fn read_to_tree<T: Storage>(
+fn read_to_tree<T: TreeAddState>(
     s: T,
     mut file: impl Read + Progress,
     stdout: &mut impl Write,
@@ -65,7 +67,7 @@ fn invalid_input(s: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, s)
 }
 
-fn add<'a, T: Io, S: 'a + Storage>(
+fn add<'a, T: Io, S: 'a + TreeAddState>(
     io: &'a T,
     a: &mut T::Args,
     storage: impl Fn(&'a T) -> S,
@@ -111,7 +113,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             println(stdout, &d.to_base32())?;
             Ok(())
         }
-        "hash" => add(io, &mut a, |_| Null(), false),
+        "hash" => add(io, &mut a, |_| (), false),
         "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
         "get" => {
             let b32 = a.next().ok_or(invalid_input("missing hash"))?;
