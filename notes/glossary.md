@@ -5,7 +5,7 @@
 - **`CDT0`** is the name of a hash function that is based on a `content-dependent tree` and the `SHA-224` compression function.
 - **`storage-tree`**, **`forest-tree`**, **`blockset-tree`**, **`block-tree`** is a tree in a `forest`.  In particular, a `blockset` storage keeps its nodes in files. One node is one file. Each storage may have its own size limitation for one node. However, the split algorithm should align levels and sublevels to `2^n`. In this case, a storage with a smaller limit will always have blocks for a storage with a bigger limit. The tree uses only hashes (`224 bits`) as node ids. A value of a forrest node contains a `block` of data.
 - **`forest`**, **`tree-storage`** is a storage that keeps trees.
-- **`storage-node-id`** is a hash of a node of data. Contains
+- **`forest-node-id`** is a hash of a node of data. Contains
     - **`type`** is either `root` or `child`.
     - **`hash`** is a `224 bits long unsigned integer`. A `root` `hash` equals to a `content-hash`.
 - **`main-tree`**. It's a tree of subtrees. Each node of the tree is a `subtree`.

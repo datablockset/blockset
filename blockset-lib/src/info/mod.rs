@@ -8,13 +8,12 @@ use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
     cdt::node_type::NodeType,
-    forest::file::CDT0,
+    forest::file::{CDT0, dir},
     state::{mb, State},
 };
 
 use self::{
     dir_entry_map::{DirEntryMap, DirEntryMapEx},
-    node_type::dir,
     node_type_set::NodeTypeSet,
 };
 

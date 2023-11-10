@@ -12,11 +12,15 @@ pub const ROOTS: &str = "roots";
 
 pub const PARTS: &str = "parts";
 
+pub const fn dir(t: NodeType) -> &'static str {
+    [ROOTS, PARTS][t as usize]
+}
+
 fn path(t: NodeType, key: &U224) -> String {
     let s = key.to_base32();
     CDT0.to_owned()
         + "/"
-        + [ROOTS, PARTS][t as usize]
+        + dir(t)
         + "/"
         + &s[..2]
         + "/"
