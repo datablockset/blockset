@@ -26,3 +26,32 @@ impl BitVec {
         }
     }
 }
+
+struct BitVecSplit<const S: u8, I: Iterator<Item = BitVec>> {
+    iter: I,
+    remainder: BitVec,
+}
+
+impl<const S: u8, I: Iterator<Item = BitVec>> BitVecSplit<S, I> {
+    const MASK: u32 = (1u32 << S) - 1;
+}
+
+impl<const S: u8, I: Iterator<Item = BitVec>> Iterator for BitVecSplit<S, I> {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut value = self.remainder.value as u64;
+        while self.remainder.len < S {
+            if let Some(b) = self.iter.next() {
+                value |= b.value << self.remainder.len;
+                self.remainder.len += b.len;
+                continue;
+            }
+            if self.remainder.len == 0 {
+                return None;
+            }
+            break;
+        }
+        self.remainder.value = value >> S;
+        Some((value as u32) & Self::MASK)
+    }
+}
