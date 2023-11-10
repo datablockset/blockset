@@ -7,6 +7,9 @@ pub struct ForestNodeId {
 
 impl ForestNodeId {
     pub fn new(node_type: NodeType, hash: &U224) -> Self {
-        Self { node_type, hash: *hash }
+        Self {
+            node_type,
+            hash: *hash,
+        }
     }
 }
