@@ -7,7 +7,7 @@ use std::io;
 use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
-    file_table::CDT0,
+    forest::file_forest::CDT0,
     state::{mb, State},
 };
 

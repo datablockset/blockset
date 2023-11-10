@@ -4,11 +4,11 @@ use io_trait::Io;
 
 use crate::{
     base32::ToBase32,
-    forest::forest::{Forest, Type},
+    forest::{Forest, Type},
     uint::u224::U224,
 };
 
-pub struct FileTable<'a, T: Io>(pub &'a T);
+pub struct FileForest<'a, T: Io>(pub &'a T);
 
 pub const CDT0: &str = "cdt0";
 
@@ -29,7 +29,7 @@ fn path(t: Type, key: &U224) -> String {
         + &s[4..]
 }
 
-impl<'a, T: Io> Forest for FileTable<'a, T> {
+impl<'a, T: Io> Forest for FileForest<'a, T> {
     fn has_block(&self, t: Type, key: &U224) -> bool {
         self.0.metadata(&path(t, key)).is_ok()
     }
@@ -54,7 +54,7 @@ impl<'a, T: Io> Forest for FileTable<'a, T> {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::forest::forest::Type;
+    use crate::forest::Type;
 
     use super::path;
 

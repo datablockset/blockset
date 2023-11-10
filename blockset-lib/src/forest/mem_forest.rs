@@ -2,13 +2,13 @@
 use std::{collections::BTreeMap, io};
 
 use crate::{
-    forest::forest::{Forest, Type},
+    forest::{Forest, Type},
     uint::u224::U224,
 };
 
-pub type MemTable = [BTreeMap<U224, Vec<u8>>; 2];
+pub type MemForest = [BTreeMap<U224, Vec<u8>>; 2];
 
-impl Forest for &mut MemTable {
+impl Forest for &mut MemForest {
     fn has_block(&self, t: Type, key: &U224) -> bool {
         self[t as usize].contains_key(key)
     }

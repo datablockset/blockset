@@ -6,11 +6,7 @@ use crate::{
     base32::{StrEx, ToBase32},
     cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
     eol::ToPosixEol,
-    file_table::FileTable,
-    forest::{
-        forest::{Forest, Type},
-        forest_tree_add::LevelStorage,
-    },
+    forest::{file_forest::FileForest, forest_tree_add::LevelStorage, Forest, Type},
     info::calculate_total,
     progress::{self, Progress},
     state::{mb, progress, State},
@@ -113,7 +109,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             Ok(())
         }
         "hash" => add(io, &mut a, |_| (), false),
-        "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
+        "add" => add(io, &mut a, |io| LevelStorage::new(FileForest(io)), true),
         "get" => {
             let b32 = a.next().ok_or(invalid_input("missing hash"))?;
             let d = b32
@@ -121,7 +117,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 .ok_or(invalid_input("invalid hash"))?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
-            let table = FileTable(io);
+            let table = FileForest(io);
             table.restore(Type::Root, &d, &mut f, stdout)?;
             Ok(())
         }

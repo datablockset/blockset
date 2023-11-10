@@ -1,6 +1,6 @@
 use std::{io, iter::once, mem::take};
 
-use super::forest::{Forest, Type};
+use super::{Forest, Type};
 
 use crate::{
     cdt::{
@@ -135,10 +135,7 @@ mod test {
 
     use crate::{
         cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
-        forest::{
-            forest::{Forest, Type},
-            mem_table::MemTable,
-        },
+        forest::{mem_forest::MemForest, Forest, Type},
         uint::u224::U224,
     };
 
@@ -151,20 +148,20 @@ mod test {
         tree.end().unwrap().0
     }
 
-    fn add(table: &mut MemTable, c: &str) -> U224 {
+    fn add(table: &mut MemForest, c: &str) -> U224 {
         let mut tree = MainTreeAdd::new(LevelStorage::new(table));
         tree_from_str(&mut tree, c)
     }
 
     fn small(c: &str) {
-        let mut table = MemTable::default();
+        let mut table = MemForest::default();
         let k = add(&mut table, c);
         let v = (&mut table).get_block(Type::Root, &k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
     fn big(c: &str) {
-        let table = &mut MemTable::default();
+        let table = &mut MemForest::default();
         let k = add(table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);

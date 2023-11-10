@@ -5,7 +5,6 @@ mod base32;
 mod bit_vec;
 mod cdt;
 mod eol;
-mod file_table;
 mod forest;
 mod info;
 mod progress;
