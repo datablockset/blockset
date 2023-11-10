@@ -6,11 +6,11 @@ mod bit_vec;
 mod cdt;
 mod eol;
 mod file_table;
+mod forest;
 mod info;
 mod progress;
 mod sha2;
 mod state;
-mod forest;
 mod uint;
 
 #[cfg(test)]

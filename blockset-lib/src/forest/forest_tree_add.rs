@@ -1,12 +1,12 @@
 use std::{io, iter::once, mem::take};
 
-use super::{
-    forest::{Forest, Type},
-    tree_add::TreeAdd
-};
+use super::forest::{Forest, Type};
 
 use crate::{
-    cdt::node_id::{len, root},
+    cdt::{
+        node_id::{len, root},
+        tree_add::TreeAdd,
+    },
     uint::{
         u224::U224,
         u256::{to_u224, U256},
@@ -134,12 +134,9 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::main_tree::MainTreeAdd,
+        cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
+        forest::forest::{Forest, Type},
         mem_table::MemTable,
-        forest::{
-            tree_add::TreeAdd,
-            forest::{Forest, Type},
-        },
         uint::u224::U224,
     };
 

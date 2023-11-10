@@ -17,8 +17,12 @@ const EMPTY: U224 = root(&[0, 0]);
 pub trait Forest {
     fn has_block(&self, t: Type, hash: &U224) -> bool;
     fn get_block(&self, t: Type, hash: &U224) -> io::Result<Vec<u8>>;
-    fn set_block(&mut self, t: Type, hash: &U224, value: impl Iterator<Item = u8>)
-        -> io::Result<()>;
+    fn set_block(
+        &mut self,
+        t: Type,
+        hash: &U224,
+        value: impl Iterator<Item = u8>,
+    ) -> io::Result<()>;
     fn check_set_block(
         &mut self,
         t: Type,

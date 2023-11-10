@@ -1,10 +1,11 @@
 use std::io;
 
-use crate::{forest::tree_add::TreeAdd, uint::u224::U224};
+use crate::uint::u224::U224;
 
 use super::{
     node_id::{root, to_node_id},
     subtree::SubTree,
+    tree_add::TreeAdd,
 };
 
 pub struct MainTreeAdd<T: TreeAdd> {
@@ -62,11 +63,10 @@ mod test {
 
     use crate::{
         cdt::node_id::{merge, root, to_node_id},
-        forest::tree_add::TreeAdd,
         uint::{u224::U224, u256::U256},
     };
 
-    use super::MainTreeAdd;
+    use super::{super::tree_add::TreeAdd, MainTreeAdd};
 
     #[derive(Default)]
     struct MemStorage(Vec<(U256, usize)>);
