@@ -8,7 +8,7 @@ use crate::{
     uint::u224::U224,
 };
 
-pub struct File<'a, T: Io>(pub &'a T);
+pub struct FileForest<'a, T: Io>(pub &'a T);
 
 pub const CDT0: &str = "cdt0";
 
@@ -29,7 +29,7 @@ fn path(t: Type, key: &U224) -> String {
         + &s[4..]
 }
 
-impl<'a, T: Io> Forest for File<'a, T> {
+impl<'a, T: Io> Forest for FileForest<'a, T> {
     fn has_block(&self, t: Type, key: &U224) -> bool {
         self.0.metadata(&path(t, key)).is_ok()
     }

@@ -21,7 +21,7 @@ struct Nodes {
 }
 
 #[derive(Default)]
-struct ForestTreeAdd {
+struct Levels {
     data: Vec<u8>,
     nodes: Vec<Nodes>,
 }
@@ -29,7 +29,7 @@ struct ForestTreeAdd {
 const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
-impl ForestTreeAdd {
+impl Levels {
     fn store(&mut self, forest: &mut impl Forest, t: Type, i: usize, k: &U224) -> io::Result<u64> {
         let data = take(&mut self.data);
         let data_len = data.len();
@@ -67,12 +67,12 @@ impl ForestTreeAdd {
     }
 }
 
-pub struct LevelStorage<T: Forest> {
+pub struct ForestTreeAdd<T: Forest> {
     forest: T,
-    levels: ForestTreeAdd,
+    levels: Levels,
 }
 
-impl<T: Forest> LevelStorage<T> {
+impl<T: Forest> ForestTreeAdd<T> {
     pub fn new(forest: T) -> Self {
         Self {
             forest,
@@ -81,7 +81,7 @@ impl<T: Forest> LevelStorage<T> {
     }
 }
 
-impl<T: Forest> TreeAdd for LevelStorage<T> {
+impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
     fn push(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
         if i < DATA_LEVEL {
             if i == 0 {
@@ -135,11 +135,11 @@ mod test {
 
     use crate::{
         cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
-        forest::{mem::Mem, Forest, Type},
+        forest::{mem::MemForest, Forest, Type},
         uint::u224::U224,
     };
 
-    use super::LevelStorage;
+    use super::ForestTreeAdd;
 
     fn tree_from_str<T: TreeAdd>(tree: &mut MainTreeAdd<T>, s: &str) -> U224 {
         for c in s.bytes() {
@@ -148,20 +148,20 @@ mod test {
         tree.end().unwrap().0
     }
 
-    fn add(table: &mut Mem, c: &str) -> U224 {
-        let mut tree = MainTreeAdd::new(LevelStorage::new(table));
+    fn add(table: &mut MemForest, c: &str) -> U224 {
+        let mut tree = MainTreeAdd::new(ForestTreeAdd::new(table));
         tree_from_str(&mut tree, c)
     }
 
     fn small(c: &str) {
-        let mut table = Mem::default();
+        let mut table = MemForest::default();
         let k = add(&mut table, c);
         let v = (&mut table).get_block(Type::Root, &k).unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
     fn big(c: &str) {
-        let table = &mut Mem::default();
+        let table = &mut MemForest::default();
         let k = add(table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);
