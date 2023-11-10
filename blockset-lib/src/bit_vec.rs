@@ -11,7 +11,7 @@ impl BitVec {
             len,
         }
     }
-    pub fn push(&mut self, overflow: &mut impl FnMut(u32), size: u8, b: BitVec) {
+    pub fn push(&mut self, size: u8, overflow: &mut impl FnMut(u32), b: BitVec) {
         assert!(size <= 32);
         self.value |= b.value << self.len;
         self.len += b.len;
