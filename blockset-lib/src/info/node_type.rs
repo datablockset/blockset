@@ -1,4 +1,4 @@
-use crate::forest::file_forest::{PARTS, ROOTS};
+use crate::forest::file::{PARTS, ROOTS};
 
 use super::node_type_set::NodeTypeSet;
 

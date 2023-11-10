@@ -6,9 +6,9 @@ use crate::{
     uint::{u224::U224, u32::from_u8x4},
 };
 
-pub mod file_forest;
-pub mod forest_tree_add;
-pub mod mem_forest;
+pub mod file;
+pub mod tree_add;
+pub mod mem;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {

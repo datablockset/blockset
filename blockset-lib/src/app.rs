@@ -6,7 +6,7 @@ use crate::{
     base32::{StrEx, ToBase32},
     cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
     eol::ToPosixEol,
-    forest::{file_forest::FileForest, forest_tree_add::LevelStorage, Forest, Type},
+    forest::{file::FileForest, tree_add::LevelStorage, Forest, Type},
     info::calculate_total,
     progress::{self, Progress},
     state::{mb, progress, State},
