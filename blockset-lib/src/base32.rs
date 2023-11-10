@@ -40,7 +40,7 @@ impl<T: Iterator<Item = BitVec>> BitsToBase32 for T {
         let mut result = String::default();
         let mut a = BitVec::default();
         for b in self {
-            a.push(5, &mut |v| result.push(to_base32(v as u8)), b)
+            a.push::<5>(&mut |v| result.push(to_base32(v as u8)), b)
         }
         (result, a)
     }
@@ -67,7 +67,7 @@ impl FromBase32 for (Vec<u32>, BitVec) {
         let mut a = BitVec::default();
         for b in i.chars() {
             let v5 = from_base32(b)?;
-            a.push(32,&mut |v| result.push(v), BitVec::new(v5 as u32, 5));
+            a.push::<32>(&mut |v| result.push(v), BitVec::new(v5 as u32, 5));
         }
         Some((result, a))
     }
