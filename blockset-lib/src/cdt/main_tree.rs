@@ -9,15 +9,15 @@ use super::{
 };
 
 pub struct MainTreeAdd<T: TreeAdd> {
+    tree_add: T,
     state: Vec<SubTree>,
-    storage: T,
 }
 
 impl<T: TreeAdd> MainTreeAdd<T> {
-    pub fn new(storage: T) -> Self {
+    pub fn new(tree_add: T) -> Self {
         Self {
+            tree_add,
             state: Vec::default(),
-            storage,
         }
     }
     pub fn push(&mut self, c: u8) -> io::Result<u64> {
@@ -25,7 +25,7 @@ impl<T: TreeAdd> MainTreeAdd<T> {
         let mut last0 = to_node_id(c);
         let mut total = 0;
         loop {
-            let tmp = self.storage.push(&last0, i);
+            let tmp = self.tree_add.push(&last0, i);
             total += tmp?;
             if let Some(sub_tree) = self.state.get_mut(i) {
                 if let Some(last1) = sub_tree.push(&last0) {
@@ -45,12 +45,12 @@ impl<T: TreeAdd> MainTreeAdd<T> {
         let mut total = 0;
         for (i, sub_tree) in self.state.iter_mut().enumerate() {
             if last0 != [0, 0] {
-                total += self.storage.push(&last0, i)?;
+                total += self.tree_add.push(&last0, i)?;
             }
             last0 = sub_tree.end(last0);
         }
         let key = root(&last0);
-        total += self.storage.end(&key, self.state.len())?;
+        total += self.tree_add.end(&key, self.state.len())?;
         Ok((key, total))
     }
 }
@@ -91,7 +91,7 @@ mod test {
             t.push(c).unwrap();
         }
         let root = t.end().unwrap();
-        (t.storage.0, root.0)
+        (t.tree_add.0, root.0)
     }
 
     #[wasm_bindgen_test]
