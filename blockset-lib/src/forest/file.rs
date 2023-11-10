@@ -20,7 +20,7 @@ pub const fn dir(t: NodeType) -> &'static str {
 
 fn path(id: &ForestNodeId) -> String {
     let s = id.hash.to_base32();
-    CDT0.to_owned() + "/" + dir(id.t) + "/" + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]
+    CDT0.to_owned() + "/" + dir(id.node_type) + "/" + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]
 }
 
 impl<'a, T: Io> Forest for FileForest<'a, T> {

@@ -45,7 +45,7 @@ pub trait Forest {
         let mut progress_p = 0.0;
         let mut progress_b = 0;
         let mut state = State::new(stdout);
-        let mut t = id.t;
+        let mut t = id.node_type;
         state.set(&progress(0, 0))?;
         while let Some((key, size)) = keys.pop() {
             let v = self.get_block(&ForestNodeId::new(t, &key))?;
