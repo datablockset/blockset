@@ -1,6 +1,6 @@
 use std::{io, iter::once, mem::take};
 
-use super::Forest;
+use super::{node_id::ForestNodeId, Forest};
 
 use crate::{
     cdt::{
@@ -31,18 +31,12 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(
-        &mut self,
-        forest: &mut impl Forest,
-        t: NodeType,
-        i: usize,
-        k: &U224,
-    ) -> io::Result<u64> {
+    fn store(&mut self, forest: &mut impl Forest, id: &ForestNodeId, i: usize) -> io::Result<u64> {
         let data = take(&mut self.data);
         let data_len = data.len();
         let r = if i == 0 {
             assert!(!data.is_empty());
-            forest.check_set_block(t, k, once(0x20).chain(data))?
+            forest.check_set_block(id, once(0x20).chain(data))?
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
@@ -55,7 +49,7 @@ impl Levels {
             // can't be formed from `last` only.
             // If the first node is equal to the original `k` then
             // we don't need to store it.
-            if level.nodes.first().unwrap() == k {
+            if *level.nodes.first().unwrap() == id.hash {
                 // only one node can produce the same digest.
                 assert_eq!(level.nodes.len(), 1);
                 // no additional data should be present.
@@ -63,8 +57,7 @@ impl Levels {
                 return Ok(0); // already stored
             }
             forest.check_set_block(
-                t,
-                k,
+                id,
                 once(data_len as u8)
                     .chain(data)
                     .chain(level.nodes.into_iter().flatten().flat_map(to_u8x4)),
@@ -108,7 +101,8 @@ impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.forest, NodeType::Child, i, &k)
+            self.levels
+                .store(&mut self.forest, &ForestNodeId::new(NodeType::Child, &k), i)
         } else {
             level.last = *digest;
             {
@@ -130,7 +124,8 @@ impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.forest, NodeType::Root, i, k)
+        self.levels
+            .store(&mut self.forest, &ForestNodeId::new(NodeType::Root, k), i)
     }
 }
 
@@ -142,7 +137,7 @@ mod test {
 
     use crate::{
         cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
-        forest::{mem::MemForest, Forest},
+        forest::{mem::MemForest, node_id::ForestNodeId, Forest},
         uint::u224::U224,
     };
 
@@ -163,7 +158,9 @@ mod test {
     fn small(c: &str) {
         let mut table = MemForest::default();
         let k = add(&mut table, c);
-        let v = (&mut table).get_block(NodeType::Root, &k).unwrap();
+        let v = (&mut table)
+            .get_block(&ForestNodeId::new(NodeType::Root, &k))
+            .unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
@@ -174,8 +171,7 @@ mod test {
         let mut cursor = Cursor::new(&mut v);
         table
             .restore(
-                NodeType::Root,
-                &k,
+                &ForestNodeId::new(NodeType::Root, &k),
                 &mut cursor,
                 &mut Cursor::<Vec<_>>::default(),
             )

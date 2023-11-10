@@ -1,5 +1,4 @@
 mod dir_entry_map;
-mod node_type;
 mod node_type_set;
 
 use std::io;
@@ -8,7 +7,7 @@ use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
     cdt::node_type::NodeType,
-    forest::file::{CDT0, dir},
+    forest::file::{dir, CDT0},
     state::{mb, State},
 };
 
