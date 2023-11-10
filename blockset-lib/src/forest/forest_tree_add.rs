@@ -21,7 +21,7 @@ struct Nodes {
 }
 
 #[derive(Default)]
-struct Levels {
+struct ForestTreeAdd {
     data: Vec<u8>,
     nodes: Vec<Nodes>,
 }
@@ -29,7 +29,7 @@ struct Levels {
 const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
-impl Levels {
+impl ForestTreeAdd {
     fn store(&mut self, forest: &mut impl Forest, t: Type, i: usize, k: &U224) -> io::Result<u64> {
         let data = take(&mut self.data);
         let data_len = data.len();
@@ -68,14 +68,14 @@ impl Levels {
 }
 
 pub struct LevelStorage<T: Forest> {
-    table: T,
-    levels: Levels,
+    forest: T,
+    levels: ForestTreeAdd,
 }
 
 impl<T: Forest> LevelStorage<T> {
-    pub fn new(table: T) -> Self {
+    pub fn new(forest: T) -> Self {
         Self {
-            table,
+            forest,
             levels: Default::default(),
         }
     }
@@ -101,7 +101,7 @@ impl<T: Forest> TreeAdd for LevelStorage<T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.table, Type::Child, i, &k)
+            self.levels.store(&mut self.forest, Type::Child, i, &k)
         } else {
             level.last = *digest;
             {
@@ -123,7 +123,7 @@ impl<T: Forest> TreeAdd for LevelStorage<T> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.table, Type::Root, i, k)
+        self.levels.store(&mut self.forest, Type::Root, i, k)
     }
 }
 
