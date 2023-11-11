@@ -1,5 +1,3 @@
-use crate::static_assert;
-
 #[derive(Default)]
 pub struct BitVec {
     pub value: u64,
