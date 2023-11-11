@@ -1,3 +1,5 @@
+use crate::static_assert;
+
 #[derive(Default)]
 pub struct BitVec {
     pub value: u64,
@@ -12,14 +14,10 @@ impl BitVec {
         }
     }
     pub fn push<const S: u8>(&mut self, overflow: &mut impl FnMut(u32), b: BitVec) {
-        assert!(S <= 32);
         self.value |= b.value << self.len;
         self.len += b.len;
         let mask = (1u64 << S) - 1;
-        loop {
-            if self.len < S {
-                return;
-            }
+        while self.len >= S {
             overflow((self.value & mask) as u32);
             self.len -= S;
             self.value >>= S;
