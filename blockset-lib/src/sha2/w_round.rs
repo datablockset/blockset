@@ -1,6 +1,6 @@
 use crate::uint::{
     u128::{from_u32x4, to_u32x4},
-    u32::add3,
+    u32::add4,
     u512::{get_u128, U512},
 };
 
@@ -8,7 +8,7 @@ use super::sigma32::{SMALL0, SMALL1};
 
 #[inline(always)]
 const fn w_round(w0: u32, w1: u32, w9: u32, we: u32) -> u32 {
-    add3(SMALL1.get(we), w9, SMALL0.get(w1), w0)
+    add4(SMALL1.get(we), w9, SMALL0.get(w1), w0)
 }
 
 #[inline(always)]

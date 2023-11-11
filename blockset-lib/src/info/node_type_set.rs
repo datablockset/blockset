@@ -1,12 +1,12 @@
-use super::node_type::NodeType;
+use crate::cdt::node_type::NodeType;
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct NodeTypeSet(u8);
 
 impl NodeTypeSet {
     const EMPTY: NodeTypeSet = NodeTypeSet(0);
-    const ROOT: NodeTypeSet = NodeType::Root.to_set();
-    const CHILD: NodeTypeSet = NodeType::Child.to_set();
+    const ROOT: NodeTypeSet = NodeTypeSet::new(NodeType::Root);
+    const CHILD: NodeTypeSet = NodeTypeSet::new(NodeType::Child);
     pub const ALL: NodeTypeSet = Self::ROOT.union(Self::CHILD);
     const fn eq(self, b: NodeTypeSet) -> bool {
         self.0 == b.0
@@ -21,6 +21,6 @@ impl NodeTypeSet {
         NodeTypeSet(self.0 & b.0)
     }
     pub const fn has(self, b: NodeType) -> bool {
-        !self.intersection(b.to_set()).eq(Self::EMPTY)
+        !self.intersection(NodeTypeSet::new(b)).eq(Self::EMPTY)
     }
 }

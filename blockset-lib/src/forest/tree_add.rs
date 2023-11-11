@@ -1,9 +1,13 @@
 use std::{io, iter::once, mem::take};
 
+use super::{node_id::ForestNodeId, Forest};
+
 use crate::{
-    cdt::node_id::{len, root},
-    storage::Storage,
-    table::{Table, Type},
+    cdt::{
+        node_id::{len, root},
+        node_type::NodeType,
+        tree_add::TreeAdd,
+    },
     uint::{
         u224::U224,
         u256::{to_u224, U256},
@@ -27,12 +31,12 @@ const DATA_LEVEL: usize = 8;
 const SKIP_LEVEL: usize = 4;
 
 impl Levels {
-    fn store(&mut self, table: &mut impl Table, t: Type, i: usize, k: &U224) -> io::Result<u64> {
+    fn store(&mut self, forest: &mut impl Forest, id: &ForestNodeId, i: usize) -> io::Result<u64> {
         let data = take(&mut self.data);
         let data_len = data.len();
         let r = if i == 0 {
             assert!(!data.is_empty());
-            table.check_set_block(t, k, once(0x20).chain(data))?
+            forest.check_set_block(id, once(0x20).chain(data))?
         } else {
             let ref_level = &mut self.nodes[i - 1];
             let level = take(ref_level);
@@ -45,16 +49,15 @@ impl Levels {
             // can't be formed from `last` only.
             // If the first node is equal to the original `k` then
             // we don't need to store it.
-            if level.nodes.first().unwrap() == k {
+            if *level.nodes.first().unwrap() == id.hash {
                 // only one node can produce the same digest.
                 assert_eq!(level.nodes.len(), 1);
                 // no additional data should be present.
                 assert_eq!(level.last, [0, 0]);
                 return Ok(0); // already stored
             }
-            table.check_set_block(
-                t,
-                k,
+            forest.check_set_block(
+                id,
                 once(data_len as u8)
                     .chain(data)
                     .chain(level.nodes.into_iter().flatten().flat_map(to_u8x4)),
@@ -64,22 +67,22 @@ impl Levels {
     }
 }
 
-pub struct LevelStorage<T: Table> {
-    table: T,
+pub struct ForestTreeAdd<T: Forest> {
+    forest: T,
     levels: Levels,
 }
 
-impl<T: Table> LevelStorage<T> {
-    pub fn new(table: T) -> Self {
+impl<T: Forest> ForestTreeAdd<T> {
+    pub fn new(forest: T) -> Self {
         Self {
-            table,
+            forest,
             levels: Default::default(),
         }
     }
 }
 
-impl<T: Table> Storage for LevelStorage<T> {
-    fn store(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
+impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
+    fn push(&mut self, digest: &U256, mut i: usize) -> io::Result<u64> {
         if i < DATA_LEVEL {
             if i == 0 {
                 assert_eq!(digest[1], 0x08000000_00000000_00000000_00000000);
@@ -98,7 +101,8 @@ impl<T: Table> Storage for LevelStorage<T> {
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
             level.nodes.push(k);
-            self.levels.store(&mut self.table, Type::Parts, i, &k)
+            self.levels
+                .store(&mut self.forest, &ForestNodeId::new(NodeType::Child, &k), i)
         } else {
             level.last = *digest;
             {
@@ -120,7 +124,8 @@ impl<T: Table> Storage for LevelStorage<T> {
         } else {
             (i - DATA_LEVEL + SKIP_LEVEL - 1) / SKIP_LEVEL
         };
-        self.levels.store(&mut self.table, Type::Main, i, k)
+        self.levels
+            .store(&mut self.forest, &ForestNodeId::new(NodeType::Root, k), i)
     }
 }
 
@@ -131,43 +136,42 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        cdt::main_tree::MainTree,
-        mem_table::MemTable,
-        storage::Storage,
-        table::{Table, Type},
+        cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
+        forest::{mem::MemForest, node_id::ForestNodeId, Forest},
         uint::u224::U224,
     };
 
-    use super::LevelStorage;
+    use super::ForestTreeAdd;
 
-    fn tree_from_str<T: Storage>(tree: &mut MainTree<T>, s: &str) -> U224 {
+    fn tree_from_str<T: TreeAdd>(tree: &mut MainTreeAdd<T>, s: &str) -> U224 {
         for c in s.bytes() {
             tree.push(c).unwrap();
         }
         tree.end().unwrap().0
     }
 
-    fn add(table: &mut MemTable, c: &str) -> U224 {
-        let mut tree = MainTree::new(LevelStorage::new(table));
+    fn add(table: &mut MemForest, c: &str) -> U224 {
+        let mut tree = MainTreeAdd::new(ForestTreeAdd::new(table));
         tree_from_str(&mut tree, c)
     }
 
     fn small(c: &str) {
-        let mut table = MemTable::default();
+        let mut table = MemForest::default();
         let k = add(&mut table, c);
-        let v = (&mut table).get_block(Type::Main, &k).unwrap();
+        let v = (&mut table)
+            .get_block(&ForestNodeId::new(NodeType::Root, &k))
+            .unwrap();
         assert_eq!(v, (" ".to_owned() + c).as_bytes());
     }
 
     fn big(c: &str) {
-        let table = &mut MemTable::default();
+        let table = &mut MemForest::default();
         let k = add(table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);
         table
             .restore(
-                Type::Main,
-                &k,
+                &ForestNodeId::new(NodeType::Root, &k),
                 &mut cursor,
                 &mut Cursor::<Vec<_>>::default(),
             )

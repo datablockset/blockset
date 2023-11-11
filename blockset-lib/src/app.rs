@@ -4,25 +4,22 @@ use io_trait::Io;
 
 use crate::{
     base32::{StrEx, ToBase32},
-    cdt::main_tree::MainTree,
+    cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
     eol::ToPosixEol,
-    file_table::FileTable,
+    forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
     info::calculate_total,
-    level_storage::LevelStorage,
     progress::{self, Progress},
     state::{mb, progress, State},
-    storage::{Null, Storage},
-    table::{Table, Type},
     uint::u224::U224,
 };
 
-fn read_to_tree<T: Storage>(
+fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
     stdout: &mut impl Write,
     display_new: bool,
 ) -> io::Result<String> {
-    let mut tree = MainTree::new(s);
+    let mut tree = MainTreeAdd::new(s);
     let mut state = State::new(stdout);
     let mut new = 0;
     loop {
@@ -65,7 +62,7 @@ fn invalid_input(s: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, s)
 }
 
-fn add<'a, T: Io, S: 'a + Storage>(
+fn add<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
     a: &mut T::Args,
     storage: impl Fn(&'a T) -> S,
@@ -111,8 +108,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             println(stdout, &d.to_base32())?;
             Ok(())
         }
-        "hash" => add(io, &mut a, |_| Null(), false),
-        "add" => add(io, &mut a, |io| LevelStorage::new(FileTable(io)), true),
+        "hash" => add(io, &mut a, |_| (), false),
+        "add" => add(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
             let b32 = a.next().ok_or(invalid_input("missing hash"))?;
             let d = b32
@@ -120,8 +117,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 .ok_or(invalid_input("invalid hash"))?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
-            let table = FileTable(io);
-            table.restore(Type::Main, &d, &mut f, stdout)?;
+            let table = FileForest(io);
+            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, stdout)?;
             Ok(())
         }
         "info" => {

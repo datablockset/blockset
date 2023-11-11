@@ -1,55 +1,54 @@
 use std::io::{self, Write};
 
 use crate::{
-    cdt::node_id::root,
+    cdt::{node_id::root, node_type::NodeType},
     state::{progress, State},
     uint::{u224::U224, u32::from_u8x4},
 };
 
-#[derive(Debug, Clone, Copy)]
-pub enum Type {
-    Main = 0,
-    Parts = 1,
-}
+use self::node_id::ForestNodeId;
+
+pub mod file;
+pub mod mem;
+pub mod node_id;
+pub mod tree_add;
 
 const EMPTY: U224 = root(&[0, 0]);
 
-pub trait Table {
-    fn has_block(&self, t: Type, key: &U224) -> bool;
-    fn get_block(&self, t: Type, key: &U224) -> io::Result<Vec<u8>>;
-    fn set_block(&mut self, t: Type, key: &U224, value: impl Iterator<Item = u8>)
-        -> io::Result<()>;
+pub trait Forest {
+    fn has_block(&self, id: &ForestNodeId) -> bool;
+    fn get_block(&self, id: &ForestNodeId) -> io::Result<Vec<u8>>;
+    fn set_block(&mut self, id: &ForestNodeId, value: impl Iterator<Item = u8>) -> io::Result<()>;
     fn check_set_block(
         &mut self,
-        t: Type,
-        key: &U224,
+        id: &ForestNodeId,
         value: impl Iterator<Item = u8>,
     ) -> io::Result<bool> {
-        if self.has_block(t, key) {
+        if self.has_block(id) {
             return Ok(false);
         }
-        self.set_block(t, key, value)?;
+        self.set_block(id, value)?;
         Ok(true)
     }
     // we should extract a state machine from the function and remove `set_progress`.
     fn restore(
         &self,
-        mut t: Type,
-        k: &U224,
+        id: &ForestNodeId,
         w: &mut impl Write,
         stdout: &mut impl Write,
     ) -> io::Result<()> {
-        if *k == EMPTY {
+        if id.hash == EMPTY {
             return Ok(());
         }
         let mut tail = Vec::default();
-        let mut keys = [(*k, 1.0)].to_vec();
+        let mut keys = [(id.hash, 1.0)].to_vec();
         let mut progress_p = 0.0;
         let mut progress_b = 0;
         let mut state = State::new(stdout);
+        let mut t = id.node_type;
         state.set(&progress(0, 0))?;
         while let Some((key, size)) = keys.pop() {
-            let v = self.get_block(t, &key)?;
+            let v = self.get_block(&ForestNodeId::new(t, &key))?;
             let mut len = *v.first().unwrap() as usize;
             if len == 0x20 {
                 let buf = &v[1..];
@@ -79,7 +78,7 @@ pub trait Table {
                     keys.push((kn, size));
                 }
             }
-            t = Type::Parts;
+            t = NodeType::Child;
         }
         w.write_all(&tail)
     }

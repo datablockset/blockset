@@ -1,5 +1,4 @@
 mod dir_entry_map;
-mod node_type;
 mod node_type_set;
 
 use std::io;
@@ -7,13 +6,13 @@ use std::io;
 use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
-    file_table::CDT0,
+    cdt::node_type::NodeType,
+    forest::file::{dir, CDT0},
     state::{mb, State},
 };
 
 use self::{
     dir_entry_map::{DirEntryMap, DirEntryMapEx},
-    node_type::NodeType,
     node_type_set::NodeTypeSet,
 };
 
@@ -29,7 +28,7 @@ fn get_dir<T: Io>(
         return;
     }
     result.extend(
-        io.read_dir_type(&(CDT0.to_owned() + "/" + desired.dir() + path), is_dir)
+        io.read_dir_type(&(CDT0.to_owned() + "/" + dir(desired) + path), is_dir)
             .unwrap_or_default()
             .into_iter()
             .map(|v| (v, desired)),

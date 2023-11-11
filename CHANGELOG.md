@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.4.0
 
-- Replace `blockset address` to `blockset hash`. PR [#147](https://github.com/datablockset/blockset/pull/147).
+- Replace the `blockset address` command to `blockset hash`. PR [#147](https://github.com/datablockset/blockset/pull/147).
 
 ## 0.3.7
 
