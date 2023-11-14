@@ -6,8 +6,8 @@ pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
     start_time: T::Instant,
-    prior_time: T::Instant,
-    left: u64,
+    prior_current: f64,
+    left: f64,
 }
 
 pub fn mb(b: u64) -> String {
@@ -23,14 +23,12 @@ fn time(mut t: u64) -> String {
 
 impl<'a, T: Io> State<'a, T> {
     pub fn new(io: &'a T) -> Self {
-        let start_time = io.now();
-        let prior_time = start_time.clone();
         Self {
             io,
             prior: 0,
-            start_time,
-            prior_time,
-            left: u64::MAX,
+            start_time: io.now(),
+            prior_current: 0.0,
+            left: f64::MAX,
         }
     }
     pub fn set(&mut self, s: &str) -> io::Result<()> {
@@ -49,19 +47,19 @@ impl<'a, T: Io> State<'a, T> {
     pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
-        if (current.clone() - self.prior_time.clone()).as_millis() < 100 {
+        let elapsed = (current - self.start_time.clone()).as_secs_f64();
+        if (elapsed - self.prior_current) < 1.0 {
             return Ok(());
         }
-        self.prior_time = current.clone();
-        let elapsed = current - self.start_time.clone();
+        self.prior_current = elapsed;
         let left = if p == 0.0 {
             "".to_string()
         } else {
-            let new_left = (elapsed.as_secs_f64() * (1.0 - p) / p) as u64;
+            let new_left = elapsed * (1.0 - p) / p;
             if new_left < self.left {
                 self.left = new_left;
             }
-            ", time left: ".to_owned() + &time(self.left)
+            ", time left: ".to_owned() + &time(self.left as u64)
         } + ".";
         let r = s.to_owned() + &percent.to_string() + "%" + &left;
         self.set(&r)
