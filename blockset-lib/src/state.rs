@@ -27,7 +27,7 @@ impl<'a, T: Io> State<'a, T> {
             io,
             prior: 0,
             start_time: io.now(),
-            prior_current: 0.0,
+            prior_current: -1.0,
             left: f64::MAX,
         }
     }
