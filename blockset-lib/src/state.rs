@@ -51,6 +51,7 @@ impl<'a, T: Io> State<'a, T> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
         let elapsed = (current - self.start_time.clone()).as_secs_f64();
+        println!("elapsed: {}", elapsed);
         if (elapsed - self.prior_current) < 1.0 {
             return Ok(());
         }
