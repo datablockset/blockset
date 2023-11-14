@@ -4,7 +4,7 @@ use io_trait::Io;
 
 use crate::{
     cdt::{node_id::root, node_type::NodeType},
-    state::{mb, State},
+    common::state::{mb, State},
     uint::{u224::U224, u32::from_u8x4},
 };
 

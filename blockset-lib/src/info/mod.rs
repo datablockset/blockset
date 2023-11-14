@@ -8,7 +8,7 @@ use io_trait::{DirEntry, Io, Metadata};
 use crate::{
     cdt::node_type::NodeType,
     forest::file::{dir, CDT0},
-    state::{mb, State},
+    common::state::{mb, State},
 };
 
 use self::{
