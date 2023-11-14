@@ -13,11 +13,14 @@ pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
 }
 
-fn time(mut t: u64) -> String {
-    let h = t / 3600;
-    t %= 3600;
-    let m = t / 60;
-    format!("{}:{:02}:{:02}", h, m, t % 60)
+const fn div_rem(a: u64, b: u64) -> (u64, u64) {
+    (a / b, a % b)
+}
+
+fn time(s: u64) -> String {
+    let (h, s) = div_rem(s, 3600);
+    let (m, s) = div_rem(s, 60);
+    format!("{}:{:02}:{:02}", h, m, s)
 }
 
 impl<'a, T: Io> State<'a, T> {
@@ -54,7 +57,7 @@ impl<'a, T: Io> State<'a, T> {
         }
         self.prior_elapsed = elapsed;
         let left = elapsed * (1.0 - p) / p;
-        let r = s.to_owned() + &percent.to_string() + "%, time left: " + &time(left as u64);
+        let r = s.to_owned() + &percent.to_string() + "%. Time left: " + &time(left as u64) + ".";
         self.set(&r)
     }
 }
