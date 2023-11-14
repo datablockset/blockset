@@ -49,7 +49,7 @@ impl<'a, T: Io> State<'a, T> {
     pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
-        if (current.clone() - self.prior_time.clone()).as_millis() >= 1000 {
+        if (current.clone() - self.prior_time.clone()).as_millis() < 1000 {
             return Ok(());
         }
         self.prior_time = current.clone();
