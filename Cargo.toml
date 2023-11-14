@@ -12,5 +12,5 @@ repository = "https://github.com/datablockset/blockset"
 [workspace.dependencies]
 io-trait = "0.8.0"
 io-impl = "0.8.0"
-io-test = "0.8.0"
+io-test = "0.8.1"
 wasm-bindgen-test = "0.3.38"
