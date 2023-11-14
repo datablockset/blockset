@@ -1,6 +1,6 @@
 use crate::{
-    array::ArrayEx,
     cdt::node_id::merge,
+    common::array::ArrayEx,
     uint::u256::{great, U256},
 };
 
