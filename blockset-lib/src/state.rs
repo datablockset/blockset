@@ -55,6 +55,7 @@ impl<'a, T: Io> State<'a, T> {
         if elapsed - self.prior_current < 1.0 {
             return Ok(());
         }
+        println!("!!!");
         self.prior_current = elapsed;
         let new_left = elapsed * (1.0 - p) / p;
         if new_left < self.left {
