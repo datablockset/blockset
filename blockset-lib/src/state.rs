@@ -42,6 +42,7 @@ impl<'a, T: Io> State<'a, T> {
         } else {
             ", time left: ".to_owned()
                 + &((elapsed.as_secs_f64() * (1.0 - p) / p) as u64).to_string()
+                + "s"
         } + ".";
         let r = s.to_owned() + &percent.to_string() + "%" + &left;
         self.set(&r)

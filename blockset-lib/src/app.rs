@@ -36,7 +36,8 @@ fn read_to_tree<T: TreeAdd>(
         } else {
             String::new()
         } + "Processed: "
-            + &mb(current) + ", ";
+            + &mb(current)
+            + ", ";
         state.set_progress(&s, p)?;
         let size = file.read(buf.as_mut())?;
         if size == 0 {
