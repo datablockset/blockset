@@ -2,8 +2,6 @@ use std::io::{self, Write};
 
 use io_trait::Io;
 
-use crate::progress;
-
 pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
@@ -13,12 +11,6 @@ pub struct State<'a, T: Io> {
 pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
 }
-
-/*
-pub fn progress(b: u64, p: u8) -> String {
-    mb(b) + ", " + &p.to_string() + "%."
-}
-*/
 
 impl<'a, T: Io> State<'a, T> {
     pub fn new(io: &'a T) -> Self {

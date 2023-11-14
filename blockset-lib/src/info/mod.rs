@@ -77,12 +77,8 @@ pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
             }
             let p = (bn * ai as u64 + bi as u64 + 1) as f64 / (an * bn) as f64;
             let e = total as f64 / p;
-            let s = "size: ~".to_string()
-                + &mb(e as u64)
-                + ". "
-                + &((p * 100.0) as u64).to_string()
-                + "%.";
-            state.set(&s)?;
+            let s = "size: ~".to_string() + &mb(e as u64) + ", ";
+            state.set_progress(&s, p)?;
         }
     }
     Ok(total)
