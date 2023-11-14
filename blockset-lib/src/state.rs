@@ -37,7 +37,13 @@ impl<'a, T: Io> State<'a, T> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
         let elapsed = current - self.start_time.clone();
-        let r = s.to_owned() + &percent.to_string() + "%, " + &elapsed.as_secs().to_string() + "s.";
+        let left = if p == 0.0 {
+            "".to_string()
+        } else {
+            ", time left: ".to_owned()
+                + &((elapsed.as_secs_f64() * (1.0 - p) / p) as u64).to_string()
+        } + ".";
+        let r = s.to_owned() + &percent.to_string() + "%" + &left;
         self.set(&r)
     }
 }

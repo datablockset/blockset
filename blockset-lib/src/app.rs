@@ -206,7 +206,7 @@ mod test {
             0x68000000_00000000_00000000_00000000,
         ];
         let s = root(&d).to_base32();
-        assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
+        assert_eq!(io.stdout.to_stdout()[..s.len()], s);
         let v = io
             .read(&("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]))
             .unwrap();
@@ -262,7 +262,7 @@ mod test {
         assert!(e.is_ok());
         let d: U256 = [0, 0];
         let s = root(&d).to_base32();
-        assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
+        assert_eq!(io.stdout.to_stdout()[..s.len()], s);
     }
 
     #[wasm_bindgen_test]
