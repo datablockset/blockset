@@ -35,7 +35,9 @@ impl<'a, T: Io> State<'a, T> {
     }
     pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
         let percent = (p * 100.0) as u8;
-        let r = s.to_owned() + &percent.to_string() + "%.";
+        let current = self.io.now();
+        let elapsed = current - self.start_time.clone();
+        let r = s.to_owned() + &percent.to_string() + "%, " + &elapsed.as_secs().to_string() + "s.";
         self.set(&r)
     }
 }
