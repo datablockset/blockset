@@ -16,11 +16,11 @@ use crate::{
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
-    stdout: &mut impl Write,
+    io: &impl Io,
     display_new: bool,
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
-    let mut state = State::new(stdout);
+    let mut state = State::new(io);
     let mut new = 0;
     loop {
         let pr = file.progress();
@@ -85,9 +85,9 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
         // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
         // is smaller than `len`. Proposed solution:
         // a Read implementation which can also report a progress.
-        read_to_tree(s, ToPosixEol::new(f), stdout, display_new)?
+        read_to_tree(s, ToPosixEol::new(f), io, display_new)?
     } else {
-        read_to_tree(s, f, stdout, display_new)?
+        read_to_tree(s, f, io, display_new)?
     };
     println(stdout, &k)?;
     Ok(())
@@ -118,7 +118,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
             let table = FileForest(io);
-            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, stdout)?;
+            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, io)?;
             Ok(())
         }
         "info" => {

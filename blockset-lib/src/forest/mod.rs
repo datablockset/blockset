@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+use io_trait::Io;
+
 use crate::{
     cdt::{node_id::root, node_type::NodeType},
     state::{progress, State},
@@ -31,12 +33,7 @@ pub trait Forest {
         Ok(true)
     }
     // we should extract a state machine from the function and remove `set_progress`.
-    fn restore(
-        &self,
-        id: &ForestNodeId,
-        w: &mut impl Write,
-        stdout: &mut impl Write,
-    ) -> io::Result<()> {
+    fn restore(&self, id: &ForestNodeId, w: &mut impl Write, io: &impl Io) -> io::Result<()> {
         if id.hash == EMPTY {
             return Ok(());
         }
@@ -44,7 +41,7 @@ pub trait Forest {
         let mut keys = [(id.hash, 1.0)].to_vec();
         let mut progress_p = 0.0;
         let mut progress_b = 0;
-        let mut state = State::new(stdout);
+        let mut state = State::new(io);
         let mut t = id.node_type;
         state.set(&progress(0, 0))?;
         while let Some((key, size)) = keys.pop() {

@@ -1,7 +1,9 @@
 use std::io::{self, Write};
 
-pub struct State<'a, T: Write> {
-    stdout: &'a mut T,
+use io_trait::Io;
+
+pub struct State<'a, T: Io> {
+    io: &'a T,
     prior: usize,
 }
 
@@ -13,9 +15,9 @@ pub fn progress(b: u64, p: u8) -> String {
     mb(b) + ", " + &p.to_string() + "%."
 }
 
-impl<'a, T: Write> State<'a, T> {
-    pub fn new(stdout: &'a mut T) -> Self {
-        Self { stdout, prior: 0 }
+impl<'a, T: Io> State<'a, T> {
+    pub fn new(io: &'a T) -> Self {
+        Self { io, prior: 0 }
     }
     pub fn set(&mut self, s: &str) -> io::Result<()> {
         let mut vec = Vec::default();
@@ -26,12 +28,12 @@ impl<'a, T: Write> State<'a, T> {
             vec.resize(self.prior * 2, 0x20);
             vec.resize(vec.len() + len, 8);
         }
-        self.stdout.write_all(&vec)?;
+        self.io.stdout().write_all(&vec)?;
         self.prior = s.len();
         Ok(())
     }
 }
-impl<'a, T: Write> Drop for State<'a, T> {
+impl<'a, T: Io> Drop for State<'a, T> {
     fn drop(&mut self) {
         let _ = self.set("");
     }

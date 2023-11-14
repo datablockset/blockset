@@ -133,6 +133,7 @@ impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
 mod test {
     use std::io::Cursor;
 
+    use io_test::VirtualIo;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -169,12 +170,9 @@ mod test {
         let k = add(table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);
+        let io = VirtualIo::new(&[]);
         table
-            .restore(
-                &ForestNodeId::new(NodeType::Root, &k),
-                &mut cursor,
-                &mut Cursor::<Vec<_>>::default(),
-            )
+            .restore(&ForestNodeId::new(NodeType::Root, &k), &mut cursor, &io)
             .unwrap();
         assert_eq!(v, c.as_bytes());
     }
