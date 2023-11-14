@@ -13,19 +13,11 @@ pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
 }
 
-fn time(t: u64) -> String {
-    let mut result = String::default();
-    let mut t = t;
-    if t >= 3600 {
-        result += &((t / 3600).to_string() + "h ");
-        t %= 3600;
-    }
-    if t >= 60 {
-        result += &((t / 60).to_string() + "m ");
-        t %= 60;
-    }
-    result += &(t.to_string() + "s");
-    result
+fn time(mut t: u64) -> String {
+    let h = t / 3600;
+    t %= 3600;
+    let m = t / 60;
+    format!("{}:{:02}:{:02}", h, m, t % 60)
 }
 
 impl<'a, T: Io> State<'a, T> {
