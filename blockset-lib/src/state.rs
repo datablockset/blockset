@@ -52,7 +52,7 @@ impl<'a, T: Io> State<'a, T> {
         let current = self.io.now();
         let elapsed = (current - self.start_time.clone()).as_secs_f64();
         println!("elapsed: {}, {}", elapsed, elapsed - self.prior_elapsed);
-        if elapsed - self.prior_elapsed < 0.1 {
+        if elapsed - self.prior_elapsed < 0.01 {
             return Ok(());
         }
         println!("!!!");
