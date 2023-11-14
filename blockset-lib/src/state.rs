@@ -7,7 +7,6 @@ pub struct State<'a, T: Io> {
     prior: usize,
     start_time: T::Instant,
     prior_elapsed: f64,
-    left: f64,
 }
 
 pub fn mb(b: u64) -> String {
@@ -28,7 +27,6 @@ impl<'a, T: Io> State<'a, T> {
             prior: 0,
             start_time: io.now(),
             prior_elapsed: -1.0,
-            left: f64::MAX,
         }
     }
     pub fn set(&mut self, s: &str) -> io::Result<()> {
@@ -55,12 +53,8 @@ impl<'a, T: Io> State<'a, T> {
             return Ok(());
         }
         self.prior_elapsed = elapsed;
-        let new_left = elapsed * (1.0 - p) / p;
-        let better = self.left - new_left;
-        if better < -1.0 || 0.0 < better {
-            self.left = new_left;
-        }
-        let r = s.to_owned() + &percent.to_string() + "%, time left: " + &time(self.left as u64);
+        let left = elapsed * (1.0 - p) / p;
+        let r = s.to_owned() + &percent.to_string() + "%, time left: " + &time(left as u64);
         self.set(&r)
     }
 }
