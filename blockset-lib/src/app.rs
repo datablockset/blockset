@@ -9,7 +9,7 @@ use crate::{
     forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
     info::calculate_total,
     progress::{self, Progress},
-    state::{mb, progress, State},
+    state::{mb, State},
     uint::u224::U224,
 };
 
@@ -27,17 +27,17 @@ fn read_to_tree<T: TreeAdd>(
         let progress::State { current, total } = pr?;
         let mut buf = [0; 1024];
         let p = if total == 0 {
-            100
+            1.0
         } else {
-            current * 100 / total
+            (current as f64) / (total as f64)
         };
         let s = if display_new {
             "New data: ".to_owned() + &mb(new) + ". "
         } else {
             String::new()
         } + "Processed: "
-            + &progress(current, p as u8);
-        state.set(&s)?;
+            + &mb(current);
+        state.set_progress(&s, p)?;
         let size = file.read(buf.as_mut())?;
         if size == 0 {
             break;

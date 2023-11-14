@@ -2,22 +2,31 @@ use std::io::{self, Write};
 
 use io_trait::Io;
 
+use crate::progress;
+
 pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
+    start_time: T::Instant,
 }
 
 pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
 }
 
+/*
 pub fn progress(b: u64, p: u8) -> String {
     mb(b) + ", " + &p.to_string() + "%."
 }
+*/
 
 impl<'a, T: Io> State<'a, T> {
     pub fn new(io: &'a T) -> Self {
-        Self { io, prior: 0 }
+        Self {
+            io,
+            prior: 0,
+            start_time: io.now(),
+        }
     }
     pub fn set(&mut self, s: &str) -> io::Result<()> {
         let mut vec = Vec::default();
@@ -31,6 +40,11 @@ impl<'a, T: Io> State<'a, T> {
         self.io.stdout().write_all(&vec)?;
         self.prior = s.len();
         Ok(())
+    }
+    pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
+        let percent = (p * 100.0) as u8;
+        let r = s.to_owned() + &percent.to_string() + "%.";
+        self.set(&r)
     }
 }
 impl<'a, T: Io> Drop for State<'a, T> {
