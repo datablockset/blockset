@@ -51,9 +51,9 @@ impl<'a, T: Io> State<'a, T> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
         let elapsed = (current - self.start_time.clone()).as_secs_f64();
-        //if elapsed - self.prior_elapsed < 0.01 {
-        //    return Ok(());
-        //}
+        if elapsed - self.prior_elapsed < 0.01 {
+            return Ok(());
+        }
         self.prior_elapsed = elapsed;
         let new_left = elapsed * (1.0 - p) / p;
         //if new_left < self.left {
