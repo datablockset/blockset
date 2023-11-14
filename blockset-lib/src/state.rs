@@ -13,13 +13,18 @@ pub fn mb(b: u64) -> String {
 }
 
 fn time(t: u64) -> String {
+    let mut result = String::default();
+    let mut t = t;
     if t >= 3600 {
-        return (t / 3600).to_string() + " h";
+        result += &((t / 3600).to_string() + "h ");
+        t %= 3600;
     }
     if t >= 60 {
-        return (t / 60).to_string() + " m";
+        result += &((t / 60).to_string() + "m ");
+        t %= 60;
     }
-    t.to_string() + "s"
+    result += &(t.to_string() + "s");
+    result
 }
 
 impl<'a, T: Io> State<'a, T> {
@@ -50,7 +55,7 @@ impl<'a, T: Io> State<'a, T> {
         let left = if p == 0.0 {
             "".to_string()
         } else {
-            ", time left: ".to_owned() + &time((elapsed.as_secs_f64() * (1.0 - p) / p) as u64)
+            ", time left: ".to_owned() + &time((elapsed.as_secs_f64() * (1.0 - p) / p) as u64) + "s"
         } + ".";
         let r = s.to_owned() + &percent.to_string() + "%" + &left;
         self.set(&r)
