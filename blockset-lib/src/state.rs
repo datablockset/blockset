@@ -56,9 +56,9 @@ impl<'a, T: Io> State<'a, T> {
         }
         self.prior_elapsed = elapsed;
         let new_left = elapsed * (1.0 - p) / p;
-        if new_left < self.left {
+        //if new_left < self.left {
             self.left = new_left;
-        }
+        //}
         let r =
             s.to_owned() + &percent.to_string() + "%, time left: " + &time(self.left as u64) + ".";
         self.set(&r)
