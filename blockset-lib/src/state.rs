@@ -12,6 +12,16 @@ pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
 }
 
+fn time(t: u64) -> String {
+    if t >= 3600 {
+        return (t / 3600).to_string() + " h";
+    }
+    if t >= 60 {
+        return (t / 60).to_string() + " m";
+    }
+    t.to_string() + "s"
+}
+
 impl<'a, T: Io> State<'a, T> {
     pub fn new(io: &'a T) -> Self {
         Self {
@@ -40,9 +50,7 @@ impl<'a, T: Io> State<'a, T> {
         let left = if p == 0.0 {
             "".to_string()
         } else {
-            ", time left: ".to_owned()
-                + &((elapsed.as_secs_f64() * (1.0 - p) / p) as u64).to_string()
-                + "s"
+            ", time left: ".to_owned() + &time((elapsed.as_secs_f64() * (1.0 - p) / p) as u64)
         } + ".";
         let r = s.to_owned() + &percent.to_string() + "%" + &left;
         self.set(&r)
