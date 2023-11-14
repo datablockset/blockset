@@ -6,7 +6,7 @@ pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
     start_time: T::Instant,
-    prior_current: f64,
+    prior_elapsed: f64,
     left: f64,
 }
 
@@ -27,7 +27,7 @@ impl<'a, T: Io> State<'a, T> {
             io,
             prior: 0,
             start_time: io.now(),
-            prior_current: -1.0,
+            prior_elapsed: -1.0,
             left: f64::MAX,
         }
     }
@@ -51,12 +51,12 @@ impl<'a, T: Io> State<'a, T> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
         let elapsed = (current - self.start_time.clone()).as_secs_f64();
-        // println!("elapsed: {}, {}", elapsed, elapsed - self.prior_current);
-        if elapsed - self.prior_current < 0.1 {
+        println!("elapsed: {}, {}", elapsed, elapsed - self.prior_elapsed);
+        if elapsed - self.prior_elapsed < 0.1 {
             return Ok(());
         }
-        // println!("!!!");
-        self.prior_current = elapsed;
+        println!("!!!");
+        self.prior_elapsed = elapsed;
         let new_left = elapsed * (1.0 - p) / p;
         if new_left < self.left {
             self.left = new_left;
