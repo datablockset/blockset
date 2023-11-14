@@ -1,21 +1,33 @@
 use std::io::{self, Write};
 
-pub struct State<'a, T: Write> {
-    stdout: &'a mut T,
+use io_trait::Io;
+
+pub struct State<'a, T: Io> {
+    io: &'a T,
     prior: usize,
+    start_time: T::Instant,
+    prior_elapsed: f64,
 }
 
 pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
 }
 
-pub fn progress(b: u64, p: u8) -> String {
-    mb(b) + ", " + &p.to_string() + "%."
+fn time(mut t: u64) -> String {
+    let h = t / 3600;
+    t %= 3600;
+    let m = t / 60;
+    format!("{}:{:02}:{:02}", h, m, t % 60)
 }
 
-impl<'a, T: Write> State<'a, T> {
-    pub fn new(stdout: &'a mut T) -> Self {
-        Self { stdout, prior: 0 }
+impl<'a, T: Io> State<'a, T> {
+    pub fn new(io: &'a T) -> Self {
+        Self {
+            io,
+            prior: 0,
+            start_time: io.now(),
+            prior_elapsed: -1.0,
+        }
     }
     pub fn set(&mut self, s: &str) -> io::Result<()> {
         let mut vec = Vec::default();
@@ -26,12 +38,27 @@ impl<'a, T: Write> State<'a, T> {
             vec.resize(self.prior * 2, 0x20);
             vec.resize(vec.len() + len, 8);
         }
-        self.stdout.write_all(&vec)?;
+        self.io.stdout().write_all(&vec)?;
         self.prior = s.len();
         Ok(())
     }
+    pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
+        if p == 0.0 {
+            return Ok(());
+        }
+        let percent = (p * 100.0) as u8;
+        let current = self.io.now();
+        let elapsed = (current - self.start_time.clone()).as_secs_f64();
+        if elapsed - self.prior_elapsed < 0.01 {
+            return Ok(());
+        }
+        self.prior_elapsed = elapsed;
+        let left = elapsed * (1.0 - p) / p;
+        let r = s.to_owned() + &percent.to_string() + "%, time left: " + &time(left as u64);
+        self.set(&r)
+    }
 }
-impl<'a, T: Write> Drop for State<'a, T> {
+impl<'a, T: Io> Drop for State<'a, T> {
     fn drop(&mut self) {
         let _ = self.set("");
     }

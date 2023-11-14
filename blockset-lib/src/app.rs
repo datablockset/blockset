@@ -9,35 +9,36 @@ use crate::{
     forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
     info::calculate_total,
     progress::{self, Progress},
-    state::{mb, progress, State},
+    state::{mb, State},
     uint::u224::U224,
 };
 
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
-    stdout: &mut impl Write,
+    io: &impl Io,
     display_new: bool,
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
-    let mut state = State::new(stdout);
+    let mut state = State::new(io);
     let mut new = 0;
     loop {
         let pr = file.progress();
         let progress::State { current, total } = pr?;
         let mut buf = [0; 1024];
         let p = if total == 0 {
-            100
+            1.0
         } else {
-            current * 100 / total
+            (current as f64) / (total as f64)
         };
         let s = if display_new {
             "New data: ".to_owned() + &mb(new) + ". "
         } else {
             String::new()
         } + "Processed: "
-            + &progress(current, p as u8);
-        state.set(&s)?;
+            + &mb(current)
+            + ", ";
+        state.set_progress(&s, p)?;
         let size = file.read(buf.as_mut())?;
         if size == 0 {
             break;
@@ -85,9 +86,9 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
         // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
         // is smaller than `len`. Proposed solution:
         // a Read implementation which can also report a progress.
-        read_to_tree(s, ToPosixEol::new(f), stdout, display_new)?
+        read_to_tree(s, ToPosixEol::new(f), io, display_new)?
     } else {
-        read_to_tree(s, f, stdout, display_new)?
+        read_to_tree(s, f, io, display_new)?
     };
     println(stdout, &k)?;
     Ok(())
@@ -118,7 +119,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let path = a.next().ok_or(invalid_input("missing file name"))?;
             let mut f = io.create(&path)?;
             let table = FileForest(io);
-            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, stdout)?;
+            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, io)?;
             Ok(())
         }
         "info" => {
@@ -206,7 +207,7 @@ mod test {
             0x68000000_00000000_00000000_00000000,
         ];
         let s = root(&d).to_base32();
-        assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
+        assert_eq!(io.stdout.to_stdout()[..s.len()], s);
         let v = io
             .read(&("cdt0/roots/".to_owned() + &s[..2] + "/" + &s[2..4] + "/" + &s[4..]))
             .unwrap();
@@ -262,7 +263,7 @@ mod test {
         assert!(e.is_ok());
         let d: U256 = [0, 0];
         let s = root(&d).to_base32();
-        assert_eq!(io.stdout.to_stdout(), s.clone() + "\n");
+        assert_eq!(io.stdout.to_stdout()[..s.len()], s);
     }
 
     #[wasm_bindgen_test]
