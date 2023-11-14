@@ -6,6 +6,7 @@ pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
     start_time: T::Instant,
+    left: u64,
 }
 
 pub fn mb(b: u64) -> String {
@@ -33,6 +34,7 @@ impl<'a, T: Io> State<'a, T> {
             io,
             prior: 0,
             start_time: io.now(),
+            left: u64::MAX,
         }
     }
     pub fn set(&mut self, s: &str) -> io::Result<()> {
@@ -55,7 +57,11 @@ impl<'a, T: Io> State<'a, T> {
         let left = if p == 0.0 {
             "".to_string()
         } else {
-            ", time left: ".to_owned() + &time((elapsed.as_secs_f64() * (1.0 - p) / p) as u64) + "s"
+            let new_left = (elapsed.as_secs_f64() * (1.0 - p) / p) as u64;
+            if new_left < self.left {
+                self.left = new_left;
+            }
+            ", time left: ".to_owned() + &time(self.left)
         } + ".";
         let r = s.to_owned() + &percent.to_string() + "%" + &left;
         self.set(&r)
