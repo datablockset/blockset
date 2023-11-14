@@ -6,6 +6,7 @@ pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
     start_time: T::Instant,
+    prior: T::Instant,
     left: u64,
 }
 
@@ -22,10 +23,13 @@ fn time(mut t: u64) -> String {
 
 impl<'a, T: Io> State<'a, T> {
     pub fn new(io: &'a T) -> Self {
+        let start_time = io.now();
+        let prior = start_time.clone();
         Self {
             io,
             prior: 0,
-            start_time: io.now(),
+            start_time,
+            prior,
             left: u64::MAX,
         }
     }
@@ -45,6 +49,10 @@ impl<'a, T: Io> State<'a, T> {
     pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
+        if current - self.prior < self.io.duration(1) {
+            return Ok(());
+        }
+        self.prior = current.clone();
         let elapsed = current - self.start_time.clone();
         let left = if p == 0.0 {
             "".to_string()
