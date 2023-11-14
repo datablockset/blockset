@@ -27,7 +27,7 @@ impl<'a, T: Io> State<'a, T> {
             io,
             prior: 0,
             start_time: io.now(),
-            prior_current: -2.0,
+            prior_current: -1.0,
             left: f64::MAX,
         }
     }
@@ -45,6 +45,9 @@ impl<'a, T: Io> State<'a, T> {
         Ok(())
     }
     pub fn set_progress(&mut self, s: &str, p: f64) -> io::Result<()> {
+        if p == 0.0 {
+            return Ok(());
+        }
         let percent = (p * 100.0) as u8;
         let current = self.io.now();
         let elapsed = (current - self.start_time.clone()).as_secs_f64();
@@ -52,16 +55,12 @@ impl<'a, T: Io> State<'a, T> {
             return Ok(());
         }
         self.prior_current = elapsed;
-        let left = if p == 0.0 {
-            "".to_string()
-        } else {
-            let new_left = elapsed * (1.0 - p) / p;
-            if new_left < self.left {
-                self.left = new_left;
-            }
-            ", time left: ".to_owned() + &time(self.left as u64)
-        } + ".";
-        let r = s.to_owned() + &percent.to_string() + "%" + &left;
+        let new_left = elapsed * (1.0 - p) / p;
+        if new_left < self.left {
+            self.left = new_left;
+        }
+        let r =
+            s.to_owned() + &percent.to_string() + "%, time left: " + &time(self.left as u64) + ".";
         self.set(&r)
     }
 }
