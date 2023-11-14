@@ -52,7 +52,7 @@ pub trait Forest {
                 w.write_all(buf)?;
                 progress_p += size;
                 progress_b += buf.len() as u64;
-                state.set_progress(&mb(progress_b), progress_p)?;
+                state.set_progress(&(mb(progress_b) + ", "), progress_p)?;
             } else {
                 len += 1;
                 if len > 1 {
