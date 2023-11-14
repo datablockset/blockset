@@ -2,6 +2,8 @@ use std::io::{self, Write};
 
 use io_trait::Io;
 
+use crate::uint::u64::div_rem;
+
 pub struct State<'a, T: Io> {
     io: &'a T,
     prior: usize,
@@ -11,10 +13,6 @@ pub struct State<'a, T: Io> {
 
 pub fn mb(b: u64) -> String {
     (b / 1_000_000).to_string() + " MB"
-}
-
-const fn div_rem(a: u64, b: u64) -> (u64, u64) {
-    (a / b, a % b)
 }
 
 fn time(s: u64) -> String {
