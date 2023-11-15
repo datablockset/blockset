@@ -4,7 +4,7 @@ pub mod base32;
 pub mod bit_vec;
 pub mod eol;
 pub mod progress;
-pub mod state;
+pub mod status_line;
 
 #[cfg(test)]
 pub mod static_assert;

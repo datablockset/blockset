@@ -4,7 +4,7 @@ use io_trait::Io;
 
 use crate::uint::u64::div_rem;
 
-pub struct State<'a, T: Io> {
+pub struct StatusLine<'a, T: Io> {
     io: &'a T,
     prior: usize,
     start_time: T::Instant,
@@ -21,7 +21,7 @@ fn time(s: u64) -> String {
     format!("{}:{:02}:{:02}", h, m, s)
 }
 
-impl<'a, T: Io> State<'a, T> {
+impl<'a, T: Io> StatusLine<'a, T> {
     pub fn new(io: &'a T) -> Self {
         Self {
             io,
@@ -30,7 +30,7 @@ impl<'a, T: Io> State<'a, T> {
             prior_elapsed: -1.0,
         }
     }
-    pub fn set(&mut self, s: &str) -> io::Result<()> {
+    fn set(&mut self, s: &str) -> io::Result<()> {
         let mut vec = Vec::default();
         vec.resize(self.prior, 8);
         vec.extend_from_slice(s.as_bytes());
@@ -59,7 +59,7 @@ impl<'a, T: Io> State<'a, T> {
         self.set(&r)
     }
 }
-impl<'a, T: Io> Drop for State<'a, T> {
+impl<'a, T: Io> Drop for StatusLine<'a, T> {
     fn drop(&mut self) {
         let _ = self.set("");
     }

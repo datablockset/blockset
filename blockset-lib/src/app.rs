@@ -8,7 +8,7 @@ use crate::{
         base32::{StrEx, ToBase32},
         eol::ToPosixEol,
         progress::{self, Progress},
-        state::{mb, State},
+        status_line::{mb, StatusLine},
     },
     forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
     info::calculate_total,
@@ -22,7 +22,7 @@ fn read_to_tree<T: TreeAdd>(
     display_new: bool,
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
-    let mut state = State::new(io);
+    let mut state = StatusLine::new(io);
     let mut new = 0;
     loop {
         let pr = file.progress();
