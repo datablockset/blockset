@@ -2,7 +2,7 @@ use std::io;
 
 use io_trait::Io;
 
-use crate::{base32::ToBase32, cdt::node_type::NodeType, forest::Forest};
+use crate::{cdt::node_type::NodeType, common::base32::ToBase32, forest::Forest};
 
 use super::node_id::ForestNodeId;
 

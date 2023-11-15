@@ -3,13 +3,15 @@ use std::io::{self, ErrorKind, Read, Write};
 use io_trait::Io;
 
 use crate::{
-    base32::{StrEx, ToBase32},
     cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
-    eol::ToPosixEol,
+    common::{
+        base32::{StrEx, ToBase32},
+        eol::ToPosixEol,
+        progress::{self, Progress},
+        state::{mb, State},
+    },
     forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
     info::calculate_total,
-    progress::{self, Progress},
-    state::{mb, State},
     uint::u224::U224,
 };
 
@@ -138,7 +140,7 @@ mod test {
     use io_trait::Io;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{base32::ToBase32, cdt::node_id::root, run, uint::u256::U256};
+    use crate::{cdt::node_id::root, common::base32::ToBase32, run, uint::u256::U256};
 
     #[wasm_bindgen_test]
     #[test]

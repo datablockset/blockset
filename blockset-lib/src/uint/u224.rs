@@ -1,6 +1,6 @@
 use std::iter::once;
 
-use crate::{
+use crate::common::{
     base32::{BitsToBase32, FromBase32, StrEx, ToBase32},
     bit_vec::BitVec,
 };
@@ -54,7 +54,7 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use super::{U224Ex, U224};
-    use crate::base32::{StrEx, ToBase32};
+    use crate::common::base32::{StrEx, ToBase32};
 
     #[wasm_bindgen_test]
     #[test]

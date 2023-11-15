@@ -1,4 +1,4 @@
-use crate::{ascii::to_ascii, bit_vec::BitVec};
+use crate::common::{ascii::to_ascii, bit_vec::BitVec};
 
 const fn to_base32(v: u8) -> char {
     //0               1
@@ -77,9 +77,7 @@ impl FromBase32 for (Vec<u32>, BitVec) {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::base32::to_base32;
-
-    use super::from_base32;
+    use super::{from_base32, to_base32};
 
     #[wasm_bindgen_test]
     #[test]
