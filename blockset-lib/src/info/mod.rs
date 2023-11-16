@@ -7,7 +7,7 @@ use io_trait::{DirEntry, Io, Metadata};
 
 use crate::{
     cdt::node_type::NodeType,
-    common::state::{mb, State},
+    common::status_line::{mb, StatusLine},
     forest::file::{dir, CDT0},
 };
 
@@ -62,7 +62,7 @@ fn create_map(io: &impl Io, path: &str, is_dir: bool, e: NodeTypeSet) -> DirEntr
 
 pub fn calculate_total(io: &impl Io) -> io::Result<u64> {
     let mut total = 0;
-    let state = &mut State::new(io);
+    let state = &mut StatusLine::new(io);
     let a = create_map(io, "", true, NodeTypeSet::ALL);
     let an = a.len() as u64;
     for (ai, (af, &e)) in a.iter().enumerate() {

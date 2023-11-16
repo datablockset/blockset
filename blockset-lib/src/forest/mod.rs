@@ -4,7 +4,7 @@ use io_trait::Io;
 
 use crate::{
     cdt::{node_id::root, node_type::NodeType},
-    common::state::{mb, State},
+    common::status_line::{mb, StatusLine},
     uint::{u224::U224, u32::from_u8x4},
 };
 
@@ -41,7 +41,7 @@ pub trait Forest {
         let mut keys = [(id.hash, 1.0)].to_vec();
         let mut progress_p = 0.0;
         let mut progress_b = 0;
-        let mut state = State::new(io);
+        let mut state = StatusLine::new(io);
         let mut t = id.node_type;
         state.set_progress("", 0.0)?;
         while let Some((key, size)) = keys.pop() {
