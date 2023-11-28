@@ -9,13 +9,13 @@ pub const SHA224: U256 = [
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{common::static_assert::static_assert, sha2::compress::compress, uint::u256::U256};
+    use crate::{sha2::compress::compress, uint::u256::U256};
 
     use super::SHA224;
 
     const A: U256 = compress(SHA224, [[0x8000_0000, 0], [0, 0]]);
 
-    const _STATIC_TEST: () = static_assert({
+    const _: () = assert!({
         let x = A;
         x[0] == 0x288234c4_476102bb_2a3a2bc9_d14a028c
             && (x[1] & ((1 << 96) - 1)) == 0xc5b3e42f_828ea62a_15a2b01f
