@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.4.2
 
-- WASI. PR [#152](https://github.com/datablockset/blockset/pull/158).
+- WASI. PR [#158](https://github.com/datablockset/blockset/pull/158).
 
 ## 0.4.1
 
