@@ -27,6 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@wasmtime
+      - run: cargo build --target wasm32-wasi --release
       - run: wasmtime ./target/wasm32-wasi/release/blockset.wasm
 
   test-wasm:
