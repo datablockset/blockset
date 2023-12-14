@@ -29,7 +29,7 @@ jobs:
       - uses: taiki-e/install-action@wasmtime
       - run: rustup target add wasm32-wasi
       - run: cargo build --target wasm32-wasi --release
-      - run: wasmtime ./target/wasm32-wasi/release/blockset.wasm
+      - run: wasmtime ./target/wasm32-wasi/release/blockset.wasm validate c02hb4h8s6v05pxpnhcyxdebewfbwbrg6sp3k46hsh6qc
 
   test-wasm:
     runs-on: ubuntu-latest
