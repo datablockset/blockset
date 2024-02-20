@@ -25,11 +25,17 @@ impl<R: Read> ToPosixEol<R> {
         Self { read, last: None }
     }
     fn get_one(&mut self) -> io::Result<Option<u8>> {
-        self.last.take().map_or_else(|| self.read.read_byte(), |x| Ok(Some(x)))
+        self.last
+            .take()
+            .map_or_else(|| self.read.read_byte(), |x| Ok(Some(x)))
     }
     fn next(&mut self) -> io::Result<Option<u8>> {
         // read the last item
-        let mut last = if let Some(last) = self.get_one()? { last } else { return Ok(None) };
+        let mut last = if let Some(last) = self.get_one()? {
+            last
+        } else {
+            return Ok(None);
+        };
         //
         if last == b'\r' {
             if let Some(next) = self.read.read_byte()? {
