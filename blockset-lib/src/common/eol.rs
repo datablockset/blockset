@@ -72,13 +72,15 @@ impl<R: Read + Progress> Progress for ToPosixEol<R> {
 mod test {
     use std::io::{Cursor, Read};
 
+    use nanvm_lib::common::default::default;
+
     use super::ToPosixEol;
 
     #[test]
     fn test() {
         let cursor = Cursor::new(b"abc\r\ndef\r\n\r\nghi\r\n\re");
         let mut x = ToPosixEol::new(cursor);
-        let mut b = Default::default();
+        let mut b = default();
         x.read_to_end(&mut b).unwrap();
         assert_eq!(b, b"abc\ndef\n\nghi\n\re");
     }
@@ -87,7 +89,7 @@ mod test {
         let c = b"\r\r";
         let cursor = Cursor::new(c);
         let mut x = ToPosixEol::new(cursor);
-        let mut b = Default::default();
+        let mut b = default();
         x.read_to_end(&mut b).unwrap();
         assert_eq!(b, c);
     }

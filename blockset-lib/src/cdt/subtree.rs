@@ -80,6 +80,7 @@ impl SubTree {
 
 #[cfg(test)]
 mod test {
+    use nanvm_lib::common::default::default;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -123,7 +124,7 @@ mod test {
             assert!(t.0.is_empty());
         }
         {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&c), None);
             assert_eq!(
                 t.0,
@@ -245,7 +246,7 @@ mod test {
         let a = to_node_id(b'a');
         let b = to_node_id(b'b');
         let ab = {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&a), None);
             assert_eq!(t.0, [Node::new2(&a, 0)]);
             let ab = t.push(&b);
@@ -255,7 +256,7 @@ mod test {
         }
         .unwrap();
         let baa = {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&b), None);
             assert_eq!(t.0, [Node::new2(&b, 0)]);
             assert_eq!(t.push(&a), None);
@@ -267,7 +268,7 @@ mod test {
         }
         .unwrap();
         {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&ab), None);
             assert_eq!(t.0, [Node::new2(&ab, 0)]);
             let r = t.push(&baa);

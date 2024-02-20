@@ -1,5 +1,7 @@
 use std::io;
 
+use nanvm_lib::common::default::default;
+
 use crate::uint::u224::U224;
 
 use super::{
@@ -17,7 +19,7 @@ impl<T: TreeAdd> MainTreeAdd<T> {
     pub fn new(tree_add: T) -> Self {
         Self {
             tree_add,
-            state: Vec::default(),
+            state: default(),
         }
     }
     pub fn push(&mut self, c: u8) -> io::Result<u64> {

@@ -60,6 +60,7 @@ pub const fn root(hash: &U256) -> U224 {
 
 #[cfg(test)]
 mod test {
+    use nanvm_lib::common::default::default;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -87,8 +88,8 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn merge_empty_test() {
-        assert_eq!(merge(&to_node_id(0x12), &U256::default()), to_node_id(0x12));
-        assert_eq!(merge(&U256::default(), &to_node_id(0x34)), to_node_id(0x34));
+        assert_eq!(merge(&to_node_id(0x12), &default()), to_node_id(0x12));
+        assert_eq!(merge(&default(), &to_node_id(0x34)), to_node_id(0x34));
     }
 
     #[wasm_bindgen_test]
