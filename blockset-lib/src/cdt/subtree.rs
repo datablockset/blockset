@@ -1,6 +1,7 @@
+use nanvm_lib::common::cast::Cast;
+
 use crate::{
     cdt::node_id::merge,
-    common::array::ArrayEx,
     uint::u256::{great, U256},
 };
 
@@ -42,7 +43,7 @@ pub struct SubTree(Vec<Node>);
 
 impl SubTree {
     pub fn new(last: &U256) -> Self {
-        Self([Node::new2(last, 0)].move_to_vec())
+        Self([Node::new2(last, 0)].cast())
     }
     pub fn push(&mut self, last0: &U256) -> Option<U256> {
         let mut height10 = 0;
