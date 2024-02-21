@@ -101,12 +101,13 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let mut a = io.args();
     a.next().unwrap();
     let command = a.next().ok_or(invalid_input("missing command"))?;
+    fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
+        let b32 = a.next().ok_or(invalid_input("missing hash"))?;
+        b32.from_base32::<U224>().ok_or(invalid_input("invalid hash"))
+    }
     match command.as_str() {
         "validate" => {
-            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-            let d = b32
-                .from_base32::<U224>()
-                .ok_or(invalid_input("invalid hash"))?;
+            let d = get_hash(&mut a)?;
             print(stdout, "valid: ")?;
             println(stdout, &d.to_base32())?;
             Ok(())
@@ -114,20 +115,20 @@ pub fn run(io: &impl Io) -> io::Result<()> {
         "hash" => add(io, &mut a, |_| (), false),
         "add" => add(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
-            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-            let d = b32
-                .from_base32::<U224>()
-                .ok_or(invalid_input("invalid hash"))?;
+            let d = get_hash(&mut a)?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
-            let mut f = io.create(&path)?;
-            let table = FileForest(io);
-            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, io)?;
+            FileForest(io).restore(
+                &ForestNodeId::new(NodeType::Root, &d),
+                &mut io.create(&path)?,
+                io,
+            )?;
             Ok(())
         }
         "info" => {
-            let total = calculate_total(io)?;
-            let s = "size: ".to_owned() + &total.to_string() + " B.";
-            println(stdout, &s)?;
+            println(
+                stdout,
+                &("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."),
+            )?;
             Ok(())
         }
         _ => Err(invalid_input("unknown command")),
