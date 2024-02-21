@@ -35,3 +35,12 @@ pub const fn u32x4_add(a: u128, b: u128) -> u128 {
     let [b0, b1, b2, b3] = to_u32x4(b);
     from_u32x4([add(a0, b0), add(a1, b1), add(a2, b2), add(a3, b3)])
 }
+
+#[inline(always)]
+pub const fn shl(u: u128, i: i32) -> u128 {
+    match i {
+        -127..=-1 => u >> -i,
+        0..=127 => u << i,
+        _ => 0,
+    }
+}
