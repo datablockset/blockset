@@ -59,7 +59,6 @@ mod test {
     #[test]
     fn shl_test() {
         assert_eq!(shl(&X, 0), X);
-        /*
         assert_eq!(
             shl(&X, 1),
             // 123456789ABCDEF
@@ -91,7 +90,6 @@ mod test {
                 0x8807_8706_8605_8504_8403_8302_8201_8100,
             ]
         );
-        */
     }
 
     #[wasm_bindgen_test]

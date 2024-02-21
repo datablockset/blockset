@@ -44,3 +44,16 @@ pub const fn shl(u: u128, i: i32) -> u128 {
         _ => 0,
     }
 }
+
+#[cfg(test)]
+mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use crate::uint::u128::shl;
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn shl_test() {
+        assert_eq!(shl(1, -130), 0);
+    }
+}
