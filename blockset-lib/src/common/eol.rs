@@ -24,11 +24,14 @@ impl<R: Read> ToPosixEol<R> {
     pub fn new(read: R) -> Self {
         Self { read, last: None }
     }
+    fn get_one(&mut self) -> io::Result<Option<u8>> {
+        self.last
+            .take()
+            .map_or_else(|| self.read.read_byte(), |x| Ok(Some(x)))
+    }
     fn next(&mut self) -> io::Result<Option<u8>> {
         // read the last item
-        let mut last = if let Some(last) = self.last.take() {
-            last
-        } else if let Some(last) = self.read.read_byte()? {
+        let mut last = if let Some(last) = self.get_one()? {
             last
         } else {
             return Ok(None);
@@ -72,23 +75,42 @@ impl<R: Read + Progress> Progress for ToPosixEol<R> {
 mod test {
     use std::io::{Cursor, Read};
 
+    use nanvm_lib::common::default::default;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
     use super::ToPosixEol;
 
     #[test]
+    #[wasm_bindgen_test]
     fn test() {
         let cursor = Cursor::new(b"abc\r\ndef\r\n\r\nghi\r\n\re");
         let mut x = ToPosixEol::new(cursor);
-        let mut b = Default::default();
+        let mut b = default();
         x.read_to_end(&mut b).unwrap();
         assert_eq!(b, b"abc\ndef\n\nghi\n\re");
     }
     #[test]
+    #[wasm_bindgen_test]
     fn test_overflow() {
         let c = b"\r\r";
         let cursor = Cursor::new(c);
         let mut x = ToPosixEol::new(cursor);
-        let mut b = Default::default();
+        let mut b = default();
         x.read_to_end(&mut b).unwrap();
         assert_eq!(b, c);
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_error() {
+        struct ReadError();
+        impl Read for ReadError {
+            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+                Err(std::io::Error::new(std::io::ErrorKind::Other, "read error"))
+            }
+        }
+        let mut x = ToPosixEol::new(ReadError());
+        let mut b = default();
+        x.read_to_end(&mut b).unwrap_err();
     }
 }

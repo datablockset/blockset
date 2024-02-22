@@ -17,6 +17,15 @@ pub mod tree_add;
 
 const EMPTY: U224 = root(&[0, 0]);
 
+fn get_len(v: &[u8]) -> Option<usize> {
+    let len = *v.first().unwrap();
+    if len == 0x20 {
+        None
+    } else {
+        Some(len as usize + 1)
+    }
+}
+
 pub trait Forest {
     fn has_block(&self, id: &ForestNodeId) -> bool;
     fn get_block(&self, id: &ForestNodeId) -> io::Result<Vec<u8>>;
@@ -46,17 +55,9 @@ pub trait Forest {
         state.set_progress("", 0.0)?;
         while let Some((key, size)) = keys.pop() {
             let v = self.get_block(&ForestNodeId::new(t, &key))?;
-            let mut len = *v.first().unwrap() as usize;
-            if len == 0x20 {
-                let buf = &v[1..];
-                w.write_all(buf)?;
-                progress_p += size;
-                progress_b += buf.len() as u64;
-                state.set_progress(&(mb(progress_b) + ", "), progress_p)?;
-            } else {
-                len += 1;
+            if let Some(len) = get_len(&v) {
                 if len > 1 {
-                    assert!(tail.is_empty());
+                    //assert!(tail.is_empty());
                     tail = v[1..len].to_vec();
                 }
                 let mut i = v.len();
@@ -74,6 +75,12 @@ pub trait Forest {
                     }
                     keys.push((kn, size));
                 }
+            } else {
+                let buf = &v[1..];
+                w.write_all(buf)?;
+                progress_p += size;
+                progress_b += buf.len() as u64;
+                state.set_progress(&(mb(progress_b) + ", "), progress_p)?;
             }
             t = NodeType::Child;
         }

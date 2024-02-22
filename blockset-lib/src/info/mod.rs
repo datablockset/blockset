@@ -4,6 +4,7 @@ mod node_type_set;
 use std::io;
 
 use io_trait::{DirEntry, Io, Metadata};
+use nanvm_lib::common::default::default;
 
 use crate::{
     cdt::node_type::NodeType,
@@ -41,7 +42,7 @@ fn get_all_dir<T: Io>(
     is_dir: bool,
     entry: NodeTypeSet,
 ) -> Vec<(T::DirEntry, NodeType)> {
-    let mut result = Vec::default();
+    let mut result = default();
     get_dir(io, path, is_dir, NodeType::Root, entry, &mut result);
     get_dir(io, path, is_dir, NodeType::Child, entry, &mut result);
     result

@@ -15,6 +15,43 @@ use crate::{
     uint::u224::U224,
 };
 
+fn set_progress(
+    state: &mut StatusLine<'_, impl Io>,
+    display_new: bool,
+    new: u64,
+    progress::State { current, total }: progress::State,
+) -> io::Result<()> {
+    let p = if total == 0 {
+        1.0
+    } else {
+        (current as f64) / (total as f64)
+    };
+    let s = if display_new {
+        "New data: ".to_owned() + &mb(new) + ". "
+    } else {
+        String::new()
+    } + "Processed: "
+        + &mb(current)
+        + ", ";
+    state.set_progress(&s, p)
+}
+
+fn file_read(
+    file: &mut (impl Read + Progress),
+    tree: &mut MainTreeAdd<impl TreeAdd>,
+    new: &mut u64,
+) -> io::Result<bool> {
+    let mut buf = [0; 1024];
+    let size = file.read(buf.as_mut())?;
+    if size == 0 {
+        return Ok(true);
+    }
+    for c in buf[0..size].iter() {
+        *new += tree.push(*c)?;
+    }
+    Ok(false)
+}
+
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
@@ -26,27 +63,9 @@ fn read_to_tree<T: TreeAdd>(
     let mut new = 0;
     loop {
         let pr = file.progress();
-        let progress::State { current, total } = pr?;
-        let mut buf = [0; 1024];
-        let p = if total == 0 {
-            1.0
-        } else {
-            (current as f64) / (total as f64)
-        };
-        let s = if display_new {
-            "New data: ".to_owned() + &mb(new) + ". "
-        } else {
-            String::new()
-        } + "Processed: "
-            + &mb(current)
-            + ", ";
-        state.set_progress(&s, p)?;
-        let size = file.read(buf.as_mut())?;
-        if size == 0 {
+        set_progress(&mut state, display_new, new, pr?)?;
+        if file_read(&mut file, &mut tree, &mut new)? {
             break;
-        }
-        for c in buf[0..size].iter() {
-            new += tree.push(*c)?;
         }
     }
     Ok(tree.end()?.0.to_base32())
@@ -65,6 +84,34 @@ fn invalid_input(s: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, s)
 }
 
+fn is_to_posix_eol(a: &mut impl Iterator<Item = String>) -> io::Result<bool> {
+    Ok(if let Some(option) = a.next() {
+        if option != "--to-posix-eol" {
+            return Err(invalid_input("unknown option"));
+        }
+        true
+    } else {
+        false
+    })
+}
+
+fn read_to_tree_file(
+    to_posix_eol: bool,
+    s: impl TreeAdd,
+    f: impl Read + Progress,
+    io: &impl Io,
+    display_new: bool,
+) -> io::Result<String> {
+    if to_posix_eol {
+        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
+        // is smaller than `len`. Proposed solution:
+        // a Read implementation which can also report a progress.
+        read_to_tree(s, ToPosixEol::new(f), io, display_new)
+    } else {
+        read_to_tree(s, f, io, display_new)
+    }
+}
+
 fn add<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
     a: &mut T::Args,
@@ -73,27 +120,22 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
 ) -> io::Result<()> {
     let stdout = &mut io.stdout();
     let path = a.next().ok_or(invalid_input("missing file name"))?;
-    let to_posix_eol = if let Some(option) = a.next() {
-        if option != "--to-posix-eol" {
-            return Err(invalid_input("unknown option"));
-        }
-        true
-    } else {
-        false
-    };
+    let to_posix_eol = is_to_posix_eol(a)?;
     // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
-    let s = storage(io);
-    let k = if to_posix_eol {
-        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
-        // is smaller than `len`. Proposed solution:
-        // a Read implementation which can also report a progress.
-        read_to_tree(s, ToPosixEol::new(f), io, display_new)?
-    } else {
-        read_to_tree(s, f, io, display_new)?
-    };
-    println(stdout, &k)?;
-    Ok(())
+    let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
+    println(stdout, &k)
+}
+
+fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
+    let b32 = a.next().ok_or(invalid_input("missing hash"))?;
+    b32.from_base32::<U224>()
+        .ok_or(invalid_input("invalid hash"))
+}
+
+fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
+    let d = get_hash(a)?.to_base32();
+    println(stdout, &("valid: ".to_owned() + &d))
 }
 
 pub fn run(io: &impl Io) -> io::Result<()> {
@@ -102,34 +144,19 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     a.next().unwrap();
     let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
-        "validate" => {
-            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-            let d = b32
-                .from_base32::<U224>()
-                .ok_or(invalid_input("invalid hash"))?;
-            print(stdout, "valid: ")?;
-            println(stdout, &d.to_base32())?;
-            Ok(())
-        }
+        "validate" => validate(&mut a, stdout),
         "hash" => add(io, &mut a, |_| (), false),
         "add" => add(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
-            let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-            let d = b32
-                .from_base32::<U224>()
-                .ok_or(invalid_input("invalid hash"))?;
+            let d = get_hash(&mut a)?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
-            let mut f = io.create(&path)?;
-            let table = FileForest(io);
-            table.restore(&ForestNodeId::new(NodeType::Root, &d), &mut f, io)?;
-            Ok(())
+            let w = &mut io.create(&path)?;
+            FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
-        "info" => {
-            let total = calculate_total(io)?;
-            let s = "size: ".to_owned() + &total.to_string() + " B.";
-            println(stdout, &s)?;
-            Ok(())
-        }
+        "info" => println(
+            stdout,
+            &("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."),
+        ),
         _ => Err(invalid_input("unknown command")),
     }
 }

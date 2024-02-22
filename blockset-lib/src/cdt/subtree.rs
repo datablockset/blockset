@@ -1,6 +1,7 @@
+use nanvm_lib::common::cast::Cast;
+
 use crate::{
     cdt::node_id::merge,
-    common::array::ArrayEx,
     uint::u256::{great, U256},
 };
 
@@ -42,7 +43,7 @@ pub struct SubTree(Vec<Node>);
 
 impl SubTree {
     pub fn new(last: &U256) -> Self {
-        Self([Node::new2(last, 0)].move_to_vec())
+        Self([Node::new2(last, 0)].cast())
     }
     pub fn push(&mut self, last0: &U256) -> Option<U256> {
         let mut height10 = 0;
@@ -79,6 +80,7 @@ impl SubTree {
 
 #[cfg(test)]
 mod test {
+    use nanvm_lib::common::default::default;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -122,7 +124,7 @@ mod test {
             assert!(t.0.is_empty());
         }
         {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&c), None);
             assert_eq!(
                 t.0,
@@ -244,7 +246,7 @@ mod test {
         let a = to_node_id(b'a');
         let b = to_node_id(b'b');
         let ab = {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&a), None);
             assert_eq!(t.0, [Node::new2(&a, 0)]);
             let ab = t.push(&b);
@@ -254,7 +256,7 @@ mod test {
         }
         .unwrap();
         let baa = {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&b), None);
             assert_eq!(t.0, [Node::new2(&b, 0)]);
             assert_eq!(t.push(&a), None);
@@ -266,7 +268,7 @@ mod test {
         }
         .unwrap();
         {
-            let mut t = SubTree(Vec::default());
+            let mut t = SubTree(default());
             assert_eq!(t.push(&ab), None);
             assert_eq!(t.0, [Node::new2(&ab, 0)]);
             let r = t.push(&baa);

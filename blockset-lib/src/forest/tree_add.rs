@@ -1,5 +1,7 @@
 use std::{io, iter::once, mem::take};
 
+use nanvm_lib::common::default::default;
+
 use super::{node_id::ForestNodeId, Forest};
 
 use crate::{
@@ -76,7 +78,7 @@ impl<T: Forest> ForestTreeAdd<T> {
     pub fn new(forest: T) -> Self {
         Self {
             forest,
-            levels: Default::default(),
+            levels: default(),
         }
     }
 }
@@ -96,7 +98,7 @@ impl<T: Forest> TreeAdd for ForestTreeAdd<T> {
         }
         i /= SKIP_LEVEL;
         if i >= self.levels.nodes.len() {
-            self.levels.nodes.push(Nodes::default());
+            self.levels.nodes.push(default());
         }
         let level = &mut self.levels.nodes[i];
         if let Some(k) = to_u224(digest) {
@@ -134,6 +136,7 @@ mod test {
     use std::io::Cursor;
 
     use io_test::VirtualIo;
+    use nanvm_lib::common::default::default;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
@@ -157,7 +160,7 @@ mod test {
     }
 
     fn small(c: &str) {
-        let mut table = MemForest::default();
+        let mut table = default();
         let k = add(&mut table, c);
         let v = (&mut table)
             .get_block(&ForestNodeId::new(NodeType::Root, &k))
@@ -166,7 +169,7 @@ mod test {
     }
 
     fn big(c: &str) {
-        let table = &mut MemForest::default();
+        let table = &mut default();
         let k = add(table, c);
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);

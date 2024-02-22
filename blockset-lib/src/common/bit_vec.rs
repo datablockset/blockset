@@ -22,3 +22,18 @@ impl BitVec {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use super::BitVec;
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test() {
+        let x = BitVec::new(0b1010, 4);
+        assert_eq!(x.value, 0b1010);
+        assert_eq!(x.len, 4);
+    }
+}
