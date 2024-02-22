@@ -24,3 +24,26 @@ impl NodeTypeSet {
         !self.intersection(NodeTypeSet::new(b)).eq(Self::EMPTY)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use super::NodeTypeSet;
+    use crate::cdt::node_type::NodeType;
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test() {
+        let x = NodeTypeSet::new(NodeType::Root);
+        assert_eq!(x.0, 1);
+        let y = NodeTypeSet::new(NodeType::Child);
+        assert_eq!(y.0, 2);
+        let z = x.union(y);
+        assert_eq!(z.0, 3);
+        assert_eq!(z.has(NodeType::Root), true);
+        assert_eq!(z.has(NodeType::Child), true);
+        assert_eq!(z.has(NodeType::Root), true);
+        assert_eq!(z.has(NodeType::Child), true);
+    }
+}
