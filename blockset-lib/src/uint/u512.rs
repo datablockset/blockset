@@ -16,13 +16,20 @@ mod test {
 
     use super::new;
 
+    #[inline(never)]
+    fn create(a: u128, b: u128, c: u128, d: u128) {
+        for i in 0..4 {
+            let x = new(a * i, b, c / (i + 1), d);
+            assert_eq!(x[0][0], a * i);
+            assert_eq!(x[0][1], b);
+            assert_eq!(x[1][0], c / (i + 1));
+            assert_eq!(x[1][1], d);
+        }
+    }
+
     #[wasm_bindgen_test]
     #[test]
     fn test() {
-        let a = new(1, 2, 3, 4);
-        assert_eq!(a[0][0], 1);
-        assert_eq!(a[0][1], 2);
-        assert_eq!(a[1][0], 3);
-        assert_eq!(a[1][1], 4);
+        create(1, 2, 3, 4);
     }
 }
