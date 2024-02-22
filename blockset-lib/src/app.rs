@@ -19,7 +19,7 @@ fn set_progress(
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
     new: u64,
-    progress::State {current, total}: progress::State,
+    progress::State { current, total }: progress::State,
 ) -> io::Result<()> {
     let p = if total == 0 {
         1.0
@@ -36,6 +36,22 @@ fn set_progress(
     state.set_progress(&s, p)
 }
 
+fn file_read(
+    file: &mut (impl Read + Progress),
+    tree: &mut MainTreeAdd<impl TreeAdd>,
+    new: &mut u64,
+) -> io::Result<bool> {
+    let mut buf = [0; 1024];
+    let size = file.read(buf.as_mut())?;
+    if size == 0 {
+        return Ok(true);
+    }
+    for c in buf[0..size].iter() {
+        *new += tree.push(*c)?;
+    }
+    Ok(false)
+}
+
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
@@ -48,14 +64,7 @@ fn read_to_tree<T: TreeAdd>(
     loop {
         let pr = file.progress();
         set_progress(&mut state, display_new, new, pr?)?;
-        let mut buf = [0; 1024];
-        let size = file.read(buf.as_mut())?;
-        if size == 0 {
-            break;
-        }
-        for c in buf[0..size].iter() {
-            new += tree.push(*c)?;
-        }
+        if file_read(&mut file, &mut tree, &mut new)? { break }
     }
     Ok(tree.end()?.0.to_base32())
 }
