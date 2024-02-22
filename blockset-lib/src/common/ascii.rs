@@ -16,7 +16,9 @@ mod test {
     fn x(x: char, y: Option<u8>) {
         assert_eq!(to_ascii(x), y);
         if let Some(y) = y {
-            assert_eq!(to_ascii((x as u8 / 2) as char), Some(y / 2));
+            assert_eq!(to_ascii(char::from_u32(x as u32 / 2).unwrap()), Some(y / 2));
+        } else {
+            assert_eq!(to_ascii(char::from_u32(x as u32 / 2).unwrap()), None);
         }
     }
 
