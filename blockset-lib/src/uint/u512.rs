@@ -17,7 +17,14 @@ mod test {
     use super::{new, U512};
 
     //#[inline(never)]
-    fn create2(a: u128, b: u128, c: u128, d: u128, i: u128, f: fn(u128, u128, u128, u128) -> U512) -> U512{
+    fn create2(
+        a: u128,
+        b: u128,
+        c: u128,
+        d: u128,
+        i: u128,
+        f: fn(u128, u128, u128, u128) -> U512,
+    ) -> U512 {
         f(a * i, b + i, c / (i + 1), d - 1)
     }
 
