@@ -17,7 +17,7 @@ pub mod tree_add;
 
 const EMPTY: U224 = root(&[0, 0]);
 
-fn get_len(v: &Vec<u8>) -> Option<usize> {
+fn get_len(v: &[u8]) -> Option<usize> {
     let len = *v.first().unwrap();
     if len == 0x20 {
         None
