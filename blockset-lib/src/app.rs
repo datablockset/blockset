@@ -15,6 +15,27 @@ use crate::{
     uint::u224::U224,
 };
 
+fn set_progress(
+    state: &mut StatusLine<'_, impl Io>,
+    display_new: bool,
+    new: u64,
+    progress::State {current, total}: progress::State,
+) -> io::Result<()> {
+    let p = if total == 0 {
+        1.0
+    } else {
+        (current as f64) / (total as f64)
+    };
+    let s = if display_new {
+        "New data: ".to_owned() + &mb(new) + ". "
+    } else {
+        String::new()
+    } + "Processed: "
+        + &mb(current)
+        + ", ";
+    state.set_progress(&s, p)
+}
+
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
@@ -26,21 +47,8 @@ fn read_to_tree<T: TreeAdd>(
     let mut new = 0;
     loop {
         let pr = file.progress();
-        let progress::State { current, total } = pr?;
+        set_progress(&mut state, display_new, new, pr?)?;
         let mut buf = [0; 1024];
-        let p = if total == 0 {
-            1.0
-        } else {
-            (current as f64) / (total as f64)
-        };
-        let s = if display_new {
-            "New data: ".to_owned() + &mb(new) + ". "
-        } else {
-            String::new()
-        } + "Processed: "
-            + &mb(current)
-            + ", ";
-        state.set_progress(&s, p)?;
         let size = file.read(buf.as_mut())?;
         if size == 0 {
             break;
@@ -103,7 +111,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let command = a.next().ok_or(invalid_input("missing command"))?;
     fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
         let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-        b32.from_base32::<U224>().ok_or(invalid_input("invalid hash"))
+        b32.from_base32::<U224>()
+            .ok_or(invalid_input("invalid hash"))
     }
     match command.as_str() {
         "validate" => {
