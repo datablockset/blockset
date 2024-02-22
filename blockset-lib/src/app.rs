@@ -102,14 +102,14 @@ fn read_to_tree_file(
     io: &impl Io,
     display_new: bool,
 ) -> io::Result<String> {
-    Ok(if to_posix_eol {
+    if to_posix_eol {
         // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
         // is smaller than `len`. Proposed solution:
         // a Read implementation which can also report a progress.
-        read_to_tree(s, ToPosixEol::new(f), io, display_new)?
+        read_to_tree(s, ToPosixEol::new(f), io, display_new)
     } else {
-        read_to_tree(s, f, io, display_new)?
-    })
+        read_to_tree(s, f, io, display_new)
+    }
 }
 
 fn add<'a, T: Io, S: 'a + TreeAdd>(
@@ -124,8 +124,18 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
     // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
     let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
-    println(stdout, &k)?;
-    Ok(())
+    println(stdout, &k)
+}
+
+fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
+    let b32 = a.next().ok_or(invalid_input("missing hash"))?;
+    b32.from_base32::<U224>()
+        .ok_or(invalid_input("invalid hash"))
+}
+
+fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
+    let d = get_hash(a)?.to_base32();
+    println(stdout, &("valid: ".to_owned() + &d))
 }
 
 pub fn run(io: &impl Io) -> io::Result<()> {
@@ -133,18 +143,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let mut a = io.args();
     a.next().unwrap();
     let command = a.next().ok_or(invalid_input("missing command"))?;
-    fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
-        let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-        b32.from_base32::<U224>()
-            .ok_or(invalid_input("invalid hash"))
-    }
     match command.as_str() {
-        "validate" => {
-            let d = get_hash(&mut a)?;
-            print(stdout, "valid: ")?;
-            println(stdout, &d.to_base32())?;
-            Ok(())
-        }
+        "validate" => validate(&mut a, stdout),
         "hash" => add(io, &mut a, |_| (), false),
         "add" => add(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
@@ -154,16 +154,12 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 &ForestNodeId::new(NodeType::Root, &d),
                 &mut io.create(&path)?,
                 io,
-            )?;
-            Ok(())
+            )
         }
-        "info" => {
-            println(
-                stdout,
-                &("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."),
-            )?;
-            Ok(())
-        }
+        "info" => println(
+            stdout,
+            &("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."),
+        ),
         _ => Err(invalid_input("unknown command")),
     }
 }
