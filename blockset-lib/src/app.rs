@@ -150,11 +150,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
         "get" => {
             let d = get_hash(&mut a)?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
-            FileForest(io).restore(
-                &ForestNodeId::new(NodeType::Root, &d),
-                &mut io.create(&path)?,
-                io,
-            )
+            let w = &mut io.create(&path)?;
+            FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
         "info" => println(
             stdout,
