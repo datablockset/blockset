@@ -1,4 +1,3 @@
-use core::panic;
 use std::io::{self, Write};
 
 use io_trait::Io;
