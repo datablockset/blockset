@@ -64,7 +64,9 @@ fn read_to_tree<T: TreeAdd>(
     loop {
         let pr = file.progress();
         set_progress(&mut state, display_new, new, pr?)?;
-        if file_read(&mut file, &mut tree, &mut new)? { break }
+        if file_read(&mut file, &mut tree, &mut new)? {
+            break;
+        }
     }
     Ok(tree.end()?.0.to_base32())
 }
@@ -82,6 +84,34 @@ fn invalid_input(s: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, s)
 }
 
+fn is_to_posix_eol(a: &mut impl Iterator<Item = String>) -> io::Result<bool> {
+    Ok(if let Some(option) = a.next() {
+        if option != "--to-posix-eol" {
+            return Err(invalid_input("unknown option"));
+        }
+        true
+    } else {
+        false
+    })
+}
+
+fn read_to_tree_file(
+    to_posix_eol: bool,
+    s: impl TreeAdd,
+    f: impl Read + Progress,
+    io: &impl Io,
+    display_new: bool,
+) -> io::Result<String> {
+    Ok(if to_posix_eol {
+        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
+        // is smaller than `len`. Proposed solution:
+        // a Read implementation which can also report a progress.
+        read_to_tree(s, ToPosixEol::new(f), io, display_new)?
+    } else {
+        read_to_tree(s, f, io, display_new)?
+    })
+}
+
 fn add<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
     a: &mut T::Args,
@@ -90,25 +120,10 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
 ) -> io::Result<()> {
     let stdout = &mut io.stdout();
     let path = a.next().ok_or(invalid_input("missing file name"))?;
-    let to_posix_eol = if let Some(option) = a.next() {
-        if option != "--to-posix-eol" {
-            return Err(invalid_input("unknown option"));
-        }
-        true
-    } else {
-        false
-    };
+    let to_posix_eol = is_to_posix_eol(a)?;
     // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
-    let s = storage(io);
-    let k = if to_posix_eol {
-        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
-        // is smaller than `len`. Proposed solution:
-        // a Read implementation which can also report a progress.
-        read_to_tree(s, ToPosixEol::new(f), io, display_new)?
-    } else {
-        read_to_tree(s, f, io, display_new)?
-    };
+    let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
     println(stdout, &k)?;
     Ok(())
 }
