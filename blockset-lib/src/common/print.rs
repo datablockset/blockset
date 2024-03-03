@@ -1,4 +1,4 @@
-use std::io::{Write, self};
+use std::io::{self, Write};
 
 pub trait Print: Write {
     fn print(&mut self, s: &str) -> io::Result<()> {
