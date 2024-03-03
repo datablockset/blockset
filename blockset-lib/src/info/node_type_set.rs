@@ -33,20 +33,20 @@ mod test {
     use crate::cdt::node_type::NodeType;
 
     #[inline(never)]
-    fn check(x: NodeType, y: NodeType, union: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet) {
+    fn check(x: NodeType, y: NodeType, union: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet, intersection: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet) {
         let xi = 1 << x as u8;
         let yi = 1 << y as u8;
         let xs = NodeTypeSet::new(x);
         let ys = NodeTypeSet::new(y);
         assert_eq!(union(xs, ys).0, xi | yi);
-        assert_eq!(xs.intersection(ys).0, xi & yi);
+        assert_eq!(intersection(xs, ys).0, xi & yi);
     }
 
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        check(NodeType::Child, NodeType::Child, NodeTypeSet::union);
-        check(NodeType::Child, NodeType::Root, NodeTypeSet::union);
+        check(NodeType::Child, NodeType::Child, NodeTypeSet::union, NodeTypeSet::intersection);
+        check(NodeType::Child, NodeType::Root, NodeTypeSet::union, NodeTypeSet::intersection);
         let x = NodeTypeSet::new(NodeType::Root);
         assert_eq!(x.0, 1);
         let y = NodeTypeSet::new(NodeType::Child);
