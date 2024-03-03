@@ -7,6 +7,7 @@ use crate::{
     common::{
         base32::{StrEx, ToBase32},
         eol::ToPosixEol,
+        print::Print,
         progress::{self, Progress},
         status_line::{mb, StatusLine},
     },
@@ -70,15 +71,6 @@ fn read_to_tree<T: TreeAdd>(
     }
 }
 
-fn print(w: &mut impl Write, s: &str) -> io::Result<()> {
-    w.write_all(s.as_bytes())
-}
-
-fn println(w: &mut impl Write, s: &str) -> io::Result<()> {
-    print(w, s)?;
-    print(w, "\n")
-}
-
 fn invalid_input(s: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, s)
 }
@@ -123,7 +115,7 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
     // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
     let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
-    println(stdout, &k)
+    stdout.println(&k)
 }
 
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
@@ -134,7 +126,7 @@ fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
 
 fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
     let d = get_hash(a)?.to_base32();
-    println(stdout, &("valid: ".to_owned() + &d))
+    stdout.println(&("valid: ".to_owned() + &d))
 }
 
 pub fn run(io: &impl Io) -> io::Result<()> {
@@ -152,10 +144,9 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let w = &mut io.create(&path)?;
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
-        "info" => println(
-            stdout,
-            &("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."),
-        ),
+        "info" => {
+            stdout.println(&("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."))
+        }
         _ => Err(invalid_input("unknown command")),
     }
 }

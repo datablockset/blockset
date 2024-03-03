@@ -4,3 +4,4 @@ pub mod bit_vec;
 pub mod eol;
 pub mod progress;
 pub mod status_line;
+pub mod print;
