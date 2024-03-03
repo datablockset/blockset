@@ -38,11 +38,13 @@ mod test {
         y: NodeType,
         union: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet,
         intersection: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet,
+        eq: fn(NodeTypeSet, NodeTypeSet) -> bool,
     ) {
         let xi = 1 << x as u8;
         let yi = 1 << y as u8;
         let xs = NodeTypeSet::new(x);
         let ys = NodeTypeSet::new(y);
+        assert!(eq(xs, xs));
         assert_eq!(union(xs, ys).0, xi | yi);
         assert_eq!(intersection(xs, ys).0, xi & yi);
     }
