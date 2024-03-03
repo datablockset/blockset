@@ -57,12 +57,14 @@ mod test {
             NodeType::Child,
             NodeTypeSet::union,
             NodeTypeSet::intersection,
+            NodeTypeSet::eq,
         );
         check(
             NodeType::Child,
             NodeType::Root,
             NodeTypeSet::union,
             NodeTypeSet::intersection,
+            NodeTypeSet::eq,
         );
         let x = NodeTypeSet::new(NodeType::Root);
         assert_eq!(x.0, 1);
