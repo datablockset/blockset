@@ -65,10 +65,9 @@ fn read_to_tree<T: TreeAdd>(
         let pr = file.progress();
         set_progress(&mut state, display_new, new, pr?)?;
         if file_read(&mut file, &mut tree, &mut new)? {
-            break;
+            return Ok(tree.end()?.0.to_base32());
         }
     }
-    Ok(tree.end()?.0.to_base32())
 }
 
 fn print(w: &mut impl Write, s: &str) -> io::Result<()> {
