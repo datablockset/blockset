@@ -115,7 +115,7 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
     // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
     let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
-    stdout.println(&k)
+    stdout.println([k.as_str()])
 }
 
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
@@ -126,7 +126,7 @@ fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
 
 fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
     let d = get_hash(a)?.to_base32();
-    stdout.println(&("valid: ".to_owned() + &d))
+    stdout.println(["valid: ", &d.as_str()])
 }
 
 pub fn run(io: &impl Io) -> io::Result<()> {
@@ -144,9 +144,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let w = &mut io.create(&path)?;
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
-        "info" => {
-            stdout.println(&("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."))
-        }
+        "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
         _ => Err(invalid_input("unknown command")),
     }
 }
