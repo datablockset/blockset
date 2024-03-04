@@ -36,14 +36,15 @@ mod test {
     fn check(
         x: NodeType,
         y: NodeType,
+        new: fn(NodeType) -> NodeTypeSet,
         union: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet,
         intersection: fn(NodeTypeSet, NodeTypeSet) -> NodeTypeSet,
         eq: fn(NodeTypeSet, NodeTypeSet) -> bool,
     ) {
         let xi = 1 << x as u8;
         let yi = 1 << y as u8;
-        let xs = NodeTypeSet::new(x);
-        let ys = NodeTypeSet::new(y);
+        let xs = new(x);
+        let ys = new(y);
         assert!(eq(xs, xs));
         assert_eq!(union(xs, ys).0, xi | yi);
         assert_eq!(intersection(xs, ys).0, xi & yi);
@@ -55,6 +56,7 @@ mod test {
         check(
             NodeType::Child,
             NodeType::Child,
+            NodeTypeSet::new,
             NodeTypeSet::union,
             NodeTypeSet::intersection,
             NodeTypeSet::eq,
@@ -62,6 +64,7 @@ mod test {
         check(
             NodeType::Child,
             NodeType::Root,
+            NodeTypeSet::new,
             NodeTypeSet::union,
             NodeTypeSet::intersection,
             NodeTypeSet::eq,

@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-github-hosted-runners
-        os: [windows-latest, ubuntu-latest, macos-13]
+        os: [windows-latest, ubuntu-latest, macos-14]
         type: ['', '--release']
     runs-on: ${{ matrix.os }}
     steps:
@@ -50,7 +50,7 @@ jobs:
     - run: cargo test ${{ matrix.type }}
 
   coverage:
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
     - uses: taiki-e/install-action@cargo-tarpaulin
