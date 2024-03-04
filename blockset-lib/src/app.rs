@@ -71,8 +71,8 @@ fn read_to_tree<T: TreeAdd>(
     }
 }
 
-fn invalid_input(s: &str) -> io::Error {
-    io::Error::new(ErrorKind::InvalidInput, s)
+fn invalid_input(error: &str) -> io::Error {
+    io::Error::new(ErrorKind::InvalidInput, error)
 }
 
 fn is_to_posix_eol(a: &mut impl Iterator<Item = String>) -> io::Result<bool> {
@@ -126,7 +126,7 @@ fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
 
 fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
     let d = get_hash(a)?.to_base32();
-    stdout.println(["valid: ", &d.as_str()])
+    stdout.println(["valid: ", d.as_str()])
 }
 
 pub fn run(io: &impl Io) -> io::Result<()> {
