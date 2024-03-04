@@ -13,19 +13,19 @@ mod test {
     use super::to_ascii;
 
     #[inline(never)]
-    fn x(x: char, y: Option<u8>) {
-        assert_eq!(to_ascii(x), y);
+    fn x(x: char, y: Option<u8>, f: fn(char) -> Option<u8>) {
+        assert_eq!(f(x), y);
         if let Some(y) = y {
-            assert_eq!(to_ascii(char::from_u32(x as u32 / 2).unwrap()), Some(y / 2));
+            assert_eq!(f(char::from_u32(x as u32 / 2).unwrap()), Some(y / 2));
         } else {
-            assert_eq!(to_ascii(char::from_u32(x as u32 / 2).unwrap()), None);
+            assert_eq!(f(char::from_u32(x as u32 / 2).unwrap()), None);
         }
     }
 
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        x('a', Some(97));
-        x('🦀', None);
+        x('a', Some(97), to_ascii);
+        x('🦀', None, to_ascii);
     }
 }
