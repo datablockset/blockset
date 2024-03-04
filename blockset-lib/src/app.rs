@@ -7,6 +7,7 @@ use crate::{
     common::{
         base32::{StrEx, ToBase32},
         eol::ToPosixEol,
+        print::Print,
         progress::{self, Progress},
         status_line::{mb, StatusLine},
     },
@@ -43,13 +44,10 @@ fn file_read(
 ) -> io::Result<bool> {
     let mut buf = [0; 1024];
     let size = file.read(buf.as_mut())?;
-    if size == 0 {
-        return Ok(true);
-    }
-    for c in buf[0..size].iter() {
+    for c in buf[..size].iter() {
         *new += tree.push(*c)?;
     }
-    Ok(false)
+    Ok(size == 0)
 }
 
 fn read_to_tree<T: TreeAdd>(
@@ -65,23 +63,13 @@ fn read_to_tree<T: TreeAdd>(
         let pr = file.progress();
         set_progress(&mut state, display_new, new, pr?)?;
         if file_read(&mut file, &mut tree, &mut new)? {
-            break;
+            return Ok(tree.end()?.0.to_base32());
         }
     }
-    Ok(tree.end()?.0.to_base32())
 }
 
-fn print(w: &mut impl Write, s: &str) -> io::Result<()> {
-    w.write_all(s.as_bytes())
-}
-
-fn println(w: &mut impl Write, s: &str) -> io::Result<()> {
-    print(w, s)?;
-    print(w, "\n")
-}
-
-fn invalid_input(s: &str) -> io::Error {
-    io::Error::new(ErrorKind::InvalidInput, s)
+fn invalid_input(error: &str) -> io::Error {
+    io::Error::new(ErrorKind::InvalidInput, error)
 }
 
 fn is_to_posix_eol(a: &mut impl Iterator<Item = String>) -> io::Result<bool> {
@@ -103,9 +91,6 @@ fn read_to_tree_file(
     display_new: bool,
 ) -> io::Result<String> {
     if to_posix_eol {
-        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
-        // is smaller than `len`. Proposed solution:
-        // a Read implementation which can also report a progress.
         read_to_tree(s, ToPosixEol::new(f), io, display_new)
     } else {
         read_to_tree(s, f, io, display_new)
@@ -121,10 +106,9 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
     let stdout = &mut io.stdout();
     let path = a.next().ok_or(invalid_input("missing file name"))?;
     let to_posix_eol = is_to_posix_eol(a)?;
-    // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
     let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
-    println(stdout, &k)
+    stdout.println([k.as_str()])
 }
 
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
@@ -135,7 +119,7 @@ fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
 
 fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
     let d = get_hash(a)?.to_base32();
-    println(stdout, &("valid: ".to_owned() + &d))
+    stdout.println(["valid: ", d.as_str()])
 }
 
 pub fn run(io: &impl Io) -> io::Result<()> {
@@ -153,10 +137,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let w = &mut io.create(&path)?;
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
-        "info" => println(
-            stdout,
-            &("size: ".to_owned() + &calculate_total(io)?.to_string() + " B."),
-        ),
+        "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
         _ => Err(invalid_input("unknown command")),
     }
 }
