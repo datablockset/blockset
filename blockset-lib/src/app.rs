@@ -44,13 +44,10 @@ fn file_read(
 ) -> io::Result<bool> {
     let mut buf = [0; 1024];
     let size = file.read(buf.as_mut())?;
-    if size == 0 {
-        return Ok(true);
-    }
-    for c in buf[0..size].iter() {
+    for c in buf[..size].iter() {
         *new += tree.push(*c)?;
     }
-    Ok(false)
+    Ok(size == 0)
 }
 
 fn read_to_tree<T: TreeAdd>(
@@ -94,9 +91,6 @@ fn read_to_tree_file(
     display_new: bool,
 ) -> io::Result<String> {
     if to_posix_eol {
-        // this may lead to incorrect progress bar because, a size of a file with replaced CRLF
-        // is smaller than `len`. Proposed solution:
-        // a Read implementation which can also report a progress.
         read_to_tree(s, ToPosixEol::new(f), io, display_new)
     } else {
         read_to_tree(s, f, io, display_new)
@@ -112,7 +106,6 @@ fn add<'a, T: Io, S: 'a + TreeAdd>(
     let stdout = &mut io.stdout();
     let path = a.next().ok_or(invalid_input("missing file name"))?;
     let to_posix_eol = is_to_posix_eol(a)?;
-    // let len = io.metadata(&path)?.len();
     let f = io.open(&path)?;
     let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
     stdout.println([k.as_str()])
