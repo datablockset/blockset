@@ -13,7 +13,7 @@ fn read_dir_recursive(io: &impl Io, path: &str) -> Vec<String> {
             if s.metadata().unwrap().is_dir() {
                 read_dir_recursive(io, s.path().as_str())
             } else {
-                [s.path().clone()].to_vec()
+                [s.path().replace('\\', "/")].to_vec()
             }
         })
         .collect()
