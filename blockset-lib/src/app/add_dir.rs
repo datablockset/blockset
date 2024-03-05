@@ -21,13 +21,10 @@ fn read_dir_recursive(io: &impl Io, path: &str) -> Vec<String> {
 
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"))?;
-    let list = read_dir_recursive(io, path.as_str())
-        .into_iter()
-        .map(|s| {
-            let s16 = s.encode_utf16().collect::<Vec<_>>();
-            GLOBAL.new_js_string(s16)
-        })
-        .collect::<Vec<_>>();
+    let list = read_dir_recursive(io, path.as_str()).into_iter().map(|s| {
+        let s16 = s.encode_utf16().collect::<Vec<_>>();
+        GLOBAL.new_js_string(s16)
+    });
     let list = to_json(GLOBAL.new_js_array(list)).map_err(|_| invalid_input("to_json"))?;
     io.stdout().println(["add-dir: ", list.as_str()])
 }
