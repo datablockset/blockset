@@ -29,9 +29,16 @@ mod test {
 
     use super::BitVec;
 
+    fn check(v: u32, len: u8, f: fn(v: u32, len: u8) -> BitVec) {
+        let x = f(v, len);
+        assert_eq!(x.value, v as u64);
+        assert_eq!(x.len, len);
+    }
+
     #[test]
     #[wasm_bindgen_test]
     fn test() {
+        check(0b1010, 4, BitVec::new);
         let x = BitVec::new(0b1010, 4);
         assert_eq!(x.value, 0b1010);
         assert_eq!(x.len, 4);
