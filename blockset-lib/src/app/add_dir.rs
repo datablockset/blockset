@@ -8,14 +8,18 @@ use crate::{app::invalid_input, common::print::Print};
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"))?;
     let list = io.read_dir(path.as_str())?;
-    let a = GLOBAL.new_js_array(list.into_iter().map(|s| {
-        if s.metadata().unwrap().is_dir() {
-            GLOBAL.new_js_string([])
-        } else {
-            let s16 = s.path().encode_utf16().collect::<Vec<_>>();
-            GLOBAL.new_js_string(s16)
-        }
-    }));
+    let list = list
+        .into_iter()
+        .flat_map(|s| {
+            if s.metadata().unwrap().is_dir() {
+                Vec::default() // GLOBAL.new_js_string([])
+            } else {
+                let s16 = s.path().encode_utf16().collect::<Vec<_>>();
+                [GLOBAL.new_js_string(s16)].to_vec()
+            }
+        })
+        .collect::<Vec<_>>();
+    let a = GLOBAL.new_js_array(list);
     let list = to_json(a).map_err(|_| invalid_input("to_json"))?;
     io.stdout().println(["add-dir: ", list.as_str()])
 }
@@ -42,6 +46,6 @@ mod test {
         a.next().unwrap();
         add_dir(&io, a).unwrap();
         let result = io.stdout.to_stdout();
-        assert_eq!(result, "add-dir: [\"a/b.txt\",\"a/d.txt\",\"\"]\n");
+        assert_eq!(result, "add-dir: [\"a/b.txt\",\"a/d.txt\"]\n");
     }
 }
