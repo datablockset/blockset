@@ -5,6 +5,20 @@ use nanvm_lib::{js::new::New, mem::global::GLOBAL, serializer::to_json};
 
 use crate::{app::invalid_input, common::print::Print};
 
+fn read_dir_recursive(io: &impl Io, path: &str) -> Vec<String> {
+    io.read_dir(path)
+        .unwrap()
+        .into_iter()
+        .flat_map(|s| {
+            if s.metadata().unwrap().is_dir() {
+                read_dir_recursive(io, s.path().as_str())
+            } else {
+                [s.path().clone()].to_vec()
+            }
+        })
+        .collect()
+}
+
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"))?;
     let list = io.read_dir(path.as_str())?;
@@ -19,8 +33,7 @@ pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
             }
         })
         .collect::<Vec<_>>();
-    let a = GLOBAL.new_js_array(list);
-    let list = to_json(a).map_err(|_| invalid_input("to_json"))?;
+    let list = to_json(GLOBAL.new_js_array(list)).map_err(|_| invalid_input("to_json"))?;
     io.stdout().println(["add-dir: ", list.as_str()])
 }
 
