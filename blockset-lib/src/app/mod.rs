@@ -1,9 +1,12 @@
+mod add_dir;
+
 use std::io::{self, ErrorKind, Read, Write};
+
+use add_dir::add_dir;
 
 use io_trait::Io;
 
 use crate::{
-    add_dir::add_dir,
     cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
     common::{
         base32::{StrEx, ToBase32},

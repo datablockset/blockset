@@ -1,4 +1,3 @@
-mod add_dir;
 mod app;
 mod cdt;
 mod common;
