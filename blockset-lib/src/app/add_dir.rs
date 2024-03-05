@@ -21,16 +21,11 @@ fn read_dir_recursive(io: &impl Io, path: &str) -> Vec<String> {
 
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"))?;
-    let list = io.read_dir(path.as_str())?;
-    let list = list
+    let list = read_dir_recursive(io, path.as_str())
         .into_iter()
-        .flat_map(|s| {
-            if s.metadata().unwrap().is_dir() {
-                Vec::default() // GLOBAL.new_js_string([])
-            } else {
-                let s16 = s.path().encode_utf16().collect::<Vec<_>>();
-                [GLOBAL.new_js_string(s16)].to_vec()
-            }
+        .map(|s| {
+            let s16 = s.encode_utf16().collect::<Vec<_>>();
+            GLOBAL.new_js_string(s16)
         })
         .collect::<Vec<_>>();
     let list = to_json(GLOBAL.new_js_array(list)).map_err(|_| invalid_input("to_json"))?;
@@ -59,6 +54,6 @@ mod test {
         a.next().unwrap();
         add_dir(&io, a).unwrap();
         let result = io.stdout.to_stdout();
-        assert_eq!(result, "add-dir: [\"a/b.txt\",\"a/d.txt\"]\n");
+        assert_eq!(result, "add-dir: [\"a/b.txt\",\"a/d.txt\",\"a/e/f.txt\"]\n");
     }
 }
