@@ -1,11 +1,7 @@
 use std::io;
 
 use io_trait::{DirEntry, Io};
-use nanvm_lib::{
-    js::new::New,
-    mem::global::GLOBAL,
-    serializer::to_json,
-};
+use nanvm_lib::{js::new::New, mem::global::GLOBAL, serializer::to_json};
 
 use crate::{app::invalid_input, common::print::Print};
 
@@ -16,7 +12,10 @@ pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
         let s16 = s.path().encode_utf16().collect::<Vec<_>>();
         GLOBAL.new_js_string(s16)
     }));
-    io.stdout().println(["add-dir: ", to_json(a).map_err(|_| invalid_input("to_json"))?.as_str()])
+    io.stdout().println([
+        "add-dir: ",
+        to_json(a).map_err(|_| invalid_input("to_json"))?.as_str(),
+    ])
 }
 
 #[cfg(test)]
