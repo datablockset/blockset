@@ -12,10 +12,8 @@ pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
         let s16 = s.path().encode_utf16().collect::<Vec<_>>();
         GLOBAL.new_js_string(s16)
     }));
-    io.stdout().println([
-        "add-dir: ",
-        to_json(a).map_err(|_| invalid_input("to_json"))?.as_str(),
-    ])
+    let list = to_json(a).map_err(|_| invalid_input("to_json"))?;
+    io.stdout().println(["add-dir: ", list.as_str()])
 }
 
 #[cfg(test)]
