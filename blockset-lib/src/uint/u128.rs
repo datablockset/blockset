@@ -51,9 +51,15 @@ mod test {
 
     use crate::uint::u128::shl;
 
+    fn check_shl(a: u128, b: i32, expected: u128, f: fn(u128, i32) -> u128) {
+        assert_eq!(f(a, b), expected);
+    }
+
     #[wasm_bindgen_test]
     #[test]
     fn shl_test() {
-        assert_eq!(shl(1, -130), 0);
+        check_shl(1, -130, 0, shl);
+        check_shl(2, -1, 1, shl);
+        check_shl(1, 1, 2, shl);
     }
 }
