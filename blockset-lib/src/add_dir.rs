@@ -2,19 +2,12 @@ use std::io;
 
 use io_trait::{DirEntry, Io};
 use nanvm_lib::{
-    js::{any::Any, new::New},
-    mem::{global::GLOBAL, manager::Dealloc},
-    serializer::WriteJson,
+    js::new::New,
+    mem::global::GLOBAL,
+    serializer::to_json,
 };
 
 use crate::{app::invalid_input, common::print::Print};
-
-fn to_json(a: Any<impl Dealloc>) -> io::Result<String> {
-    let mut s = String::default();
-    s.write_json(a)
-        .map_err(|_| invalid_input("write to JSON"))?;
-    Ok(s)
-}
 
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"))?;
@@ -23,7 +16,7 @@ pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
         let s16 = s.path().encode_utf16().collect::<Vec<_>>();
         GLOBAL.new_js_string(s16)
     }));
-    io.stdout().println(["add-dir: ", to_json(a)?.as_str()])
+    io.stdout().println(["add-dir: ", to_json(a).map_err(|_| invalid_input("to_json"))?.as_str()])
 }
 
 #[cfg(test)]
