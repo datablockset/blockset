@@ -1,8 +1,10 @@
 mod add_dir;
+mod add_file;
 
 use std::io::{self, ErrorKind, Read, Write};
 
 use add_dir::add_dir;
+use add_file::add_file;
 
 use io_trait::Io;
 
@@ -101,20 +103,6 @@ fn read_to_tree_file(
     }
 }
 
-fn add<'a, T: Io, S: 'a + TreeAdd>(
-    io: &'a T,
-    a: &mut T::Args,
-    storage: impl Fn(&'a T) -> S,
-    display_new: bool,
-) -> io::Result<()> {
-    let stdout = &mut io.stdout();
-    let path = a.next().ok_or(invalid_input("missing file name"))?;
-    let to_posix_eol = is_to_posix_eol(a)?;
-    let f = io.open(&path)?;
-    let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
-    stdout.println([k.as_str()])
-}
-
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
     let b32 = a.next().ok_or(invalid_input("missing hash"))?;
     b32.from_base32::<U224>()
@@ -133,8 +121,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
         "validate" => validate(&mut a, stdout),
-        "hash" => add(io, &mut a, |_| (), false),
-        "add" => add(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
+        "hash" => add_file(io, &mut a, |_| (), false),
+        "add" => add_file(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
             let d = get_hash(&mut a)?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
