@@ -3,6 +3,7 @@ use std::io::{self, ErrorKind, Read, Write};
 use io_trait::Io;
 
 use crate::{
+    add_dir::add_dir,
     cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
     common::{
         base32::{StrEx, ToBase32},
@@ -68,7 +69,7 @@ fn read_to_tree<T: TreeAdd>(
     }
 }
 
-fn invalid_input(error: &str) -> io::Error {
+pub fn invalid_input(error: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, error)
 }
 
@@ -138,6 +139,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
+        "add-dir" => add_dir(io, a),
         _ => Err(invalid_input("unknown command")),
     }
 }
