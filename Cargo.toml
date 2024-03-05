@@ -14,4 +14,5 @@ io-trait = "0.8.0"
 io-impl = "0.8.1"
 io-test = "0.8.1"
 wasm-bindgen-test = "0.3.41"
-nanvm-lib = "0.0.1"
+# nanvm-lib = "0.0.1"
+nanvm-lib = { git = "https://github.com/functionalscript/nanvm", branch = "to-json" }
