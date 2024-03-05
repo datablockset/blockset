@@ -27,8 +27,10 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        let io = VirtualIo::new(&[]);
-        let x = io.args();
-        add_dir(&io, x).unwrap();
+        let io = VirtualIo::new(&["a"]);
+        io.create_dir("a").unwrap();
+        let mut a = io.args();
+        a.next().unwrap();
+        add_dir(&io, a).unwrap();
     }
 }
