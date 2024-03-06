@@ -3,7 +3,7 @@ use std::io;
 use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
     common::cast::Cast,
-    js::{any::Any, any_cast::AnyCast, js_object::Property, js_string::new_string, new::New},
+    js::{any_cast::AnyCast, js_object::Property, js_string::new_string, new::New},
     mem::{global::GLOBAL, manager::Manager},
     serializer::to_json,
 };
@@ -24,10 +24,6 @@ fn read_dir_recursive<I: Io>(io: &I, path: &str) -> Vec<I::DirEntry> {
         .collect()
 }
 
-fn to_js_string<M: Manager>(m: M, s: &str) -> Any<M::Dealloc> {
-    m.new_js_string(s.encode_utf16().collect::<Vec<_>>())
-}
-
 fn property<M: Manager>(m: M, e: impl DirEntry) -> Property<M::Dealloc> {
     let path = e
         .path()
@@ -41,10 +37,8 @@ fn property<M: Manager>(m: M, e: impl DirEntry) -> Property<M::Dealloc> {
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"));
     let list = read_dir_recursive(io, path?.as_str());
-    let list = list
-        .into_iter()
-        .map(|s| to_js_string(GLOBAL, s.path().replace('\\', "/").as_str()));
-    let list = to_json(GLOBAL.new_js_array(list)).map_err(|_| invalid_input("to_json"))?;
+    let list = list.into_iter().map(|s| property(GLOBAL, s));
+    let list = to_json(GLOBAL.new_js_object(list)).map_err(|_| invalid_input("to_json"))?;
     io.stdout().println(["add-dir: ", list.as_str()])
 }
 
@@ -70,6 +64,6 @@ mod test {
         a.next().unwrap();
         add_dir(&io, a).unwrap();
         let result = io.stdout.to_stdout();
-        assert_eq!(result, "add-dir: [\"a/b.txt\",\"a/d.txt\",\"a/e/f.txt\"]\n");
+        assert_eq!(result, "add-dir: {\"a/b.txt\":0,\"a/d.txt\":0,\"a/e/f.txt\":0}\n");
     }
 }
