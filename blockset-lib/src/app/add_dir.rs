@@ -3,7 +3,7 @@ use std::io;
 use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
     common::cast::Cast,
-    js::{any::Any, new::New},
+    js::{any::Any, any_cast::AnyCast, js_object::Property, js_string::new_string, new::New},
     mem::{global::GLOBAL, manager::Manager},
     serializer::to_json,
 };
@@ -26,6 +26,16 @@ fn read_dir_recursive<I: Io>(io: &I, path: &str) -> Vec<I::DirEntry> {
 
 fn to_js_string<M: Manager>(m: M, s: &str) -> Any<M::Dealloc> {
     m.new_js_string(s.encode_utf16().collect::<Vec<_>>())
+}
+
+fn property<M: Manager>(m: M, e: impl DirEntry) -> Property<M::Dealloc> {
+    let path = e
+        .path()
+        .replace('\\', "/")
+        .encode_utf16()
+        .collect::<Vec<_>>();
+    let len = e.metadata().unwrap().len() as f64;
+    (new_string(m, path).to_ref(), len.move_to_any())
 }
 
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
