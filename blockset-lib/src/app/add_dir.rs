@@ -2,7 +2,10 @@ use std::io;
 
 use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
-    common::cast::Cast, js::{any::Any, new::New}, mem::{global::GLOBAL, manager::Manager}, serializer::to_json
+    common::cast::Cast,
+    js::{any::Any, new::New},
+    mem::{global::GLOBAL, manager::Manager},
+    serializer::to_json,
 };
 
 use crate::{app::invalid_input, common::print::Print};
@@ -28,7 +31,9 @@ fn to_js_string<M: Manager>(m: M, s: &str) -> Any<M::Dealloc> {
 pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing directory name"));
     let list = read_dir_recursive(io, path?.as_str());
-    let list = list.into_iter().map(|s| to_js_string(GLOBAL, s.path().replace('\\', "/").as_str()));
+    let list = list
+        .into_iter()
+        .map(|s| to_js_string(GLOBAL, s.path().replace('\\', "/").as_str()));
     let list = to_json(GLOBAL.new_js_array(list)).map_err(|_| invalid_input("to_json"))?;
     io.stdout().println(["add-dir: ", list.as_str()])
 }
