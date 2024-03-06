@@ -44,6 +44,8 @@ pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
 
 #[cfg(test)]
 mod test {
+    use std::io::Write;
+
     use io_test::VirtualIo;
     use io_trait::Io;
     use wasm_bindgen_test::wasm_bindgen_test;
@@ -55,7 +57,10 @@ mod test {
     fn test() {
         let io = VirtualIo::new(&["a"]);
         io.create_dir("a").unwrap();
-        io.create("a/b.txt").unwrap();
+        {
+            let mut f = io.create("a/b.txt").unwrap();
+            f.write_all(b"Hello world!").unwrap();
+        }
         io.create("c.txt").unwrap();
         io.create("a/d.txt").unwrap();
         io.create_dir("a/e").unwrap();
@@ -66,7 +71,7 @@ mod test {
         let result = io.stdout.to_stdout();
         assert_eq!(
             result,
-            "add-dir: {\"a/b.txt\":0,\"a/d.txt\":0,\"a/e/f.txt\":0}\n"
+            "add-dir: {\"a/b.txt\":12,\"a/d.txt\":0,\"a/e/f.txt\":0}\n"
         );
     }
 }
