@@ -22,3 +22,7 @@ A special tool which can analyze files, warn if there are `CRLF` and fix if requ
 - `non-UTF8 (most likely binary)`
 - `UTF8`
 - `UTF8 with CRLF`
+
+Plan:
+1. create a separate tool,
+2. remove EOL handling from the BLOCKSET.
