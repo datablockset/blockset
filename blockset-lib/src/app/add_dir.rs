@@ -64,6 +64,9 @@ mod test {
         a.next().unwrap();
         add_dir(&io, a).unwrap();
         let result = io.stdout.to_stdout();
-        assert_eq!(result, "add-dir: {\"a/b.txt\":0,\"a/d.txt\":0,\"a/e/f.txt\":0}\n");
+        assert_eq!(
+            result,
+            "add-dir: {\"a/b.txt\":0,\"a/d.txt\":0,\"a/e/f.txt\":0}\n"
+        );
     }
 }
