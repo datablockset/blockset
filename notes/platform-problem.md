@@ -16,4 +16,9 @@ A layer of abstraction when the BLOCKSET and other programs communicate using th
   1. do nothing or
   2. convert `LF` to `CRLF`.
 
-Default behavior: 1.1 and 2.1.
+Default behavior should be 1.1 and 2.1.
+
+A special tool which can analyze files, warn if there are `CRLF` and fix if required. Output:
+- `non-UTF8 (most likely binary)`
+- `UTF8`
+- `UTF8 with CRLF`
