@@ -25,8 +25,7 @@ fn read_dir_recursive<I: Io>(io: &I, path: &str) -> Vec<I::DirEntry> {
 }
 
 fn property<M: Manager>(m: M, path_len: usize, e: impl DirEntry) -> Property<M::Dealloc> {
-    let path = e
-        .path()[path_len+1..]
+    let path = e.path()[path_len + 1..]
         .replace('\\', "/")
         .encode_utf16()
         .collect::<Vec<_>>();
