@@ -34,44 +34,9 @@ fn property<M: Manager>(m: M, e: impl DirEntry) -> Property<M::Dealloc> {
     (new_string(m, path).to_ref(), len.move_to_any())
 }
 
-pub fn add_dir<T: Io>(io: &T, mut a: T::Args) -> io::Result<()> {
-    let path = a.next().ok_or(invalid_input("missing directory name"));
-    let list = read_dir_recursive(io, path?.as_str());
+pub fn add_dir<T: Io>(io: &T, path: &str) -> io::Result<()> {
+    let list = read_dir_recursive(io, path);
     let list = list.into_iter().map(|s| property(GLOBAL, s));
-    let list = to_json(GLOBAL.new_js_object(list)).map_err(|_| invalid_input("to_json"))?;
-    io.stdout().println(["add-dir: ", list.as_str()])
-}
-
-#[cfg(test)]
-mod test {
-    use std::io::Write;
-
-    use io_test::VirtualIo;
-    use io_trait::Io;
-    use wasm_bindgen_test::wasm_bindgen_test;
-
-    use super::add_dir;
-
-    #[test]
-    #[wasm_bindgen_test]
-    fn test() {
-        let io = VirtualIo::new(&["a"]);
-        io.create_dir("a").unwrap();
-        {
-            let mut f = io.create("a/b.txt").unwrap();
-            f.write_all(b"Hello world!").unwrap();
-        }
-        io.create("c.txt").unwrap();
-        io.create("a/d.txt").unwrap();
-        io.create_dir("a/e").unwrap();
-        io.create("a/e/f.txt").unwrap();
-        let mut a = io.args();
-        a.next().unwrap();
-        add_dir(&io, a).unwrap();
-        let result = io.stdout.to_stdout();
-        assert_eq!(
-            result,
-            "add-dir: {\"a/b.txt\":12,\"a/d.txt\":0,\"a/e/f.txt\":0}\n"
-        );
-    }
+    let list = to_json(GLOBAL.new_js_object(list)).map_err(|_| invalid_input("to_json"));
+    io.stdout().println(["add-dir: ", list?.as_str()])
 }

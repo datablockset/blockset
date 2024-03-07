@@ -4,7 +4,7 @@ mod add_file;
 use std::io::{self, ErrorKind, Read, Write};
 
 use add_dir::add_dir;
-use add_file::add_file;
+use add_file::add_entry;
 
 use io_trait::Io;
 
@@ -121,8 +121,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
         "validate" => validate(&mut a, stdout),
-        "hash" => add_file(io, &mut a, |_| (), false),
-        "add" => add_file(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
+        "hash" => add_entry(io, &mut a, |_| (), false),
+        "add" => add_entry(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
             let d = get_hash(&mut a)?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
@@ -130,7 +130,6 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
-        "add-dir" => add_dir(io, a),
         _ => Err(invalid_input("unknown command")),
     }
 }
@@ -139,6 +138,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
 mod test {
     use io_test::VirtualIo;
     use io_trait::Io;
+    use std::io::Write;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{cdt::node_id::root, common::base32::ToBase32, run, uint::u256::U256};
@@ -359,5 +359,29 @@ mod test {
         let mut io = VirtualIo::new(&["add", "a.txt", "--x"]);
         let e = run(&mut io);
         assert_eq!(e.unwrap_err().to_string(), "unknown option");
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_add_dir() {
+        let mut io = VirtualIo::new(&["add", "a"]);
+        io.create_dir("a").unwrap();
+        {
+            let mut f = io.create("a/b.txt").unwrap();
+            f.write_all(b"Hello world!").unwrap();
+        }
+        io.create("c.txt").unwrap();
+        io.create("a/d.txt").unwrap();
+        io.create_dir("a/e").unwrap();
+        io.create("a/e/f.txt").unwrap();
+        let mut a = io.args();
+        a.next().unwrap();
+        run(&mut io).unwrap();
+        // add_dir(&io, "a").unwrap();
+        let result = io.stdout.to_stdout();
+        assert_eq!(
+            result,
+            "add-dir: {\"a/b.txt\":12,\"a/d.txt\":0,\"a/e/f.txt\":0}\n"
+        );
     }
 }

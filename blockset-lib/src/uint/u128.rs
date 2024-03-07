@@ -61,5 +61,6 @@ mod test {
         check_shl(1, -130, 0, shl);
         check_shl(2, -1, 1, shl);
         check_shl(1, 1, 2, shl);
+        check_shl(1, 130, 0, shl);
     }
 }
