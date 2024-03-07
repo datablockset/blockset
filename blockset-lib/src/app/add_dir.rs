@@ -4,10 +4,7 @@ use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
     common::{cast::Cast, default::default},
     js::{any_cast::AnyCast, js_object::Property, js_string::new_string, new::New},
-    mem::{
-        global::GLOBAL,
-        manager::{Dealloc, Manager},
-    },
+    mem::{global::GLOBAL, manager::Manager},
     serializer::to_json,
 };
 
