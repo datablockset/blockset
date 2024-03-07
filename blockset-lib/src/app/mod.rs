@@ -380,7 +380,7 @@ mod test {
         let result = io.stdout.to_stdout();
         assert_eq!(
             result,
-            "add-dir: {\"a/b.txt\":12,\"a/d.txt\":0,\"a/e/f.txt\":0}\n"
+            "add-dir: {\"b.txt\":12,\"d.txt\":0,\"e/f.txt\":0}\n"
         );
     }
 }

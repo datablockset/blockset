@@ -24,9 +24,9 @@ fn read_dir_recursive<I: Io>(io: &I, path: &str) -> Vec<I::DirEntry> {
         .collect()
 }
 
-fn property<M: Manager>(m: M, e: impl DirEntry) -> Property<M::Dealloc> {
+fn property<M: Manager>(m: M, path_len: usize, e: impl DirEntry) -> Property<M::Dealloc> {
     let path = e
-        .path()
+        .path()[path_len+1..]
         .replace('\\', "/")
         .encode_utf16()
         .collect::<Vec<_>>();
@@ -36,7 +36,7 @@ fn property<M: Manager>(m: M, e: impl DirEntry) -> Property<M::Dealloc> {
 
 pub fn add_dir<T: Io>(io: &T, path: &str) -> io::Result<()> {
     let list = read_dir_recursive(io, path);
-    let list = list.into_iter().map(|s| property(GLOBAL, s));
+    let list = list.into_iter().map(|s| property(GLOBAL, path.len(), s));
     let list = to_json(GLOBAL.new_js_object(list)).map_err(|_| invalid_input("to_json"));
     io.stdout().println(["add-dir: ", list?.as_str()])
 }
