@@ -3,7 +3,6 @@ mod add_file;
 
 use std::io::{self, ErrorKind, Read, Write};
 
-use add_dir::add_dir;
 use add_file::add_entry;
 
 use io_trait::Io;
