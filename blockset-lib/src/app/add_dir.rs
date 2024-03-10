@@ -51,6 +51,6 @@ fn path_to_json(io: &impl Io, path: &str) -> io::Result<String> {
 }
 
 pub fn add_dir<T: Io>(io: &T, path: &str) -> io::Result<()> {
-    io.stdout()
-        .println(["add-dir: ", path_to_json(io, path)?.as_str()])
+    let json = path_to_json(io, path)?;
+    io.stdout().println(["add-dir: ", json.as_str()])
 }
