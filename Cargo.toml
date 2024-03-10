@@ -10,6 +10,7 @@ authors = ["Sergey Shandar"]
 repository = "https://github.com/datablockset/blockset"
 
 [workspace.dependencies]
+blockset-lib = { path = "blockset-lib", version = "0.4.2" }
 io-trait = "0.10.0"
 io-impl = "0.10.0"
 io-test = "0.10.0"
