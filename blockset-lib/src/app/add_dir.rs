@@ -16,7 +16,7 @@ use nanvm_lib::{
 
 use crate::{app::invalid_input, cdt::tree_add::TreeAdd, common::print::Print};
 
-use super::{add::Add, add_file::add_file, read_to_tree};
+use super::{add::Add, read_to_tree};
 
 fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<I::DirEntry>> {
     let mut result: Vec<_> = default();
@@ -64,7 +64,7 @@ fn path_to_json<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S>(
     let mut list = Vec::default();
     for e in files {
         let f = e.path();
-        let hash = add_file(add, f.as_str())?;
+        let hash = add.add_file(f.as_str())?;
         list.push(property(GLOBAL, path.len(), f, hash));
     }
     dir_to_json(GLOBAL, list.into_iter())
