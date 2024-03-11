@@ -1,5 +1,4 @@
 mod add;
-mod add_dir;
 mod add_entry;
 
 use std::io::{self, ErrorKind, Read, Write};

@@ -1,5 +1,5 @@
 use core::ops::Deref;
-use std::io;
+use std::io::{self, Cursor};
 
 use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
@@ -14,9 +14,9 @@ use nanvm_lib::{
     serializer::to_json,
 };
 
-use crate::cdt::tree_add::TreeAdd;
+use crate::{cdt::tree_add::TreeAdd, common::print::Print};
 
-use super::{invalid_input, read_to_tree_file};
+use super::{invalid_input, read_to_tree, read_to_tree_file};
 
 pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
     pub io: &'a T,
@@ -73,7 +73,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             self.display_new,
         )
     }
-    pub fn path_to_json(&self, path: &str) -> io::Result<String> {
+    fn path_to_json(&self, path: &str) -> io::Result<String> {
         let files = read_dir_recursive(self.io, path)?;
         let mut list = Vec::default();
         for e in files {
@@ -82,5 +82,18 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             list.push(property(GLOBAL, path.len(), f, hash));
         }
         dir_to_json(GLOBAL, list.into_iter())
+    }
+    pub fn add_dir(
+        &self,
+        path: &str,
+    ) -> io::Result<()> {
+        let json = self.path_to_json(path)?;
+        let hash = read_to_tree(
+            (self.storage)(self.io),
+            Cursor::new(&json),
+            self.io,
+            self.display_new,
+        )?;
+        self.io.stdout().println([hash.as_str()])
     }
 }

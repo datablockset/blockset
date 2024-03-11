@@ -4,7 +4,7 @@ use io_trait::{Io, Metadata};
 
 use crate::{cdt::tree_add::TreeAdd, common::print::Print};
 
-use super::{add::Add, add_dir::add_dir, invalid_input, is_to_posix_eol};
+use super::{add::Add, invalid_input, is_to_posix_eol};
 
 pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
@@ -21,7 +21,7 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
         display_new,
     };
     if io.metadata(&path)?.is_dir() {
-        add_dir(&add, &path)
+        add.add_dir(&path)
     } else {
         let k = add.add_file(&path)?;
         io.stdout().println([k.as_str()])
