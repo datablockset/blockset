@@ -1,5 +1,5 @@
 use core::ops::Deref;
-use std::io;
+use std::io::{self, Cursor};
 
 use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
@@ -16,7 +16,7 @@ use nanvm_lib::{
 
 use crate::{app::invalid_input, cdt::tree_add::TreeAdd, common::print::Print};
 
-use super::{add::Add, add_file::add_file};
+use super::{add::Add, add_file::add_file, read_to_tree};
 
 fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<I::DirEntry>> {
     let mut result: Vec<_> = default();
@@ -75,6 +75,6 @@ pub fn add_dir<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S>(
     path: &str,
 ) -> io::Result<()> {
     let json = path_to_json(add, path)?;
-    // read_to_tree((add.storage)(add.io), Cursor::new(json), add.io, add.display_new)?;
-    add.io.stdout().println(["add-dir: ", json.as_str()])
+    let hash = read_to_tree((add.storage)(add.io), Cursor::new(&json), add.io, add.display_new)?;
+    add.io.stdout().println([hash.as_str()])
 }
