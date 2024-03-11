@@ -2,7 +2,7 @@ use std::io;
 
 use io_trait::{Io, Metadata};
 
-use crate::{cdt::tree_add::TreeAdd, common::print::Print};
+use crate::{cdt::tree_add::TreeAdd, common::{print::Print, status_line::StatusLine}};
 
 use super::{add::Add, invalid_input, is_to_posix_eol};
 
@@ -20,10 +20,13 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
         to_posix_eol,
         display_new,
     };
-    if io.metadata(&path)?.is_dir() {
-        add.add_dir(&path)
-    } else {
-        let k = add.add_file(&path)?;
-        io.stdout().println([k.as_str()])
-    }
+    let k = {
+        let mut state = StatusLine::new(io);
+        if io.metadata(&path)?.is_dir() {
+            add.add_dir(&mut state, &path)?
+        } else {
+            add.add_file(&mut state, &path)?
+        }
+    };
+    io.stdout().println([k.as_str()])
 }
