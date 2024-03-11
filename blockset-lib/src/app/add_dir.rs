@@ -1,9 +1,15 @@
+use core::ops::Deref;
 use std::io;
 
 use io_trait::{DirEntry, Io, Metadata};
 use nanvm_lib::{
     common::{cast::Cast, default::default},
-    js::{any_cast::AnyCast, js_object::Property, js_string::new_string, new::New},
+    js::{
+        any_cast::AnyCast,
+        js_object::Property,
+        js_string::{new_string, JsStringRef},
+        new::New,
+    },
     mem::{global::GLOBAL, manager::Manager},
     serializer::to_json,
 };
@@ -27,13 +33,19 @@ fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<I::DirEntry>>
     Ok(result)
 }
 
-fn property<M: Manager>(m: M, path_len: usize, e: impl DirEntry) -> Property<M::Dealloc> {
-    let path = e.path()[path_len + 1..]
-        .replace('\\', "/")
-        .encode_utf16()
-        .collect::<Vec<_>>();
-    let len = e.metadata().unwrap().len() as f64;
-    (new_string(m, path).to_ref(), len.move_to_any())
+fn str_to_js_string<M: Manager>(m: M, s: impl Deref<Target = str>) -> JsStringRef<M::Dealloc> {
+    new_string(m, s.encode_utf16().collect::<Vec<_>>()).to_ref()
+}
+
+fn property<M: Manager>(
+    m: M,
+    path_len: usize,
+    e: impl Deref<Target = str>,
+    v: impl Deref<Target = str>,
+) -> Property<M::Dealloc> {
+    let path = str_to_js_string(m, e[path_len + 1..].replace('\\', "/"));
+    // let len = e.metadata().unwrap().len() as f64;
+    (path, str_to_js_string(m, v).move_to_any())
 }
 
 fn dir_to_json<M: Manager>(
@@ -51,13 +63,13 @@ fn path_to_json<'a, T: Io, S: 'a + TreeAdd>(
     path: &str,
 ) -> io::Result<String> {
     let files = read_dir_recursive(io, path)?;
+    let mut list = Vec::default();
     for e in &files {
-        add_file(io, e.path().as_str(), to_posix_eol, storage, display_new)?;
+        let f = e.path();
+        let hash = add_file(io, f.as_str(), to_posix_eol, storage, display_new)?;
+        list.push(property(GLOBAL, path.len(), f, hash));
     }
-    dir_to_json(
-        GLOBAL,
-        files.into_iter().map(|s| property(GLOBAL, path.len(), s)),
-    )
+    dir_to_json(GLOBAL, list.into_iter())
 }
 
 pub fn add_dir<'a, T: Io, S: 'a + TreeAdd>(
