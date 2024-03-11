@@ -40,12 +40,11 @@ fn str_to_js_string<M: Manager>(m: M, s: impl Deref<Target = str>) -> JsStringRe
 fn property<M: Manager>(
     m: M,
     path_len: usize,
-    e: impl Deref<Target = str>,
-    v: impl Deref<Target = str>,
+    file: impl Deref<Target = str>,
+    hash: impl Deref<Target = str>,
 ) -> Property<M::Dealloc> {
-    let path = str_to_js_string(m, e[path_len + 1..].replace('\\', "/"));
-    // let len = e.metadata().unwrap().len() as f64;
-    (path, str_to_js_string(m, v).move_to_any())
+    let path = str_to_js_string(m, file[path_len + 1..].replace('\\', "/"));
+    (path, str_to_js_string(m, hash).move_to_any())
 }
 
 fn dir_to_json<M: Manager>(
@@ -65,9 +64,9 @@ fn path_to_json<'a, T: Io, S: 'a + TreeAdd>(
     let files = read_dir_recursive(io, path)?;
     let mut list = Vec::default();
     for e in &files {
-        let f = e.path();
-        let hash = add_file(io, f.as_str(), to_posix_eol, storage, display_new)?;
-        list.push(property(GLOBAL, path.len(), f, hash));
+        let file = e.path();
+        let hash = add_file(io, file.as_str(), to_posix_eol, storage, display_new)?;
+        list.push(property(GLOBAL, path.len(), file, hash));
     }
     dir_to_json(GLOBAL, list.into_iter())
 }
