@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self, SeekFrom};
 
 use io_trait::{File, Metadata};
 
@@ -13,9 +13,9 @@ pub trait Progress {
 
 impl<T: File> Progress for T {
     fn progress(&mut self) -> io::Result<State> {
-        Ok(State {
-            total: self.metadata()?.len(),
-            current: self.stream_position()?,
-        })
+        let current = self.stream_position()?;
+        let total = self.seek(SeekFrom::End(0))?;
+        self.seek(SeekFrom::Start(current))?;
+        Ok(State { total, current })
     }
 }
