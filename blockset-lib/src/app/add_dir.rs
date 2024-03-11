@@ -62,7 +62,7 @@ fn path_to_json<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S>(
 ) -> io::Result<String> {
     let files = read_dir_recursive(add.io, path)?;
     let mut list = Vec::default();
-    for e in &files {
+    for e in files {
         let f = e.path();
         let hash = add_file(add, f.as_str())?;
         list.push(property(GLOBAL, path.len(), f, hash));
