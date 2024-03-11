@@ -1,3 +1,4 @@
+mod add;
 mod add_dir;
 mod add_file;
 

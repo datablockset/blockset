@@ -16,7 +16,7 @@ use nanvm_lib::{
 
 use crate::{app::invalid_input, cdt::tree_add::TreeAdd, common::print::Print};
 
-use super::add_file::add_file;
+use super::{add::Add, add_file::add_file};
 
 fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<I::DirEntry>> {
     let mut result: Vec<_> = default();
@@ -56,30 +56,24 @@ fn dir_to_json<M: Manager>(
     to_json(m.new_js_object(list)).map_err(|_| invalid_input("to_json"))
 }
 
-fn path_to_json<'a, T: Io, S: 'a + TreeAdd>(
-    io: &'a T,
-    to_posix_eol: bool,
-    storage: &impl Fn(&'a T) -> S,
-    display_new: bool,
+fn path_to_json<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S>(
+    add: &Add<'a, T, S, F>,
     path: &str,
 ) -> io::Result<String> {
-    let files = read_dir_recursive(io, path)?;
+    let files = read_dir_recursive(add.io, path)?;
     let mut list = Vec::default();
     for e in &files {
         let f = e.path();
-        let hash = add_file(io, f.as_str(), to_posix_eol, storage, display_new)?;
+        let hash = add_file(add, f.as_str())?;
         list.push(property(GLOBAL, path.len(), f, hash));
     }
     dir_to_json(GLOBAL, list.into_iter())
 }
 
-pub fn add_dir<'a, T: Io, S: 'a + TreeAdd>(
-    io: &'a T,
-    to_posix_eol: bool,
-    storage: &impl Fn(&'a T) -> S,
-    display_new: bool,
+pub fn add_dir<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S>(
+    add: &Add<'a, T, S, F>,
     path: &str,
 ) -> io::Result<()> {
-    let json = path_to_json(io, to_posix_eol, storage, display_new, path)?;
-    io.stdout().println(["add-dir: ", json.as_str()])
+    let json = path_to_json(add, path)?;
+    add.io.stdout().println(["add-dir: ", json.as_str()])
 }
