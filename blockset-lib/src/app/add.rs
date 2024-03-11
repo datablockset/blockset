@@ -83,10 +83,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         }
         dir_to_json(GLOBAL, list.into_iter())
     }
-    pub fn add_dir(
-        &self,
-        path: &str,
-    ) -> io::Result<()> {
+    pub fn add_dir(&self, path: &str) -> io::Result<()> {
         let json = self.path_to_json(path)?;
         let hash = read_to_tree(
             (self.storage)(self.io),
