@@ -43,8 +43,10 @@ fn property<M: Manager>(
     file: impl Deref<Target = str>,
     hash: impl Deref<Target = str>,
 ) -> Property<M::Dealloc> {
-    let path = str_to_js_string(m, file[path_len + 1..].replace('\\', "/"));
-    (path, str_to_js_string(m, hash).move_to_any())
+    (
+        str_to_js_string(m, file[path_len + 1..].replace('\\', "/")),
+        str_to_js_string(m, hash).move_to_any(),
+    )
 }
 
 fn dir_to_json<M: Manager>(
