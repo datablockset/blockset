@@ -1,10 +1,10 @@
 mod add;
 mod add_dir;
-mod add_file;
+mod add_entry;
 
 use std::io::{self, ErrorKind, Read, Write};
 
-use add_file::add_entry;
+use add_entry::add_entry;
 
 use io_trait::Io;
 
