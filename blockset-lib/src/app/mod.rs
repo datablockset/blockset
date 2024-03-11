@@ -377,7 +377,7 @@ mod test {
         a.next().unwrap();
         run(&mut io).unwrap();
         // add_dir(&io, "a").unwrap();
-        let result = io.stdout.to_stdout();
+        let _result = io.stdout.to_stdout();
         /*
         assert_eq!(
             result,
