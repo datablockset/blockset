@@ -21,13 +21,13 @@ pub fn add_file<'a, T: Io, S: 'a + TreeAdd>(
 pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
     a: &mut T::Args,
-    storage: impl Fn(&'a T) -> S,
+    storage: &impl Fn(&'a T) -> S,
     display_new: bool,
 ) -> io::Result<()> {
     let path = a.next().ok_or(invalid_input("missing file name"))?;
     let to_posix_eol = is_to_posix_eol(a)?;
     if io.metadata(&path)?.is_dir() {
-        add_dir(io, &path)
+        add_dir(io, to_posix_eol, storage, display_new, &path)
     } else {
         add_file(io, &path, to_posix_eol, storage, display_new)
     }
