@@ -1,6 +1,4 @@
-use std::io::{self, SeekFrom};
-
-use io_trait::{File, Metadata};
+use std::io::{self, Read, Seek, SeekFrom};
 
 pub struct State {
     pub total: u64,
@@ -11,7 +9,7 @@ pub trait Progress {
     fn progress(&mut self) -> io::Result<State>;
 }
 
-impl<T: File> Progress for T {
+impl<T: Read + Seek> Progress for T {
     fn progress(&mut self) -> io::Result<State> {
         let current = self.stream_position()?;
         let total = self.seek(SeekFrom::End(0))?;
