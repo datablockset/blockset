@@ -24,6 +24,7 @@ pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
     pub to_posix_eol: bool,
     pub display_new: bool,
     pub status: StatusLine<'a, T>,
+    pub total: u64,
 }
 
 fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<I::DirEntry>> {
@@ -72,6 +73,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             self.io.open(path)?,
             &mut self.status,
             self.display_new,
+            self.total,
         )
     }
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
@@ -91,6 +93,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             Cursor::new(&json),
             &mut self.status,
             self.display_new,
+            self.total,
         )
     }
 }

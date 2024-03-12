@@ -24,10 +24,12 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
             to_posix_eol,
             display_new,
             status: StatusLine::new(io),
+            total: 0,
         };
         if io.metadata(&path)?.is_dir() {
             add.add_dir(&path)?
         } else {
+            add.total = io.metadata(&path)?.len();
             add.add_file(&path)?
         }
     };
