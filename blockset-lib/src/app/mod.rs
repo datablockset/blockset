@@ -58,7 +58,6 @@ fn file_read(
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
-    // io: &impl Io,
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
 ) -> io::Result<String> {
