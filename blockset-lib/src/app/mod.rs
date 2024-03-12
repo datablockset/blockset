@@ -55,6 +55,26 @@ fn file_read(
     Ok(size == 0)
 }
 
+fn read_to_tree_once(
+    file: &mut (impl Read + Progress),
+    state: &mut StatusLine<'_, impl Io>,
+    display_new: bool,
+    p: State,
+    tree: &mut MainTreeAdd<impl TreeAdd>,
+    new: &mut u64,
+) -> io::Result<bool> {
+    set_progress(
+        state,
+        display_new,
+        *new,
+        State {
+            total: p.total,
+            current: p.current + file.position()?,
+        },
+    )?;
+    file_read(file, tree, new)
+}
+
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
@@ -64,20 +84,8 @@ fn read_to_tree<T: TreeAdd>(
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
     let mut new = 0;
-    loop {
-        set_progress(
-            state,
-            display_new,
-            new,
-            State {
-                total: p.total,
-                current: p.current + file.position()?,
-            },
-        )?;
-        if file_read(&mut file, &mut tree, &mut new)? {
-            return Ok(tree.end()?.0.to_base32());
-        }
-    }
+    while !read_to_tree_once(&mut file, state, display_new, p, &mut tree, &mut new)? {}
+    Ok(tree.end()?.0.to_base32())
 }
 
 pub fn invalid_input(error: &str) -> io::Error {
