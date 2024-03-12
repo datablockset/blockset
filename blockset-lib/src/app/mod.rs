@@ -384,6 +384,7 @@ mod test {
         let f = |a| {
             let mut io = VirtualIo::new(&["add", a]);
             io.create_dir("a").unwrap();
+            io.create_dir("b").unwrap();
             {
                 let mut f = io.create("a/b.txt").unwrap();
                 f.write_all(b"Hello world!").unwrap();
@@ -400,5 +401,6 @@ mod test {
         let a = f("a");
         let b = f("a/");
         assert_eq!(a, b);
+        f("b");
     }
 }
