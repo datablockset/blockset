@@ -1,7 +1,7 @@
 mod add;
 mod add_entry;
 
-use std::io::{self, ErrorKind, Read, Write};
+use std::io::{self, Cursor, ErrorKind, Read, Write};
 
 use add_entry::add_entry;
 
@@ -20,6 +20,8 @@ use crate::{
     info::calculate_total,
     uint::u224::U224,
 };
+
+use self::add::posix_path;
 
 fn set_progress(
     state: &mut StatusLine<'_, impl Io>,
@@ -140,12 +142,9 @@ pub fn run(io: &impl Io) -> io::Result<()> {
         "add" => add_entry(io, &mut a, &|io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
             let d = get_hash(&mut a)?;
-            let path = a.next().ok_or(invalid_input("missing file name"))?;
+            let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
             let w = &mut io.create(&path)?;
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
-        }
-        "get-dir" => {
-            Ok(())
         }
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
         _ => Err(invalid_input("unknown command")),
