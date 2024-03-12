@@ -7,7 +7,10 @@ use crate::{
     common::{print::Print, progress::State, status_line::StatusLine},
 };
 
-use super::{add::{posix_path, Add}, invalid_input, is_to_posix_eol};
+use super::{
+    add::{posix_path, Add},
+    invalid_input, is_to_posix_eol,
+};
 
 pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,

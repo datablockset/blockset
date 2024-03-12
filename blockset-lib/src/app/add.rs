@@ -34,10 +34,7 @@ pub fn posix_path(s: &str) -> String {
     s.replace('\\', "/")
 }
 
-fn read_dir_recursive<I: Io>(
-    io: &I,
-    path: &str,
-) -> io::Result<Vec<(String, u64)>> {
+fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<(String, u64)>> {
     let mut result: Vec<_> = default();
     let mut dirs = [path.to_owned()].cast();
     while let Some(dir) = dirs.pop() {
