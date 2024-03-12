@@ -1,5 +1,6 @@
 use std::io::{self, Read, Seek, SeekFrom};
 
+#[derive(Debug, Clone, Copy)]
 pub struct State {
     pub total: u64,
     pub current: u64,

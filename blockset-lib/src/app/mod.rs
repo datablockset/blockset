@@ -60,13 +60,21 @@ fn read_to_tree<T: TreeAdd>(
     mut file: impl Read + Progress,
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
-    total: u64,
+    p: State,
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
     let mut new = 0;
     loop {
         let current = file.position()?;
-        set_progress(state, display_new, new, State { total, current })?;
+        set_progress(
+            state,
+            display_new,
+            new,
+            State {
+                total: p.total,
+                current: p.current + current,
+            },
+        )?;
         if file_read(&mut file, &mut tree, &mut new)? {
             return Ok(tree.end()?.0.to_base32());
         }
@@ -94,12 +102,12 @@ fn read_to_tree_file(
     f: impl Read + Progress,
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
-    total: u64,
+    p: State,
 ) -> io::Result<String> {
     if to_posix_eol {
-        read_to_tree(s, ToPosixEol::new(f), state, display_new, total)
+        read_to_tree(s, ToPosixEol::new(f), state, display_new, p)
     } else {
-        read_to_tree(s, f, state, display_new, total)
+        read_to_tree(s, f, state, display_new, p)
     }
 }
 

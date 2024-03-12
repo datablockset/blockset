@@ -14,7 +14,10 @@ use nanvm_lib::{
     serializer::to_json,
 };
 
-use crate::{cdt::tree_add::TreeAdd, common::status_line::StatusLine};
+use crate::{
+    cdt::tree_add::TreeAdd,
+    common::{progress::State, status_line::StatusLine},
+};
 
 use super::{invalid_input, read_to_tree, read_to_tree_file};
 
@@ -24,7 +27,7 @@ pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
     pub to_posix_eol: bool,
     pub display_new: bool,
     pub status: StatusLine<'a, T>,
-    pub total: u64,
+    pub p: State,
 }
 
 fn read_dir_recursive<I: Io>(io: &I, path: &str) -> io::Result<Vec<I::DirEntry>> {
@@ -73,11 +76,14 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             self.io.open(path)?,
             &mut self.status,
             self.display_new,
-            self.total,
+            self.p,
         )
     }
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
         let files = read_dir_recursive(self.io, path)?;
+        for e in &files {
+            self.p.total += e.metadata().unwrap().len();
+        }
         let mut list = Vec::default();
         for e in files {
             let f = e.path();
@@ -93,7 +99,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             Cursor::new(&json),
             &mut self.status,
             self.display_new,
-            self.total,
+            self.p,
         )
     }
 }
