@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `blockset add` works with directories. PR [#165](https://github.com/datablockset/blockset/pull/165).
+
 ## 0.4.2
 
 - WASI. PR [#158](https://github.com/datablockset/blockset/pull/158).
