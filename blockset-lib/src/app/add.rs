@@ -81,6 +81,14 @@ fn calculate_len(files: &[(String, u64)], state: &mut State) {
     });
 }
 
+fn normalize_path(path: &str) -> &str {
+    if path.ends_with('/') {
+        &path[..path.len() - 1]
+    } else {
+        path
+    }
+}
+
 impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     pub fn add_file(&mut self, path: &str) -> io::Result<String> {
         read_to_tree_file(
@@ -133,7 +141,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     }
     pub fn add_file_or_dir(&mut self, path: &str, metadata: T::Metadata) -> io::Result<String> {
         if metadata.is_dir() {
-            self.add_dir(path)
+            self.add_dir(normalize_path(path))
         } else {
             self.p.total = metadata.len();
             self.add_file(path)
