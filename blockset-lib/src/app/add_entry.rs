@@ -18,17 +18,18 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     let path = a.next().ok_or(invalid_input("missing file name"))?;
     let to_posix_eol = is_to_posix_eol(a)?;
     let k = {
-        let add = Add {
+        let mut add = Add {
             io,
             storage,
             to_posix_eol,
             display_new,
+            status: StatusLine::new(io),
         };
-        let mut state = StatusLine::new(io);
+        // let mut state = StatusLine::new(io);
         if io.metadata(&path)?.is_dir() {
-            add.add_dir(&mut state, &path)?
+            add.add_dir(&path)?
         } else {
-            add.add_file(&mut state, &path)?
+            add.add_file(&path)?
         }
     };
     io.stdout().println([k.as_str()])

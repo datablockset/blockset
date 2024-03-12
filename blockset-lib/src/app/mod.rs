@@ -63,7 +63,6 @@ fn read_to_tree<T: TreeAdd>(
     display_new: bool,
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
-    // let mut state = StatusLine::new(io);
     let mut new = 0;
     loop {
         let pr = file.progress();
