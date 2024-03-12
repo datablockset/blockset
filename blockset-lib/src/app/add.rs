@@ -90,16 +90,16 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         // JSON size:
         // `{` +
         // `"` + path + `":"` + 45 + `",` = (e.path.len() - path_len - 1) + 51
-        for e in &files {
-            self.p.total += e.1;
-            json_len += e.0.len() + 51 - path_len;
+        for (path, len) in &files {
+            self.p.total += len;
+            json_len += path.len() + 51 - path_len;
         }
         self.p.total += json_len as u64;
         let mut list = Vec::default();
-        for e in files {
-            let hash = self.add_file(&e.0)?;
-            list.push(property(GLOBAL, path_len, e.0, hash));
-            self.p.current += e.1;
+        for (path, len) in files {
+            let hash = self.add_file(&path)?;
+            list.push(property(GLOBAL, path_len, path, hash));
+            self.p.current += len;
         }
         let json = dir_to_json(GLOBAL, list.into_iter())?;
         assert_eq!(json.len(), json_len);
