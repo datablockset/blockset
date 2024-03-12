@@ -144,6 +144,9 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let w = &mut io.create(&path)?;
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
+        "get-dir" => {
+            Ok(())
+        }
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
         _ => Err(invalid_input("unknown command")),
     }
@@ -393,14 +396,7 @@ mod test {
             let mut a = io.args();
             a.next().unwrap();
             run(&mut io).unwrap();
-            // add_dir(&io, "a").unwrap();
             io.stdout.to_stdout()
-            /*
-            assert_eq!(
-                result,
-                "add-dir: {\"b.txt\":12,\"d.txt\":0,\"e/f.txt\":0}\n"
-            );
-            */
         };
         let a = f("a");
         let b = f("a/");
