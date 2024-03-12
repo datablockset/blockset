@@ -1,6 +1,6 @@
 use std::io::{self, Read};
 
-use super::progress::{self, Progress};
+use super::progress::Progress;
 
 trait ReadEx: Read {
     fn read_byte(&mut self) -> io::Result<Option<u8>> {
@@ -66,8 +66,8 @@ impl<R: Read> Read for ToPosixEol<R> {
 }
 
 impl<R: Read + Progress> Progress for ToPosixEol<R> {
-    fn progress(&mut self) -> io::Result<progress::State> {
-        self.read.progress()
+    fn position(&mut self) -> io::Result<u64> {
+        self.read.position()
     }
 }
 

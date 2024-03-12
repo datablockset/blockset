@@ -1,21 +1,17 @@
-use std::io;
+use std::io::{self, Read, Seek};
 
-use io_trait::{File, Metadata};
-
+#[derive(Debug, Clone, Copy)]
 pub struct State {
     pub total: u64,
     pub current: u64,
 }
 
 pub trait Progress {
-    fn progress(&mut self) -> io::Result<State>;
+    fn position(&mut self) -> io::Result<u64>;
 }
 
-impl<T: File> Progress for T {
-    fn progress(&mut self) -> io::Result<State> {
-        Ok(State {
-            total: self.metadata()?.len(),
-            current: self.stream_position()?,
-        })
+impl<T: Read + Seek> Progress for T {
+    fn position(&mut self) -> io::Result<u64> {
+        self.stream_position()
     }
 }

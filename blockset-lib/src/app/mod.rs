@@ -1,4 +1,9 @@
+mod add;
+mod add_entry;
+
 use std::io::{self, ErrorKind, Read, Write};
+
+use add_entry::add_entry;
 
 use io_trait::Io;
 
@@ -8,7 +13,7 @@ use crate::{
         base32::{StrEx, ToBase32},
         eol::ToPosixEol,
         print::Print,
-        progress::{self, Progress},
+        progress::{self, Progress, State},
         status_line::{mb, StatusLine},
     },
     forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
@@ -50,25 +55,40 @@ fn file_read(
     Ok(size == 0)
 }
 
+fn read_to_tree_once(
+    file: &mut (impl Read + Progress),
+    state: &mut StatusLine<'_, impl Io>,
+    display_new: bool,
+    p: State,
+    tree: &mut MainTreeAdd<impl TreeAdd>,
+    new: &mut u64,
+) -> io::Result<bool> {
+    set_progress(
+        state,
+        display_new,
+        *new,
+        State {
+            total: p.total,
+            current: p.current + file.position()?,
+        },
+    )?;
+    file_read(file, tree, new)
+}
+
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
-    io: &impl Io,
+    state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
+    p: State,
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
-    let mut state = StatusLine::new(io);
     let mut new = 0;
-    loop {
-        let pr = file.progress();
-        set_progress(&mut state, display_new, new, pr?)?;
-        if file_read(&mut file, &mut tree, &mut new)? {
-            return Ok(tree.end()?.0.to_base32());
-        }
-    }
+    while !read_to_tree_once(&mut file, state, display_new, p, &mut tree, &mut new)? {}
+    Ok(tree.end()?.0.to_base32())
 }
 
-fn invalid_input(error: &str) -> io::Error {
+pub fn invalid_input(error: &str) -> io::Error {
     io::Error::new(ErrorKind::InvalidInput, error)
 }
 
@@ -87,28 +107,15 @@ fn read_to_tree_file(
     to_posix_eol: bool,
     s: impl TreeAdd,
     f: impl Read + Progress,
-    io: &impl Io,
+    state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
+    p: State,
 ) -> io::Result<String> {
     if to_posix_eol {
-        read_to_tree(s, ToPosixEol::new(f), io, display_new)
+        read_to_tree(s, ToPosixEol::new(f), state, display_new, p)
     } else {
-        read_to_tree(s, f, io, display_new)
+        read_to_tree(s, f, state, display_new, p)
     }
-}
-
-fn add<'a, T: Io, S: 'a + TreeAdd>(
-    io: &'a T,
-    a: &mut T::Args,
-    storage: impl Fn(&'a T) -> S,
-    display_new: bool,
-) -> io::Result<()> {
-    let stdout = &mut io.stdout();
-    let path = a.next().ok_or(invalid_input("missing file name"))?;
-    let to_posix_eol = is_to_posix_eol(a)?;
-    let f = io.open(&path)?;
-    let k = read_to_tree_file(to_posix_eol, storage(io), f, io, display_new)?;
-    stdout.println([k.as_str()])
 }
 
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
@@ -129,8 +136,8 @@ pub fn run(io: &impl Io) -> io::Result<()> {
     let command = a.next().ok_or(invalid_input("missing command"))?;
     match command.as_str() {
         "validate" => validate(&mut a, stdout),
-        "hash" => add(io, &mut a, |_| (), false),
-        "add" => add(io, &mut a, |io| ForestTreeAdd::new(FileForest(io)), true),
+        "hash" => add_entry(io, &mut a, &|_| (), false),
+        "add" => add_entry(io, &mut a, &|io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
             let d = get_hash(&mut a)?;
             let path = a.next().ok_or(invalid_input("missing file name"))?;
@@ -146,6 +153,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
 mod test {
     use io_test::VirtualIo;
     use io_trait::Io;
+    use std::io::Write;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{cdt::node_id::root, common::base32::ToBase32, run, uint::u256::U256};
@@ -366,5 +374,36 @@ mod test {
         let mut io = VirtualIo::new(&["add", "a.txt", "--x"]);
         let e = run(&mut io);
         assert_eq!(e.unwrap_err().to_string(), "unknown option");
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_add_dir() {
+        let f = |a| {
+            let mut io = VirtualIo::new(&["add", a]);
+            io.create_dir("a").unwrap();
+            {
+                let mut f = io.create("a/b.txt").unwrap();
+                f.write_all(b"Hello world!").unwrap();
+            }
+            io.create("c.txt").unwrap();
+            io.create("a/d.txt").unwrap();
+            io.create_dir("a/e").unwrap();
+            io.create("a/e/f.txt").unwrap();
+            let mut a = io.args();
+            a.next().unwrap();
+            run(&mut io).unwrap();
+            // add_dir(&io, "a").unwrap();
+            io.stdout.to_stdout()
+            /*
+            assert_eq!(
+                result,
+                "add-dir: {\"b.txt\":12,\"d.txt\":0,\"e/f.txt\":0}\n"
+            );
+            */
+        };
+        let a = f("a");
+        let b = f("a/");
+        assert_eq!(a, b);
     }
 }
