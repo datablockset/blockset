@@ -72,7 +72,7 @@ fn dir_to_json<M: Manager>(
     to_json(m.new_js_object(list)).map_err(|_| invalid_input("to_json"))
 }
 
-fn calculate_len(files: &Vec<(String, u64)>, state: &mut State) -> usize {
+fn calculate_len(files: &[(String, u64)], state: &mut State) -> usize {
     // JSON size:
     // `{` +
     // `"` + path + `":"` + 45 + `",` = path.len() + 51
