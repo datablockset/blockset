@@ -89,6 +89,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             let f = e.path();
             let hash = self.add_file(f.as_str())?;
             list.push(property(GLOBAL, path.len(), f, hash));
+            self.p.current += e.metadata().unwrap().len();
         }
         dir_to_json(GLOBAL, list.into_iter())
     }
