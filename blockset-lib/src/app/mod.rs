@@ -65,14 +65,13 @@ fn read_to_tree<T: TreeAdd>(
     let mut tree = MainTreeAdd::new(s);
     let mut new = 0;
     loop {
-        let current = file.position()?;
         set_progress(
             state,
             display_new,
             new,
             State {
                 total: p.total,
-                current: p.current + current,
+                current: p.current + file.position()?,
             },
         )?;
         if file_read(&mut file, &mut tree, &mut new)? {
