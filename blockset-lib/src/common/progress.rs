@@ -8,11 +8,6 @@ pub struct State {
 pub trait Progress {
     fn len(&mut self) -> io::Result<u64>;
     fn position(&mut self) -> io::Result<u64>;
-    fn progress(&mut self) -> io::Result<State> {
-        let current = self.position()?;
-        let total = self.len()?;
-        Ok(State { total, current })
-    }
 }
 
 impl<T: Read + Seek> Progress for T {

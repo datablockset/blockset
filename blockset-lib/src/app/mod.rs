@@ -13,7 +13,7 @@ use crate::{
         base32::{StrEx, ToBase32},
         eol::ToPosixEol,
         print::Print,
-        progress::{self, Progress},
+        progress::{self, Progress, State},
         status_line::{mb, StatusLine},
     },
     forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
@@ -63,9 +63,10 @@ fn read_to_tree<T: TreeAdd>(
 ) -> io::Result<String> {
     let mut tree = MainTreeAdd::new(s);
     let mut new = 0;
+    let total = file.len()?;
     loop {
-        let pr = file.progress();
-        set_progress(state, display_new, new, pr?)?;
+        let current = file.position()?;
+        set_progress(state, display_new, new, State { total, current })?;
         if file_read(&mut file, &mut tree, &mut new)? {
             return Ok(tree.end()?.0.to_base32());
         }
