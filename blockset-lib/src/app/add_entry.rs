@@ -1,6 +1,6 @@
 use std::io;
 
-use io_trait::{Io, Metadata};
+use io_trait::Io;
 
 use crate::{
     cdt::tree_add::TreeAdd,
@@ -30,12 +30,7 @@ fn add_file_or_dir<'a, T: Io, S: 'a + TreeAdd>(
             current: 0,
         },
     };
-    if io.metadata(&path)?.is_dir() {
-        add.add_dir(&path)
-    } else {
-        add.p.total = io.metadata(&path)?.len();
-        add.add_file(&path)
-    }
+    add.add_file_or_dir(&path, add.io.metadata(&path)?)
 }
 
 pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(

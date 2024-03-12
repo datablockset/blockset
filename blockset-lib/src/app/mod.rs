@@ -1,7 +1,7 @@
 mod add;
 mod add_entry;
 
-use std::io::{self, Cursor, ErrorKind, Read, Write};
+use std::io::{self, ErrorKind, Read, Write};
 
 use add_entry::add_entry;
 
