@@ -105,10 +105,9 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         Ok(json)
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
-        let json = self.path_to_json(path)?;
         read_to_tree(
             (self.storage)(self.io),
-            Cursor::new(&json),
+            Cursor::new(self.path_to_json(path)?),
             &mut self.status,
             self.display_new,
             self.p,
