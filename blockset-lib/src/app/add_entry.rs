@@ -7,7 +7,7 @@ use crate::{
     common::{print::Print, progress::State, status_line::StatusLine},
 };
 
-use super::{add::Add, invalid_input, is_to_posix_eol};
+use super::{add::{posix_path, Add}, invalid_input, is_to_posix_eol};
 
 pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     io: &'a T,
@@ -15,7 +15,10 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     storage: &'a impl Fn(&'a T) -> S,
     display_new: bool,
 ) -> io::Result<()> {
-    let path = a.next().ok_or(invalid_input("missing file name"))?;
+    let mut path = posix_path(&a.next().ok_or(invalid_input("missing file name"))?);
+    if path.ends_with('/') {
+        path.pop();
+    }
     let to_posix_eol = is_to_posix_eol(a)?;
     let k = {
         let mut add = Add {

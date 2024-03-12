@@ -30,7 +30,7 @@ pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
     pub p: State,
 }
 
-fn posix_path(s: &str) -> String {
+pub fn posix_path(s: &str) -> String {
     s.replace('\\', "/")
 }
 
@@ -108,11 +108,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         Ok(json)
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
-        let mut p = posix_path(path);
-        if p.ends_with('/') {
-            p.pop();
-        }
-        let json = self.path_to_json(p.as_str())?;
+        let json = self.path_to_json(path)?;
         read_to_tree(
             (self.storage)(self.io),
             Cursor::new(&json),

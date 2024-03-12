@@ -379,26 +379,31 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_add_dir() {
-        let mut io = VirtualIo::new(&["add", "a"]);
-        io.create_dir("a").unwrap();
-        {
-            let mut f = io.create("a/b.txt").unwrap();
-            f.write_all(b"Hello world!").unwrap();
-        }
-        io.create("c.txt").unwrap();
-        io.create("a/d.txt").unwrap();
-        io.create_dir("a/e").unwrap();
-        io.create("a/e/f.txt").unwrap();
-        let mut a = io.args();
-        a.next().unwrap();
-        run(&mut io).unwrap();
-        // add_dir(&io, "a").unwrap();
-        let _result = io.stdout.to_stdout();
-        /*
-        assert_eq!(
-            result,
-            "add-dir: {\"b.txt\":12,\"d.txt\":0,\"e/f.txt\":0}\n"
-        );
-        */
+        let f = |a| {
+            let mut io = VirtualIo::new(&["add", a]);
+            io.create_dir("a").unwrap();
+            {
+                let mut f = io.create("a/b.txt").unwrap();
+                f.write_all(b"Hello world!").unwrap();
+            }
+            io.create("c.txt").unwrap();
+            io.create("a/d.txt").unwrap();
+            io.create_dir("a/e").unwrap();
+            io.create("a/e/f.txt").unwrap();
+            let mut a = io.args();
+            a.next().unwrap();
+            run(&mut io).unwrap();
+            // add_dir(&io, "a").unwrap();
+            io.stdout.to_stdout()
+            /*
+            assert_eq!(
+                result,
+                "add-dir: {\"b.txt\":12,\"d.txt\":0,\"e/f.txt\":0}\n"
+            );
+            */
+        };
+        let a = f("a");
+        let b = f("a/");
+        assert_eq!(a, b);
     }
 }
