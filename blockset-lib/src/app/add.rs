@@ -103,12 +103,16 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         }
         dir_to_json(GLOBAL, list.into_iter())
     }
+    fn calculate_and_add_files(
+        &mut self,
+        path: &str,
+        files: Vec<(String, u64)>,
+    ) -> io::Result<String> {
+        calculate_len(&files, &mut self.p);
+        self.add_files(path, files)
+    }
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
-        let files = read_dir_recursive(self.io, path)?;
-        let json_len = calculate_len(&files, &mut self.p);
-        let json = self.add_files(path, files)?;
-        assert_eq!(json.len(), json_len);
-        Ok(json)
+        self.calculate_and_add_files(path, read_dir_recursive(self.io, path)?)
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
         read_to_tree(
