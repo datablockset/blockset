@@ -70,7 +70,6 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             self.to_posix_eol,
             (self.storage)(self.io),
             self.io.open(path)?,
-            self.io,
             &mut self.status,
             self.display_new,
         )

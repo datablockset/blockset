@@ -92,7 +92,6 @@ fn read_to_tree_file(
     to_posix_eol: bool,
     s: impl TreeAdd,
     f: impl Read + Progress,
-    io: &impl Io,
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
 ) -> io::Result<String> {
