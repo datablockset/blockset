@@ -30,6 +30,10 @@ pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
     pub p: State,
 }
 
+fn posix_path(s: &str) -> String {
+    s.replace('\\', "/")
+}
+
 fn read_dir_recursive<I: Io>(
     io: &I,
     path: &str,
@@ -40,9 +44,9 @@ fn read_dir_recursive<I: Io>(
         for entry in io.read_dir(dir.as_str())? {
             let m = entry.metadata()?;
             if m.is_dir() {
-                dirs.push(entry.path().to_owned());
+                dirs.push(entry.path());
             } else {
-                result.push((entry.path(), m.len()));
+                result.push((posix_path(&entry.path()[path.len() + 1..]), m.len()));
             }
         }
     }
@@ -55,12 +59,11 @@ fn str_to_js_string<M: Manager>(m: M, s: impl Deref<Target = str>) -> JsStringRe
 
 fn property<M: Manager>(
     m: M,
-    path_len: usize,
     file: impl Deref<Target = str>,
     hash: impl Deref<Target = str>,
 ) -> Property<M::Dealloc> {
     (
-        str_to_js_string(m, file[path_len..].replace('\\', "/")),
+        str_to_js_string(m, file),
         str_to_js_string(m, hash).move_to_any(),
     )
 }
@@ -84,21 +87,20 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         )
     }
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
-        let path_len = path.len() + 1;
         let files = read_dir_recursive(self.io, path)?;
         let mut json_len = 1;
         // JSON size:
         // `{` +
-        // `"` + path + `":"` + 45 + `",` = (e.path.len() - path_len - 1) + 51
+        // `"` + path + `":"` + 45 + `",` = path.len() + 51
         for (path, len) in &files {
             self.p.total += len;
-            json_len += path.len() + 51 - path_len;
+            json_len += path.len() + 51;
         }
         self.p.total += json_len as u64;
         let mut list = Vec::default();
-        for (path, len) in files {
-            let hash = self.add_file(&path)?;
-            list.push(property(GLOBAL, path_len, path, hash));
+        for (p, len) in files {
+            let hash = self.add_file((path.to_owned() + "/" + &p).as_str())?;
+            list.push(property(GLOBAL, p, hash));
             self.p.current += len;
         }
         let json = dir_to_json(GLOBAL, list.into_iter())?;
@@ -106,7 +108,11 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         Ok(json)
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
-        let json = self.path_to_json(path)?;
+        let mut p = posix_path(path);
+        if p.ends_with('/') {
+            p.pop();
+        }
+        let json = self.path_to_json(p.as_str())?;
         read_to_tree(
             (self.storage)(self.io),
             Cursor::new(&json),
