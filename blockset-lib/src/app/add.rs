@@ -76,7 +76,7 @@ fn calculate_len(files: &[(String, u64)], state: &mut State) {
     // JSON size:
     state.total = if files.is_empty() {
         // `{}`
-         2
+        2
     } else {
         // `{` +
         // `"` + path + `":"` + 45 + `",` = path.len() + 51
