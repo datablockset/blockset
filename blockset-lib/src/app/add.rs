@@ -72,15 +72,21 @@ fn dir_to_json<M: Manager>(
     to_json(m.new_js_object(list)).map_err(|_| invalid_input("to_json"))
 }
 
-fn calculate_len(files: &[(String, u64)], state: &mut State) -> usize {
+fn calculate_len(files: &[(String, u64)], state: &mut State) {
     // JSON size:
     // `{` +
     // `"` + path + `":"` + 45 + `",` = path.len() + 51
-    let (total, json_len) = files.iter().fold((0, 1), |(total, json_len), (path, len)| {
-        (total + len, json_len + path.len() + 51)
+    state.total = files.iter().fold(1, |total, (path, len)| {
+        total + len + (path.len() as u64) + 51
     });
-    state.total += total + json_len as u64;
-    json_len
+}
+
+fn normalize_path(path: &str) -> &str {
+    if let Some(s_path) = path.strip_suffix('/') {
+        s_path
+    } else {
+        path
+    }
 }
 
 impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
@@ -114,13 +120,31 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
         self.calculate_and_add_files(path, read_dir_recursive(self.io, path)?)
     }
-    pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
+    // TODO: move it to unit tests.
+    fn check(&mut self, cursor: &Cursor<String>) {
+        assert!(self.p.current + cursor.position() == self.p.total);
+    }
+    fn mem_to_tree(&mut self, cursor: &mut Cursor<String>) -> io::Result<String> {
         read_to_tree(
             (self.storage)(self.io),
-            Cursor::new(self.path_to_json(path)?),
+            cursor,
             &mut self.status,
             self.display_new,
             self.p,
         )
+    }
+    pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
+        let mut cursor = Cursor::new(self.path_to_json(path)?);
+        let result = self.mem_to_tree(&mut cursor)?;
+        self.check(&cursor);
+        Ok(result)
+    }
+    pub fn add_file_or_dir(&mut self, path: &str, metadata: T::Metadata) -> io::Result<String> {
+        if metadata.is_dir() {
+            self.add_dir(normalize_path(path))
+        } else {
+            self.p.total = metadata.len();
+            self.add_file(path)
+        }
     }
 }

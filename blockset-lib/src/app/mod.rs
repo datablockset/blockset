@@ -21,6 +21,8 @@ use crate::{
     uint::u224::U224,
 };
 
+use self::add::posix_path;
+
 fn set_progress(
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
@@ -140,7 +142,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
         "add" => add_entry(io, &mut a, &|io| ForestTreeAdd::new(FileForest(io)), true),
         "get" => {
             let d = get_hash(&mut a)?;
-            let path = a.next().ok_or(invalid_input("missing file name"))?;
+            let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
             let w = &mut io.create(&path)?;
             FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
         }
@@ -393,14 +395,7 @@ mod test {
             let mut a = io.args();
             a.next().unwrap();
             run(&mut io).unwrap();
-            // add_dir(&io, "a").unwrap();
             io.stdout.to_stdout()
-            /*
-            assert_eq!(
-                result,
-                "add-dir: {\"b.txt\":12,\"d.txt\":0,\"e/f.txt\":0}\n"
-            );
-            */
         };
         let a = f("a");
         let b = f("a/");

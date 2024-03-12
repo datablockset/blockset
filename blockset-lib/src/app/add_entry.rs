@@ -1,6 +1,6 @@
 use std::io;
 
-use io_trait::{Io, Metadata};
+use io_trait::Io;
 
 use crate::{
     cdt::tree_add::TreeAdd,
@@ -30,12 +30,7 @@ fn add_file_or_dir<'a, T: Io, S: 'a + TreeAdd>(
             current: 0,
         },
     };
-    if io.metadata(&path)?.is_dir() {
-        add.add_dir(&path)
-    } else {
-        add.p.total = io.metadata(&path)?.len();
-        add.add_file(&path)
-    }
+    add.add_file_or_dir(&path, add.io.metadata(&path)?)
 }
 
 pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
@@ -44,10 +39,7 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
     storage: &'a impl Fn(&'a T) -> S,
     display_new: bool,
 ) -> io::Result<()> {
-    let mut path = posix_path(&a.next().ok_or(invalid_input("missing file name"))?);
-    if path.ends_with('/') {
-        path.pop();
-    }
+    let path = posix_path(&a.next().ok_or(invalid_input("missing file name"))?);
     let to_posix_eol = is_to_posix_eol(a)?;
     let k = add_file_or_dir(io, storage, to_posix_eol, display_new, path)?;
     io.stdout().println([k.as_str()])
