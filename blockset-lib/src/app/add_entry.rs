@@ -25,7 +25,6 @@ pub fn add_entry<'a, T: Io, S: 'a + TreeAdd>(
             display_new,
             status: StatusLine::new(io),
         };
-        // let mut state = StatusLine::new(io);
         if io.metadata(&path)?.is_dir() {
             add.add_dir(&path)?
         } else {

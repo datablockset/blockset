@@ -14,10 +14,7 @@ use nanvm_lib::{
     serializer::to_json,
 };
 
-use crate::{
-    cdt::tree_add::TreeAdd,
-    common::status_line::StatusLine,
-};
+use crate::{cdt::tree_add::TreeAdd, common::status_line::StatusLine};
 
 use super::{invalid_input, read_to_tree, read_to_tree_file};
 
@@ -93,7 +90,6 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         read_to_tree(
             (self.storage)(self.io),
             Cursor::new(&json),
-            self.io,
             &mut self.status,
             self.display_new,
         )

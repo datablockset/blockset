@@ -58,7 +58,7 @@ fn file_read(
 fn read_to_tree<T: TreeAdd>(
     s: T,
     mut file: impl Read + Progress,
-    io: &impl Io,
+    // io: &impl Io,
     state: &mut StatusLine<'_, impl Io>,
     display_new: bool,
 ) -> io::Result<String> {
@@ -97,9 +97,9 @@ fn read_to_tree_file(
     display_new: bool,
 ) -> io::Result<String> {
     if to_posix_eol {
-        read_to_tree(s, ToPosixEol::new(f), io, state, display_new)
+        read_to_tree(s, ToPosixEol::new(f), state, display_new)
     } else {
-        read_to_tree(s, f, io, state, display_new)
+        read_to_tree(s, f, state, display_new)
     }
 }
 
