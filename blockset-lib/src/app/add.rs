@@ -33,7 +33,7 @@ pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
 fn read_dir_recursive<I: Io>(
     io: &I,
     path: &str,
-) -> io::Result<Vec<(I::DirEntry, u64)>> {
+) -> io::Result<Vec<(String, u64)>> {
     let mut result: Vec<_> = default();
     let mut dirs = [path.to_owned()].cast();
     while let Some(dir) = dirs.pop() {
@@ -42,7 +42,7 @@ fn read_dir_recursive<I: Io>(
             if m.is_dir() {
                 dirs.push(entry.path().to_owned());
             } else {
-                result.push((entry, m.len()));
+                result.push((entry.path(), m.len()));
             }
         }
     }
@@ -92,14 +92,13 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         // `"` + path + `":"` + 45 + `",` = (e.path.len() - path_len - 1) + 51
         for e in &files {
             self.p.total += e.1;
-            json_len += e.0.path().len() + 51 - path_len;
+            json_len += e.0.len() + 51 - path_len;
         }
         self.p.total += json_len as u64;
         let mut list = Vec::default();
         for e in files {
-            let f = e.0.path();
-            let hash = self.add_file(f.as_str())?;
-            list.push(property(GLOBAL, path_len, f, hash));
+            let hash = self.add_file(&e.0)?;
+            list.push(property(GLOBAL, path_len, e.0, hash));
             self.p.current += e.1;
         }
         let json = dir_to_json(GLOBAL, list.into_iter())?;
