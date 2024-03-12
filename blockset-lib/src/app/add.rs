@@ -14,7 +14,10 @@ use nanvm_lib::{
     serializer::to_json,
 };
 
-use crate::{cdt::tree_add::TreeAdd, common::{print::Print, status_line::StatusLine}};
+use crate::{
+    cdt::tree_add::TreeAdd,
+    common::{print::Print, status_line::StatusLine},
+};
 
 use super::{invalid_input, read_to_tree, read_to_tree_file};
 
@@ -74,7 +77,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             self.display_new,
         )
     }
-    fn path_to_json(&self, state: &mut StatusLine<'a, T>,  path: &str) -> io::Result<String> {
+    fn path_to_json(&self, state: &mut StatusLine<'a, T>, path: &str) -> io::Result<String> {
         let files = read_dir_recursive(self.io, path)?;
         let mut list = Vec::default();
         for e in files {
