@@ -112,10 +112,11 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
         self.calculate_and_add_files(path, read_dir_recursive(self.io, path)?)
     }
+    // TODO: move it to unit tests.
     fn check(&mut self, cursor: &Cursor<String>) {
         assert!(self.p.current + cursor.position() == self.p.total);
     }
-    fn add_to_tree(&mut self, cursor: &mut Cursor<String>) -> io::Result<String> {
+    fn mem_to_tree(&mut self, cursor: &mut Cursor<String>) -> io::Result<String> {
         read_to_tree(
             (self.storage)(self.io),
             cursor,
@@ -126,7 +127,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
         let mut cursor = Cursor::new(self.path_to_json(path)?);
-        let result = self.add_to_tree(&mut cursor)?;
+        let result = self.mem_to_tree(&mut cursor)?;
         self.check(&cursor);
         Ok(result)
     }
