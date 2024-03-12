@@ -66,9 +66,6 @@ impl<R: Read> Read for ToPosixEol<R> {
 }
 
 impl<R: Read + Progress> Progress for ToPosixEol<R> {
-    fn len(&mut self) -> io::Result<u64> {
-        self.read.len()
-    }
     fn position(&mut self) -> io::Result<u64> {
         self.read.position()
     }
