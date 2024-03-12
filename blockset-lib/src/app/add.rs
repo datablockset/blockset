@@ -56,7 +56,7 @@ fn property<M: Manager>(
     hash: impl Deref<Target = str>,
 ) -> Property<M::Dealloc> {
     (
-        str_to_js_string(m, file[path_len + 1..].replace('\\', "/")),
+        str_to_js_string(m, file[path_len..].replace('\\', "/")),
         str_to_js_string(m, hash).move_to_any(),
     )
 }
@@ -80,18 +80,27 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
         )
     }
     fn path_to_json(&mut self, path: &str) -> io::Result<String> {
+        let path_len = path.len() + 1;
         let files = read_dir_recursive(self.io, path)?;
+        let mut json_len = 1;
+        // JSON size:
+        // `{` +
+        // `"` + path + `":"` + 45 + `",` = (e.path.len() - path_len - 1) + 51
         for e in &files {
             self.p.total += e.metadata().unwrap().len();
+            json_len += e.path().len() + 51 - path_len;
         }
+        self.p.total += json_len as u64;
         let mut list = Vec::default();
         for e in files {
             let f = e.path();
             let hash = self.add_file(f.as_str())?;
-            list.push(property(GLOBAL, path.len(), f, hash));
+            list.push(property(GLOBAL, path_len, f, hash));
             self.p.current += e.metadata().unwrap().len();
         }
-        dir_to_json(GLOBAL, list.into_iter())
+        let json = dir_to_json(GLOBAL, list.into_iter())?;
+        assert_eq!(json.len(), json_len);
+        Ok(json)
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {
         let json = self.path_to_json(path)?;
