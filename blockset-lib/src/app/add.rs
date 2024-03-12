@@ -82,8 +82,8 @@ fn calculate_len(files: &[(String, u64)], state: &mut State) {
 }
 
 fn normalize_path(path: &str) -> &str {
-    if path.ends_with('/') {
-        &path[..path.len() - 1]
+    if let Some(s_path) = path.strip_suffix('/') {
+        s_path
     } else {
         path
     }
