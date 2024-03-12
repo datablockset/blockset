@@ -72,6 +72,17 @@ fn dir_to_json<M: Manager>(
     to_json(m.new_js_object(list)).map_err(|_| invalid_input("to_json"))
 }
 
+fn calculate_len(files: &Vec<(String, u64)>, state: &mut State) -> usize {
+    // JSON size:
+    // `{` +
+    // `"` + path + `":"` + 45 + `",` = path.len() + 51
+    let (total, json_len) = files.iter().fold((0, 1), |(total, json_len), (path, len)| {
+        (total + len, json_len + path.len() + 51)
+    });
+    state.total += total + json_len as u64;
+    json_len
+}
+
 impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     pub fn add_file(&mut self, path: &str) -> io::Result<String> {
         read_to_tree_file(
@@ -83,24 +94,19 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             self.p,
         )
     }
-    fn path_to_json(&mut self, path: &str) -> io::Result<String> {
-        let files = read_dir_recursive(self.io, path)?;
-        let mut json_len = 1;
-        // JSON size:
-        // `{` +
-        // `"` + path + `":"` + 45 + `",` = path.len() + 51
-        for (path, len) in &files {
-            self.p.total += len;
-            json_len += path.len() + 51;
-        }
-        self.p.total += json_len as u64;
+    fn add_files(&mut self, path: &str, files: Vec<(String, u64)>) -> io::Result<String> {
         let mut list = Vec::default();
         for (p, len) in files {
             let hash = self.add_file((path.to_owned() + "/" + &p).as_str())?;
             list.push(property(GLOBAL, p, hash));
             self.p.current += len;
         }
-        let json = dir_to_json(GLOBAL, list.into_iter())?;
+        dir_to_json(GLOBAL, list.into_iter())
+    }
+    fn path_to_json(&mut self, path: &str) -> io::Result<String> {
+        let files = read_dir_recursive(self.io, path)?;
+        let json_len = calculate_len(&files, &mut self.p);
+        let json = self.add_files(path, files)?;
         assert_eq!(json.len(), json_len);
         Ok(json)
     }
