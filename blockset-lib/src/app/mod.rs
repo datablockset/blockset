@@ -7,6 +7,7 @@ use std::io::{self, Cursor, ErrorKind, Read, Write};
 use add_entry::add_entry;
 
 use io_trait::Io;
+use nanvm_lib::mem::global::GLOBAL;
 
 use crate::{
     cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
@@ -22,7 +23,7 @@ use crate::{
     uint::u224::U224,
 };
 
-use self::{add::posix_path, get::restore};
+use self::{add::posix_path, get::{parse_json, restore}};
 
 fn set_progress(
     state: &mut StatusLine<'_, impl Io>,
@@ -145,8 +146,11 @@ pub fn run(io: &impl Io) -> io::Result<()> {
             let d = get_hash(&mut a)?;
             let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
             if path.ends_with('/') {
-                let mut w = Cursor::new(Vec::default());
-                restore(io, &d, &mut w)
+                let mut buffer = Vec::default();
+                let mut w = Cursor::new(&mut buffer);
+                restore(io, &d, &mut w)?;
+                let json = parse_json(io, GLOBAL, buffer)?;
+                Ok(())
             } else {
                 restore(io, &d, &mut io.create(&path)?)
             }
