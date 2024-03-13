@@ -7,7 +7,10 @@ use std::io::{self, Cursor, ErrorKind, Read, Write};
 use add_entry::add_entry;
 
 use io_trait::Io;
-use nanvm_lib::mem::global::GLOBAL;
+use nanvm_lib::{
+    js::{any::Any, any_cast::AnyCast, js_object::JsObjectRef, js_string::JsStringRef},
+    mem::{global::GLOBAL, manager::Dealloc},
+};
 
 use crate::{
     cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
@@ -23,7 +26,10 @@ use crate::{
     uint::u224::U224,
 };
 
-use self::{add::posix_path, get::{parse_json, restore}};
+use self::{
+    add::posix_path,
+    get::{parse_json, restore},
+};
 
 fn set_progress(
     state: &mut StatusLine<'_, impl Io>,
@@ -133,6 +139,15 @@ fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io
     stdout.println(["valid: ", d.as_str()])
 }
 
+fn js_string_to_string(s: &JsStringRef<impl Dealloc>) -> io::Result<String> {
+    String::from_utf16(s.items())
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF-16"))
+}
+
+fn try_move<D: Dealloc, T: AnyCast<D>>(o: Any<D>) -> io::Result<T> {
+    o.try_move().map_err(|_| invalid_input("invalid JSON"))
+}
+
 pub fn run(io: &impl Io) -> io::Result<()> {
     let stdout = &mut io.stdout();
     let mut a = io.args();
@@ -149,7 +164,14 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 let mut buffer = Vec::default();
                 let mut w = Cursor::new(&mut buffer);
                 restore(io, &d, &mut w)?;
-                let json = parse_json(io, GLOBAL, buffer)?;
+                let json: JsObjectRef<_> = try_move(parse_json(io, GLOBAL, buffer)?)?;
+                for (k, v) in json.items() {
+                    stdout.println([
+                        js_string_to_string(k)?.as_str(),
+                        ": ",
+                        js_string_to_string(&try_move(v.clone())?)?.as_str(),
+                    ])?;
+                }
                 Ok(())
             } else {
                 restore(io, &d, &mut io.create(&path)?)
