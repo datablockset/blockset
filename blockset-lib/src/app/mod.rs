@@ -411,11 +411,12 @@ mod test {
         f("b");
         // as a file
         {
-            io.args = ["blockset", "get", &a, "c.txt"]
+            io.args = ["blockset", "get", &a, "c.json"]
                 .iter()
                 .map(|s| s.to_string())
                 .collect();
             run(&mut io).unwrap();
+            io.read("c.json").unwrap();
         }
         // as a directory
         {
