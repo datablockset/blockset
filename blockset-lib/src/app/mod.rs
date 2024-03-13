@@ -1,14 +1,16 @@
 mod add;
 mod add_entry;
+mod get;
 
-use std::io::{self, ErrorKind, Read, Write};
+use std::io::{self, Cursor, ErrorKind, Read, Write};
 
 use add_entry::add_entry;
 
 use io_trait::Io;
+use nanvm_lib::parser;
 
 use crate::{
-    cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
+    cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
     common::{
         base32::{StrEx, ToBase32},
         eol::ToPosixEol,
@@ -16,12 +18,12 @@ use crate::{
         progress::{self, Progress, State},
         status_line::{mb, StatusLine},
     },
-    forest::{file::FileForest, node_id::ForestNodeId, tree_add::ForestTreeAdd, Forest},
+    forest::{file::FileForest, tree_add::ForestTreeAdd},
     info::calculate_total,
     uint::u224::U224,
 };
 
-use self::add::posix_path;
+use self::{add::posix_path, get::restore};
 
 fn set_progress(
     state: &mut StatusLine<'_, impl Io>,
@@ -143,8 +145,12 @@ pub fn run(io: &impl Io) -> io::Result<()> {
         "get" => {
             let d = get_hash(&mut a)?;
             let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
-            let w = &mut io.create(&path)?;
-            FileForest(io).restore(&ForestNodeId::new(NodeType::Root, &d), w, io)
+            if path.ends_with('/') {
+                let mut w = Cursor::new(Vec::default());
+                restore(io, &d, &mut w)
+            } else {
+                restore(io, &d, &mut io.create(&path)?)
+            }
         }
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
         _ => Err(invalid_input("unknown command")),
@@ -396,11 +402,28 @@ mod test {
             let mut a = io.args();
             a.next().unwrap();
             run(&mut io).unwrap();
-            io.stdout.to_stdout()
+            let x = io.stdout.to_stdout()[..45].to_owned();
+            (io, x)
         };
-        let a = f("a");
-        let b = f("a/");
+        let (mut io, a) = f("a");
+        let (_, b) = f("a/");
         assert_eq!(a, b);
         f("b");
+        // as a file
+        {
+            io.args = ["blockset", "get", &a, "c.txt"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
+            run(&mut io).unwrap();
+        }
+        // as a directory
+        {
+            io.args = ["blockset", "get", &a, "c/"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
+            run(&mut io).unwrap();
+        }
     }
 }
