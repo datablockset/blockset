@@ -7,7 +7,6 @@ use std::io::{self, Cursor, ErrorKind, Read, Write};
 use add_entry::add_entry;
 
 use io_trait::Io;
-use nanvm_lib::parser;
 
 use crate::{
     cdt::{main_tree::MainTreeAdd, tree_add::TreeAdd},
