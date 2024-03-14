@@ -36,3 +36,10 @@ pub fn parse_json<M: Manager>(io: &impl Io, manager: M, v: Vec<u8>) -> io::Resul
     let result = tokenize_and_parse(io, manager, s).map_err(|_| invalid_input("Invalid JSON"))?;
     Ok(result.any)
 }
+
+pub fn create_file_recursivly<T: Io>(io: &T, path: &str) -> io::Result<T::File> {
+    if let Some((p, _)) = path.rsplit_once('/') {
+        io.create_dir_recursively(p)?;
+    }
+    io.create(path)
+}

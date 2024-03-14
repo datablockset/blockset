@@ -28,7 +28,7 @@ use crate::{
 
 use self::{
     add::posix_path,
-    get::{parse_json, restore},
+    get::{create_file_recursivly, parse_json, restore},
 };
 
 fn set_progress(
@@ -174,7 +174,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 }
                 Ok(())
             } else {
-                restore(io, &d, &mut io.create(&path)?)
+                restore(io, &d, &mut create_file_recursivly(io, &path)?)
             }
         }
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
@@ -437,6 +437,15 @@ mod test {
         // as a file
         {
             io.args = ["blockset", "get", &a, "c.json"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
+            run(&mut io).unwrap();
+            io.read("c.json").unwrap();
+        }
+        // as a file to a new folder
+        {
+            io.args = ["blockset", "get", &a, "d/c.json"]
                 .iter()
                 .map(|s| s.to_string())
                 .collect();
