@@ -74,16 +74,16 @@ fn dir_to_json<M: Manager>(
 
 fn calculate_len(files: &[(String, u64)], state: &mut State) {
     // JSON size:
-    if files.is_empty() {
+    state.total = if files.is_empty() {
         // `{}`
-        state.total = 2;
-        return;
-    }
-    // `{` +
-    // `"` + path + `":"` + 45 + `",` = path.len() + 51
-    state.total = files.iter().fold(1, |total, (path, len)| {
-        total + len + (path.len() as u64) + 51
-    });
+        2
+    } else {
+        // `{` +
+        // `"` + path + `":"` + 45 + `",` = path.len() + 51
+        files.iter().fold(1, |total, (path, len)| {
+            total + len + (path.len() as u64) + 51
+        })
+    };
 }
 
 fn normalize_path(path: &str) -> &str {
