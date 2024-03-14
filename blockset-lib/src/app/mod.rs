@@ -169,9 +169,14 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 restore(io, &d, &mut w)?;
                 let json: JsObjectRef<_> = try_move(parse_json(io, GLOBAL, buffer)?)?;
                 for (k, v) in json.items() {
-                    let path = js_string_to_string(k)?;
+                    let file = js_string_to_string(k)?;
                     let hash = js_string_to_string(&try_move(v.clone())?)?;
-                    stdout.println([&path, ": ", &hash])?;
+                    restore(
+                        io,
+                        &str_to_hash(&hash)?,
+                        &mut create_file_recursively(io, (path.to_owned() + &file).as_str())?,
+                    )?;
+                    // stdout.println([&path, ": ", &hash])?;
                 }
                 Ok(())
             } else {
