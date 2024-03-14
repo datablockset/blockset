@@ -128,10 +128,13 @@ fn read_to_tree_file(
     }
 }
 
+fn str_to_hash(s: &str) -> io::Result<U224> {
+    s.from_base32::<U224>().ok_or(invalid_input("invalid hash"))
+}
+
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
     let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-    b32.from_base32::<U224>()
-        .ok_or(invalid_input("invalid hash"))
+    str_to_hash(&b32)
 }
 
 fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
