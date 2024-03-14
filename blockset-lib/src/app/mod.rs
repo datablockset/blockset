@@ -128,10 +128,13 @@ fn read_to_tree_file(
     }
 }
 
+fn str_to_hash(s: &str) -> io::Result<U224> {
+    s.from_base32::<U224>().ok_or(invalid_input("invalid hash"))
+}
+
 fn get_hash(a: &mut impl Iterator<Item = String>) -> io::Result<U224> {
     let b32 = a.next().ok_or(invalid_input("missing hash"))?;
-    b32.from_base32::<U224>()
-        .ok_or(invalid_input("invalid hash"))
+    str_to_hash(&b32)
 }
 
 fn validate(a: &mut impl Iterator<Item = String>, stdout: &mut impl Write) -> io::Result<()> {
@@ -166,11 +169,14 @@ pub fn run(io: &impl Io) -> io::Result<()> {
                 restore(io, &d, &mut w)?;
                 let json: JsObjectRef<_> = try_move(parse_json(io, GLOBAL, buffer)?)?;
                 for (k, v) in json.items() {
-                    stdout.println([
-                        js_string_to_string(k)?.as_str(),
-                        ": ",
-                        js_string_to_string(&try_move(v.clone())?)?.as_str(),
-                    ])?;
+                    let file = js_string_to_string(k)?;
+                    let hash = js_string_to_string(&try_move(v.clone())?)?;
+                    restore(
+                        io,
+                        &str_to_hash(&hash)?,
+                        &mut create_file_recursively(io, (path.to_owned() + &file).as_str())?,
+                    )?;
+                    // stdout.println([&path, ": ", &hash])?;
                 }
                 Ok(())
             } else {

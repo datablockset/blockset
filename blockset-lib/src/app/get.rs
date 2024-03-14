@@ -42,7 +42,8 @@ fn dir(path: &str) -> Option<&str> {
 }
 
 fn create_file_path_recursively<T: Io>(io: &T, path: &str) -> io::Result<()> {
-    dir(path).map_or(Ok(()), |d| io.create_dir_recursively(d))
+    dir(path).map(|d| io.create_dir_recursively(d));
+    Ok(())
 }
 
 pub fn create_file_recursively<T: Io>(io: &T, path: &str) -> io::Result<T::File> {
