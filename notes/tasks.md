@@ -1,4 +1,4 @@
-# Tesks
+# Tasks
 
 - [ ] Fix `New 0 MB.` when adding directories
 - [ ] Fix progress when extracting directories
