@@ -19,9 +19,7 @@ The `blockset` application is a command line program that can store and retrieve
   ```
 - get a file or a directory by a content hash
   ```console
-  blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./old.md
-  ```
-  ```console
+  blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./ls.json
   blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./dir/
   ```
 - information about the repository
