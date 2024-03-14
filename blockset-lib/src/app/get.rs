@@ -37,9 +37,15 @@ pub fn parse_json<M: Manager>(io: &impl Io, manager: M, v: Vec<u8>) -> io::Resul
     Ok(result.any)
 }
 
-pub fn create_file_recursivly<T: Io>(io: &T, path: &str) -> io::Result<T::File> {
-    if let Some((p, _)) = path.rsplit_once('/') {
-        io.create_dir_recursively(p)?;
-    }
+fn dir(path: &str) -> Option<&str> {
+    path.rsplit_once('/').map(|(d, _)| d)
+}
+
+fn create_file_path_recursively<T: Io>(io: &T, path: &str) -> io::Result<()> {
+    dir(path).map_or(Ok(()), |d| io.create_dir_recursively(d))
+}
+
+pub fn create_file_recursively<T: Io>(io: &T, path: &str) -> io::Result<T::File> {
+    create_file_path_recursively(io, path)?;
     io.create(path)
 }
