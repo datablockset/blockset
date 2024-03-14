@@ -12,14 +12,17 @@ The `blockset` application is a command line program that can store and retrieve
   ```console
   blockset hash ./README.md
   ```
-- add content of a file to the local storage `cdt0/`:
+- add content of a file or a directory to the local storage `cdt0/`:
   ```console
   blockset add ./README.md
   blockset add ./LICENSE --to-posix-eol
   ```
-- get a file by a content hash
+- get a file or a directory by a content hash
   ```console
   blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./old.md
+  ```
+  ```console
+  blockset get ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd ./dir/
   ```
 - information about the repository
   ```console

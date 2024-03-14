@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.5.0
+
 - `blockset get` can create directories recursively. PR [#168](https://github.com/datablockset/blockset/pull/168).
 - `blockset add` works with directories. PR [#165](https://github.com/datablockset/blockset/pull/165).
 
