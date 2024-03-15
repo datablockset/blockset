@@ -1,10 +1,14 @@
 # Tasks
 
-- [ ] Fix `New 0 MB.` when adding directories
-- [ ] Fix progress when extracting directories
-- [ ] Optimize `
+- [ ] Fix `New 0 MB.` when adding directories.
+- [ ] Fix progress when extracting directories.
 
 ## Epic Stories
+
+### Digital Signatures And Time Stamping
+
+- [ ] Digital Signatures.
+- [ ] Time Stamps.
 
 ### Add and extract directories
 
@@ -34,10 +38,5 @@ See:
 - `IO-test` a mock implementation of `IO` for testing. Depends on
   - `IO-trait`.
   - `common`.
-
-### Digital Signatures And Time Stamping
-
-- [ ] Digital Signatures
-- [ ] Time Stamps
 
 ### ALIQ Model
