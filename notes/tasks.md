@@ -31,7 +31,7 @@ See:
 
 - `IO-trait` a trait with a minimal set of I/O operations.
 - `common` a library with common functions, including I/O extensions. Depends on
-  - `IO-trait`.
+  - `IO-trait` to extend the `IO` trait.
 - `IO-impl` an implementation of `IO` for the local file system. Depends on
   - `IO-trait`.
   - `common`.
