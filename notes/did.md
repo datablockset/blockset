@@ -1,3 +1,5 @@
 - https://www.w3.org/TR/did-core/
 - https://en.wikipedia.org/wiki/Decentralized_identifier
 - https://en.wikipedia.org/wiki/Well-known_URI
+- https://en.wikipedia.org/wiki/Web_of_trust
+- https://en.wikipedia.org/wiki/Self-sovereign_identity
