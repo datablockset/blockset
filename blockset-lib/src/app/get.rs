@@ -2,6 +2,7 @@ use std::io::{self, Write};
 
 use io_trait::Io;
 use nanvm_lib::{
+    common::default::default,
     js::any::Any,
     mem::manager::Manager,
     parser::{parse_with_tokens, Context, ParseError, ParseResult},
@@ -26,7 +27,7 @@ fn tokenize_and_parse<M: Manager>(
     s: String,
 ) -> Result<ParseResult<M>, ParseError> {
     parse_with_tokens(
-        &Context::new(manager, io, String::default()),
+        &mut Context::new(manager, io, default(), &mut default()),
         tokenize(s).into_iter(),
     )
 }

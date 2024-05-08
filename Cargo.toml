@@ -3,16 +3,16 @@ members = ["blockset", "blockset-lib"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["Sergey Shandar"]
 repository = "https://github.com/datablockset/blockset"
 
 [workspace.dependencies]
-blockset-lib = { path = "blockset-lib", version = "0.5.1" }
-io-trait = "0.10.0"
-io-impl = "0.10.0"
-io-test = "0.10.1"
+blockset-lib = { path = "blockset-lib", version = "0.5.2" }
+io-trait = "0.11.0"
+io-impl = "0.11.0"
+io-test = "0.11.0"
 wasm-bindgen-test = "0.3.42"
-nanvm-lib = "0.0.4"
+nanvm-lib = "0.0.5"
