@@ -2,7 +2,11 @@ use std::io::{self, Write};
 
 use io_trait::Io;
 use nanvm_lib::{
-    common::default::default, js::any::Any, mem::manager::Manager, parser::{parse_with_tokens, Context, ParseError, ParseResult}, tokenizer::tokenize
+    common::default::default,
+    js::any::Any,
+    mem::manager::Manager,
+    parser::{parse_with_tokens, Context, ParseError, ParseResult},
+    tokenizer::tokenize,
 };
 
 use crate::{
