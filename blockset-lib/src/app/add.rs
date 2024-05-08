@@ -11,7 +11,7 @@ use nanvm_lib::{
         new::New,
     },
     mem::{global::GLOBAL, manager::Manager},
-    serializer::to_json,
+    serializer::to_json::to_json,
 };
 
 use crate::{
@@ -26,6 +26,7 @@ pub struct Add<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> {
     pub storage: &'a F,
     pub to_posix_eol: bool,
     pub display_new: bool,
+    pub new: u64,
     pub status: StatusLine<'a, T>,
     pub p: State,
 }
@@ -103,6 +104,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             &mut self.status,
             self.display_new,
             self.p,
+            &mut self.new,
         )
     }
     fn add_files(&mut self, path: &str, files: Vec<(String, u64)>) -> io::Result<String> {
@@ -136,6 +138,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
             &mut self.status,
             self.display_new,
             self.p,
+            &mut self.new,
         )
     }
     pub fn add_dir(&mut self, path: &str) -> io::Result<String> {

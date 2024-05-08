@@ -24,6 +24,7 @@ fn add_file_or_dir<'a, T: Io, S: 'a + TreeAdd>(
         storage,
         to_posix_eol,
         display_new,
+        new: 0,
         status: StatusLine::new(io),
         p: State {
             total: 0,
