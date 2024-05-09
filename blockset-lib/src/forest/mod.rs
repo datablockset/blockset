@@ -1,10 +1,7 @@
 use std::io::{self, Write};
 
-use io_trait::Io;
-
 use crate::{
     cdt::{node_id::root, node_type::NodeType},
-    common::status_line::{mb, StatusLine},
     uint::{u224::U224, u32::from_u8x4},
 };
 
@@ -46,7 +43,6 @@ pub trait Forest {
         &self,
         id: &ForestNodeId,
         w: &mut impl Write,
-        io: &impl Io,
         mut progress: impl FnMut(u64, f64) -> io::Result<()>,
     ) -> io::Result<()> {
         if id.hash == EMPTY {
@@ -88,7 +84,7 @@ pub trait Forest {
                 progress_p += size;
                 progress_b += buf.len() as u64;
                 // state.set_progress(&(mb(progress_b) + ", "), progress_p)?;
-                progress(progress_b, progress_p);
+                progress(progress_b, progress_p)?;
             }
             t = NodeType::Child;
         }

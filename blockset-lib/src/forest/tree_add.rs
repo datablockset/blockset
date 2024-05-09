@@ -180,7 +180,6 @@ mod test {
             .restore(
                 &ForestNodeId::new(NodeType::Root, &k),
                 &mut cursor,
-                &io,
                 |progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p),
             )
             .unwrap();

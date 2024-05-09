@@ -23,7 +23,6 @@ pub fn restore(io: &impl Io, hash: &U224, w: &mut impl Write) -> io::Result<()> 
     FileForest(io).restore(
         &ForestNodeId::new(NodeType::Root, hash),
         w,
-        io,
         |progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p),
     )
 }
