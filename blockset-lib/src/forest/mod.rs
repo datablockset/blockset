@@ -42,7 +42,13 @@ pub trait Forest {
         Ok(true)
     }
     // we should extract a state machine from the function and remove `set_progress`.
-    fn restore(&self, id: &ForestNodeId, w: &mut impl Write, io: &impl Io, mut progress: impl FnMut(u64, f64) -> io::Result<()>) -> io::Result<()> {
+    fn restore(
+        &self,
+        id: &ForestNodeId,
+        w: &mut impl Write,
+        io: &impl Io,
+        mut progress: impl FnMut(u64, f64) -> io::Result<()>,
+    ) -> io::Result<()> {
         if id.hash == EMPTY {
             return Ok(());
         }
