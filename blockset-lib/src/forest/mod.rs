@@ -42,7 +42,7 @@ pub trait Forest {
         Ok(true)
     }
     // we should extract a state machine from the function and remove `set_progress`.
-    fn restore(&self, id: &ForestNodeId, w: &mut impl Write, io: &impl Io) -> io::Result<()> {
+    fn restore(&self, id: &ForestNodeId, w: &mut impl Write, io: &impl Io, mut progress: impl FnMut(u64, f64) -> io::Result<()>) -> io::Result<()> {
         if id.hash == EMPTY {
             return Ok(());
         }
@@ -50,9 +50,10 @@ pub trait Forest {
         let mut keys = [(id.hash, 1.0)].to_vec();
         let mut progress_p = 0.0;
         let mut progress_b = 0;
-        let mut state = StatusLine::new(io);
+        // let mut state = StatusLine::new(io);
         let mut t = id.node_type;
-        state.set_progress("", 0.0)?;
+        // state.set_progress("", 0.0)?;
+        progress(0, 0.0)?;
         while let Some((key, size)) = keys.pop() {
             let v = self.get_block(&ForestNodeId::new(t, &key))?;
             if let Some(len) = get_len(&v) {
@@ -80,7 +81,8 @@ pub trait Forest {
                 w.write_all(buf)?;
                 progress_p += size;
                 progress_b += buf.len() as u64;
-                state.set_progress(&(mb(progress_b) + ", "), progress_p)?;
+                // state.set_progress(&(mb(progress_b) + ", "), progress_p)?;
+                progress(progress_b, progress_p);
             }
             t = NodeType::Child;
         }

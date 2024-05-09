@@ -11,6 +11,7 @@ use nanvm_lib::{
 
 use crate::{
     cdt::node_type::NodeType,
+    common::status_line::{mb, StatusLine},
     forest::{file::FileForest, node_id::ForestNodeId, Forest},
     uint::u224::U224,
 };
@@ -18,7 +19,13 @@ use crate::{
 use super::invalid_input;
 
 pub fn restore(io: &impl Io, hash: &U224, w: &mut impl Write) -> io::Result<()> {
-    FileForest(io).restore(&ForestNodeId::new(NodeType::Root, hash), w, io)
+    let mut state = StatusLine::new(io);
+    FileForest(io).restore(
+        &ForestNodeId::new(NodeType::Root, hash),
+        w,
+        io,
+        |progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p),
+    )
 }
 
 fn tokenize_and_parse<M: Manager>(
