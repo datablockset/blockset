@@ -2,14 +2,15 @@ mod add;
 mod add_entry;
 mod get;
 
-use std::io::{self, Cursor, ErrorKind, Read, Write};
+use std::io::{self, ErrorKind, Read, Write};
 
 use add_entry::add_entry;
+use get::get;
 
 use io_trait::Io;
 use nanvm_lib::{
-    js::{any::Any, any_cast::AnyCast, js_object::JsObjectRef, js_string::JsStringRef},
-    mem::{global::GLOBAL, manager::Dealloc},
+    js::{any::Any, any_cast::AnyCast, js_string::JsStringRef},
+    mem::manager::Dealloc,
 };
 
 use crate::{
@@ -24,11 +25,6 @@ use crate::{
     forest::{file::FileForest, tree_add::ForestTreeAdd},
     info::calculate_total,
     uint::u224::U224,
-};
-
-use self::{
-    add::posix_path,
-    get::{create_file_recursively, parse_json, restore},
 };
 
 fn set_progress(
@@ -161,29 +157,7 @@ pub fn run(io: &impl Io) -> io::Result<()> {
         "validate" => validate(&mut a, stdout),
         "hash" => add_entry(io, &mut a, &|_| (), false),
         "add" => add_entry(io, &mut a, &|io| ForestTreeAdd::new(FileForest(io)), true),
-        "get" => {
-            let d = get_hash(&mut a)?;
-            let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
-            if path.ends_with('/') {
-                let mut buffer = Vec::default();
-                let mut w = Cursor::new(&mut buffer);
-                restore(io, &d, &mut w)?;
-                let json: JsObjectRef<_> = try_move(parse_json(io, GLOBAL, buffer)?)?;
-                for (k, v) in json.items() {
-                    let file = js_string_to_string(k)?;
-                    let hash = js_string_to_string(&try_move(v.clone())?)?;
-                    restore(
-                        io,
-                        &str_to_hash(&hash)?,
-                        &mut create_file_recursively(io, (path.to_owned() + &file).as_str())?,
-                    )?;
-                    // stdout.println([&path, ": ", &hash])?;
-                }
-                Ok(())
-            } else {
-                restore(io, &d, &mut create_file_recursively(io, &path)?)
-            }
-        }
+        "get" => get(io, &mut a),
         "info" => stdout.println(["size: ", calculate_total(io)?.to_string().as_str(), " B."]),
         _ => Err(invalid_input("unknown command")),
     }
