@@ -18,12 +18,17 @@ use crate::{
 
 use super::{add::posix_path, get_hash, invalid_input, js_string_to_string, str_to_hash, try_move};
 
-pub fn restore(io: &impl Io, hash: &U224, w: &mut impl Write) -> io::Result<()> {
-    let mut state = StatusLine::new(io);
+pub fn restore(
+    io: &impl Io,
+    hash: &U224,
+    w: &mut impl Write,
+    progress: &mut impl FnMut(u64, f64) -> io::Result<()>,
+) -> io::Result<()> {
+    // let mut state = StatusLine::new(io);
     FileForest(io).restore(
         &ForestNodeId::new(NodeType::Root, hash),
         w,
-        |progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p),
+        progress, //|progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p),
     )
 }
 
@@ -61,10 +66,12 @@ pub fn create_file_recursively<T: Io>(io: &T, path: &str) -> io::Result<T::File>
 pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
     let d = get_hash(a)?;
     let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
+    let mut state = StatusLine::new(io);
+    let mut f = |progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p);
     if path.ends_with('/') {
         let mut buffer = Vec::default();
         let mut w = Cursor::new(&mut buffer);
-        restore(io, &d, &mut w)?;
+        restore(io, &d, &mut w, &mut f)?;
         let json: JsObjectRef<_> = try_move(parse_json(io, GLOBAL, buffer)?)?;
         for (k, v) in json.items() {
             let file = js_string_to_string(k)?;
@@ -73,11 +80,12 @@ pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
                 io,
                 &str_to_hash(&hash)?,
                 &mut create_file_recursively(io, (path.to_owned() + &file).as_str())?,
+                &mut f,
             )?;
             // stdout.println([&path, ": ", &hash])?;
         }
         Ok(())
     } else {
-        restore(io, &d, &mut create_file_recursively(io, &path)?)
+        restore(io, &d, &mut create_file_recursively(io, &path)?, &mut f)
     }
 }
