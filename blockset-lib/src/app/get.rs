@@ -24,11 +24,7 @@ pub fn restore(
     w: &mut impl Write,
     progress: &mut impl FnMut(u64, f64) -> io::Result<()>,
 ) -> io::Result<u64> {
-    FileForest(io).restore(
-        &ForestNodeId::new(NodeType::Root, hash),
-        w,
-        progress,
-    )
+    FileForest(io).restore(&ForestNodeId::new(NodeType::Root, hash), w, progress)
 }
 
 fn tokenize_and_parse<M: Manager>(
