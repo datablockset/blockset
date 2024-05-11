@@ -44,9 +44,9 @@ pub trait Forest {
         id: &ForestNodeId,
         w: &mut impl Write,
         mut progress: impl FnMut(u64, f64) -> io::Result<()>,
-    ) -> io::Result<()> {
+    ) -> io::Result<u64> {
         if id.hash == EMPTY {
-            return Ok(());
+            return Ok(0);
         }
         let mut tail = Vec::default();
         let mut keys = [(id.hash, 1.0)].to_vec();
@@ -85,6 +85,7 @@ pub trait Forest {
             }
             t = NodeType::Child;
         }
-        w.write_all(&tail)
+        w.write_all(&tail)?;
+        Ok(progress_b)
     }
 }
