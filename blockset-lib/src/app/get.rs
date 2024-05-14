@@ -58,19 +58,27 @@ pub fn create_file_recursively<T: Io>(io: &T, path: &str) -> io::Result<T::File>
     io.create(path)
 }
 
+fn set_progress(
+    state: &mut StatusLine<impl Io>,
+    progress_b: u64,
+    progress_p: f64,
+) -> io::Result<()> {
+    state.set_progress(&(mb(progress_b) + ", "), progress_p)
+}
+
 pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
     let d = get_hash(a)?;
     let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
     let mut state = StatusLine::new(io);
-    let mut offset = 0;
-    let mut b = 0;
     if path.ends_with('/') {
         let mut buffer = Vec::default();
         let mut w = Cursor::new(&mut buffer);
         restore(io, &d, &mut w, &mut |_, _| Ok(()))?;
-        let json: JsObjectRef<_> = try_move(parse_json(io, GLOBAL, buffer)?)?;
+        let json = try_move::<_, JsObjectRef<_>>(parse_json(io, GLOBAL, buffer)?)?;
         let items = json.items();
         let t = items.len();
+        let mut offset = 0;
+        let mut b = 0;
         for (k, v) in items {
             let file = js_string_to_string(k)?;
             let hash = js_string_to_string(&try_move(v.clone())?)?;
@@ -79,14 +87,14 @@ pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
                 &str_to_hash(&hash)?,
                 &mut create_file_recursively(io, (path.to_owned() + &file).as_str())?,
                 &mut |progress_b, progress_p| {
-                    state.set_progress(
-                        &(mb(b + progress_b) + ", "),
+                    set_progress(
+                        &mut state,
+                        b + progress_b,
                         (offset as f64 + progress_p) / t as f64,
                     )
                 },
             )?;
             offset += 1;
-            // stdout.println([&path, ": ", &hash])?;
         }
         Ok(())
     } else {
@@ -94,9 +102,7 @@ pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
             io,
             &d,
             &mut create_file_recursively(io, &path)?,
-            &mut |progress_b, progress_p| {
-                state.set_progress(&(mb(b + progress_b) + ", "), progress_p)
-            },
+            &mut |progress_b, progress_p| set_progress(&mut state, progress_b, progress_p),
         )?;
         Ok(())
     }
