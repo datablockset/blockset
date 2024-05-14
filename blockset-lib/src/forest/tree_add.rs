@@ -141,6 +141,7 @@ mod test {
 
     use crate::{
         cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
+        common::status_line::{mb, StatusLine},
         forest::{mem::MemForest, node_id::ForestNodeId, Forest},
         uint::u224::U224,
     };
@@ -174,8 +175,13 @@ mod test {
         let mut v = Vec::default();
         let mut cursor = Cursor::new(&mut v);
         let io = VirtualIo::new(&[]);
+        let mut state = StatusLine::new(&io);
         table
-            .restore(&ForestNodeId::new(NodeType::Root, &k), &mut cursor, &io)
+            .restore(
+                &ForestNodeId::new(NodeType::Root, &k),
+                &mut cursor,
+                |progress_b, progress_p| state.set_progress(&(mb(progress_b) + ", "), progress_p),
+            )
             .unwrap();
         assert_eq!(v, c.as_bytes());
     }
