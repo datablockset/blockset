@@ -66,9 +66,7 @@ fn set_progress(
     state.set_progress(&(mb(progress_b) + ", "), progress_p)
 }
 
-pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
-    let d = get_hash(a)?;
-    let path = posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str());
+fn get_if(d: &U224, path: &str, io: &impl Io) -> io::Result<()> {
     let mut state = StatusLine::new(io);
     if path.ends_with('/') {
         let mut buffer = Vec::default();
@@ -106,4 +104,12 @@ pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
         )?;
         Ok(())
     }
+}
+
+pub fn get<T: Io>(io: &T, a: &mut T::Args) -> io::Result<()> {
+    get_if(
+        &get_hash(a)?,
+        &posix_path(a.next().ok_or(invalid_input("missing file name"))?.as_str()),
+        io,
+    )
 }
