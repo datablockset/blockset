@@ -71,13 +71,12 @@ fn get_if(d: &U224, path: &str, io: &impl Io) -> io::Result<()> {
     if path.ends_with('/') {
         let mut buffer = Vec::default();
         let mut w = Cursor::new(&mut buffer);
-        restore(io, &d, &mut w, &mut |_, _| Ok(()))?;
+        restore(io, d, &mut w, &mut |_, _| Ok(()))?;
         let json = try_move::<_, JsObjectRef<_>>(parse_json(io, GLOBAL, buffer)?)?;
         let items = json.items();
         let t = items.len();
-        let mut offset = 0;
         let mut b = 0;
-        for (k, v) in items {
+        for (offset, (k, v)) in items.iter().enumerate() {
             let file = js_string_to_string(k)?;
             let hash = js_string_to_string(&try_move(v.clone())?)?;
             b += restore(
@@ -92,14 +91,13 @@ fn get_if(d: &U224, path: &str, io: &impl Io) -> io::Result<()> {
                     )
                 },
             )?;
-            offset += 1;
         }
         Ok(())
     } else {
         restore(
             io,
-            &d,
-            &mut create_file_recursively(io, &path)?,
+            d,
+            &mut create_file_recursively(io, path)?,
             &mut |progress_b, progress_p| set_progress(&mut state, progress_b, progress_p),
         )?;
         Ok(())
