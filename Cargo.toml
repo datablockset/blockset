@@ -3,14 +3,14 @@ members = ["blockset", "blockset-lib"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.3"
+version = "0.5.4"
 edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["Sergey Shandar"]
 repository = "https://github.com/datablockset/blockset"
 
 [workspace.dependencies]
-blockset-lib = { path = "blockset-lib", version = "0.5.3" }
+blockset-lib = { path = "blockset-lib", version = "0.5.4" }
 io-trait = "0.11.0"
 io-impl = "0.11.0"
 io-test = "0.11.0"
