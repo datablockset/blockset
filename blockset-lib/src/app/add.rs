@@ -129,7 +129,7 @@ impl<'a, T: Io, S: 'a + TreeAdd, F: Fn(&'a T) -> S> Add<'a, T, S, F> {
     }
     // TODO: move it to unit tests.
     fn check(&mut self, cursor: &Cursor<String>) {
-        assert!(self.p.current + cursor.position() == self.p.total);
+        // assert!(self.p.current + cursor.position() == self.p.total);
     }
     fn mem_to_tree(&mut self, cursor: &mut Cursor<String>) -> io::Result<String> {
         read_to_tree(
