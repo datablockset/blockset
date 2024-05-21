@@ -1,7 +1,9 @@
 # Tasks
 
-- [ ] Fix `New 0 MB.` when adding directories.
-- [ ] Fix progress when extracting directories.
+- [ ] Fix `file already exists` when two `blockset` processes are working on the same repository.
+
+- [x] Fix `New 0 MB.` when adding directories.
+- [x] Fix progress when extracting directories.
 
 ## Epic Stories
 
@@ -29,13 +31,13 @@ See:
 
 ### New Library Structure
 
-- `IO-trait` a trait with a minimal set of I/O operations.
+- `IO-trait` is a trait with a minimal set of I/O operations.
 - `common` a library with common functions, including I/O extensions. Depends on
   - `IO-trait` to extend the `IO` trait.
-- `IO-impl` an implementation of `IO` for the local file system. Depends on
+- `IO-impl` is an implementation of `IO` for the local file system. Depends on
   - `IO-trait`.
   - `common`.
-- `IO-test` a mock implementation of `IO` for testing. Depends on
+- `IO-test` is a mock implementation of `IO` for testing. Depends on
   - `IO-trait`.
   - `common`.
 
