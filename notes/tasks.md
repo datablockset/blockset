@@ -1,6 +1,7 @@
 # Tasks
 
 - [ ] Fix `file already exists` when two `blockset` processes are working on the same repository.
+- [ ] Fix `check` and add unit tests.
 
 - [x] Fix `New 0 MB.` when adding directories.
 - [x] Fix progress when extracting directories.
