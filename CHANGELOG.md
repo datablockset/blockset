@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.6.0
+
+- license changed to AGPL 3.0. PR [#177](https://github.com/datablockset/blockset/pull/177).
+
 ## 0.5.4
 
-- remove `assert`
+- remove `assert`. PR [#175](https://github.com/datablockset/blockset/pull/175).
 
 ## 0.5.3
 
