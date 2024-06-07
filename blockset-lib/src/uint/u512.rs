@@ -1,5 +1,7 @@
 use crate::uint::u256::U256;
 
+use super::u256;
+
 pub type U512 = [U256; 2];
 
 pub const fn new(a: u128, b: u128, c: u128, d: u128) -> U512 {
@@ -8,6 +10,11 @@ pub const fn new(a: u128, b: u128, c: u128, d: u128) -> U512 {
 
 pub const fn get_u128(a: &U512, i: usize) -> u128 {
     a[(i >> 1) & 1][i & 1]
+}
+
+pub const fn add([a0, a1]: U512, [b0, b1]: U512) -> U512 {
+    let (r0, c) = u256::overflowing_add(a0, b0);
+    [r0, u256::add(u256::add(a1, b1), [c as u128, 0])]
 }
 
 #[cfg(test)]
