@@ -1,5 +1,7 @@
 use crate::uint::u32::add;
 
+use super::u256::{self, U256};
+
 /// Converts a 128-bit unsigned integer (`u128`) into a vector of four 32-bit unsigned integers (`[u32; 4]`).
 /// This function essentially 'splits' the 128-bit value into a vector of four components, each representing a
 /// 32-bit segment, starting from the least significant bits.
@@ -43,6 +45,25 @@ pub const fn shl(u: u128, i: i32) -> u128 {
         0..=127 => u << i,
         _ => 0,
     }
+}
+
+#[inline(always)]
+const fn lo_hi(a: u128) -> [u128; 2] {
+    [a as u64 as u128, a >> 64]
+}
+
+/// Multiplication with overflow.
+/// a0 * b0 + (a1 * b0 + a0 * b1) << 64 + (a1 * b1) << 128
+pub const fn mul(a: u128, b: u128) -> U256 {
+    let [a0, a1] = lo_hi(a);
+    let [b0, b1] = lo_hi(b);
+    let r0 = [a0 * b0, 0];
+    let r1 = {
+        let x = a1 * b0 + a0 * b1;
+        [x << 64, x >> 64]
+    };
+    let r2 = [0, a1 * b1];
+    u256::add(u256::add(r0, r1), r2)
 }
 
 #[cfg(test)]

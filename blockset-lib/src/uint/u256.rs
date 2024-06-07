@@ -44,11 +44,27 @@ pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
     Some([a00, a01, a02, a03, a10, a11, a12])
 }
 
+pub const fn add([a0, a1]: U256, [b0, b1]: U256) -> U256 {
+    let (r0, c) = a0.overflowing_add(b0);
+    [r0, a1 + b1 + c as u128]
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
+    use crate::uint::u256::add;
+
     use super::{shl, U256};
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_add() {
+        assert_eq!(add([0, 0], [0, 0]), [0, 0]);
+        assert_eq!(add([0, 1], [0, 2]), [0, 3]);
+        assert_eq!(add([1, 2], [3, 4]), [4, 6]);
+        assert_eq!(add([u128::MAX, 3], [4, 5]), [3, 9]);
+    }
 
     const X: U256 = [
         0x100F_0E0D_0C0B_0A09_0807_0605_0403_0201,
