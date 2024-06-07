@@ -70,7 +70,31 @@ pub const fn mul(a: u128, b: u128) -> U256 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u128::shl;
+    use crate::uint::u128::{mul, shl};
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn test_mul() {
+        assert_eq!(mul(0, 0), [0, 0]);
+        assert_eq!(mul(0, 1), [0, 0]);
+        assert_eq!(mul(1, 1), [1, 0]);
+        assert_eq!(mul(2, 3), [6, 0]);
+        assert_eq!(mul(6, 7), [42, 0]);
+        assert_eq!(mul(42, 43), [1_806, 0]);
+        assert_eq!(mul(1_806, 1_807), [3_263_442, 0]);
+        assert_eq!(mul(3_263_442, 3_263_443), [10_650_056_950_806, 0]);
+        assert_eq!(
+            mul(10_650_056_950_806, 10_650_056_950_807),
+            [113_423_713_055_421_844_361_000_442, 0]
+        );
+        assert_eq!(
+            mul(
+                113_423_713_055_421_844_361_000_442,
+                113_423_713_055_421_844_361_000_443
+            ),
+            [337_284_947_070_536_250_008_747_159_125_413_113_374, 37_806_656_864_672]
+        );
+    }
 
     fn check_shl(a: u128, b: i32, expected: u128, f: fn(u128, i32) -> u128) {
         assert_eq!(f(a, b), expected);
