@@ -82,6 +82,7 @@ mod test {
     #[wasm_bindgen_test]
     fn test_mul() {
         assert_eq!(mul([1, 2], [3, 4]), [[3, 10], [8, 0]]);
+        assert_eq!(mul([3, 10], [8, 1]), [[24, 83], [10, 0]]);
     }
 
     #[test]
