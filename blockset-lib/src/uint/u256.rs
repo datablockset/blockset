@@ -74,9 +74,15 @@ pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u256::add;
+    use crate::uint::u256::{add, mul};
 
     use super::{shl, U256};
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_mul() {
+        assert_eq!(mul([1, 2], [3, 4]), [[3, 10], [8, 0]]);
+    }
 
     #[test]
     #[wasm_bindgen_test]
