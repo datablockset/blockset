@@ -46,17 +46,16 @@ pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
     Some([a00, a01, a02, a03, a10, a11, a12])
 }
 
-pub const fn add([a0, a1]: U256, [b0, b1]: U256) -> U256 {
-    let (r0, c) = a0.overflowing_add(b0);
-    [r0, a1 + b1 + c as u128]
-}
-
 pub const fn overflowing_add([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
     let (r0, c) = a0.overflowing_add(b0);
     let (a1c, c0) = a1.overflowing_add(c as u128);
     let (r1, c1) = a1c.overflowing_add(b1);
     assert!(!(c0 & c1));
     ([r0, r1], c0 | c1)
+}
+
+pub const fn add(a: U256, b: U256) -> U256 {
+    overflowing_add(a, b).0
 }
 
 pub const ZERO: U256 = [0, 0];
