@@ -70,6 +70,11 @@ pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
     u512::add(u512::add(r0, r1), r2)
 }
 
+pub fn div(a: U256, b: U256) -> (U256, U256) {
+    if less(&a, &b) { return (ZERO, a) }
+    (ZERO, a)
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
