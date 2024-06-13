@@ -1,5 +1,5 @@
 use crate::uint::{
-    u256x::{u32x8_add, U256},
+    u256x::{u32x8_wadd, U256},
     u512x::U512,
 };
 
@@ -14,5 +14,5 @@ pub const fn compress(init: U256, mut w: U512) -> U256 {
     x = round16(x, &w, 2);
     w = w_round16(w);
     x = round16(x, &w, 3);
-    u32x8_add(&x, &init)
+    u32x8_wadd(&x, &init)
 }

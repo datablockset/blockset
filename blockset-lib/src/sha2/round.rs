@@ -1,7 +1,7 @@
 use crate::uint::{
     u128x::{get_u32, to_u32x4},
     u256x::U256,
-    u32x::{add, add5},
+    u32x::{wadd, wadd5},
     u512x::{get_u128, new, U512},
 };
 
@@ -11,7 +11,7 @@ const fn round([s0, s1]: U256, i: usize, w: u128, k: u128) -> U256 {
     let (a, e) = {
         let t1 = {
             let [e, f, g, h] = to_u32x4(s1);
-            add5(
+            wadd5(
                 h,
                 BIG1.get(e),
                 (e & f) ^ (!e & g),
@@ -20,8 +20,8 @@ const fn round([s0, s1]: U256, i: usize, w: u128, k: u128) -> U256 {
             )
         };
         let [a, b, c, d] = to_u32x4(s0);
-        let t2 = add(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
-        (add(t1, t2), add(d, t1))
+        let t2 = wadd(BIG0.get(a), (a & b) ^ (a & c) ^ (b & c));
+        (wadd(t1, t2), wadd(d, t1))
     };
     [a as u128 | (s0 << 32), e as u128 | (s1 << 32)]
 }

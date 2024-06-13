@@ -1,4 +1,4 @@
-use crate::uint::u32x::add;
+use crate::uint::u32x::wadd;
 
 use super::u256x::{self, U256};
 
@@ -32,10 +32,10 @@ pub const fn get_u32(v: u128, i: usize) -> u32 {
 /// Performs element-wise addition of two 128-bit vectors (`u128`), represented as arrays of 32-bit components.
 /// Each component of the vectors is added using `add`, which handles overflow by wrapping around.
 #[inline(always)]
-pub const fn u32x4_add(a: u128, b: u128) -> u128 {
+pub const fn u32x4_wadd(a: u128, b: u128) -> u128 {
     let [a0, a1, a2, a3] = to_u32x4(a);
     let [b0, b1, b2, b3] = to_u32x4(b);
-    from_u32x4([add(a0, b0), add(a1, b1), add(a2, b2), add(a3, b3)])
+    from_u32x4([wadd(a0, b0), wadd(a1, b1), wadd(a2, b2), wadd(a3, b3)])
 }
 
 #[inline(always)]
@@ -63,7 +63,7 @@ pub const fn mul(a: u128, b: u128) -> U256 {
         [x << 64, x >> 64]
     };
     let r2 = [0, a1 * b1];
-    u256x::add(u256x::add(r0, r1), r2)
+    u256x::wadd(u256x::wadd(r0, r1), r2)
 }
 
 #[cfg(test)]

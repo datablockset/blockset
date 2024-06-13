@@ -1,12 +1,12 @@
-use crate::uint::u128x::{shl as shl128, to_u32x4, u32x4_add};
+use crate::uint::u128x::{shl as shl128, to_u32x4, u32x4_wadd};
 
 use super::{u128x, u512x::{self, U512}};
 
 pub type U256 = [u128; 2];
 
 #[inline(always)]
-pub const fn u32x8_add(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
-    [u32x4_add(a0, b0), u32x4_add(a1, b1)]
+pub const fn u32x8_wadd(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
+    [u32x4_wadd(a0, b0), u32x4_wadd(a1, b1)]
 }
 
 #[inline(always)]
@@ -46,7 +46,7 @@ pub const fn to_u224(&[a0, a1]: &U256) -> Option<[u32; 7]> {
     Some([a00, a01, a02, a03, a10, a11, a12])
 }
 
-pub const fn overflowing_add([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
+pub const fn oadd([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
     let (r0, c) = a0.overflowing_add(b0);
     let (a1c, c0) = a1.overflowing_add(c as u128);
     let (r1, c1) = a1c.overflowing_add(b1);
@@ -54,20 +54,38 @@ pub const fn overflowing_add([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
     ([r0, r1], c0 | c1)
 }
 
-pub const fn add(a: U256, b: U256) -> U256 {
-    overflowing_add(a, b).0
+pub const fn wadd(a: U256, b: U256) -> U256 {
+    oadd(a, b).0
 }
 
-pub const ZERO: U256 = [0, 0];
+pub const fn osub([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
+    let (r0, c) = a0.overflowing_sub(b0);
+    let (a1c, c0) = a1.overflowing_sub(c as u128);
+    let (r1, c1) = a1c.overflowing_sub(b1);
+    assert!(!(c0 & c1));
+    ([r0, r1], c0 | c1)
+}
+
+#[inline(always)]
+pub const fn from_u128(a: u128) -> U256 {
+    [a, 0]
+}
+
+#[inline(always)]
+pub const fn from_bool(a: bool) -> U256 {
+    from_u128(a as u128)
+}
+
+pub const ZERO: U256 = from_u128(0);
 
 pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
     let r0 = [u128x::mul(a0, b0), ZERO];
     let r1 = {
-        let [x0, x1] = add(u128x::mul(a1, b0), u128x::mul(a0, b1));
+        let [x0, x1] = wadd(u128x::mul(a1, b0), u128x::mul(a0, b1));
         [[0, x0], [x1, 0]]
     };
     let r2 = [ZERO, u128x::mul(a1, b1)];
-    u512x::add(u512x::add(r0, r1), r2)
+    u512x::wadd(u512x::wadd(r0, r1), r2)
 }
 
 pub fn div(a: U256, b: U256) -> (U256, U256) {
@@ -79,7 +97,7 @@ pub fn div(a: U256, b: U256) -> (U256, U256) {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u256x::{add, mul};
+    use crate::uint::u256x::{wadd, mul};
 
     use super::{shl, U256};
 
@@ -193,10 +211,10 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_add() {
-        assert_eq!(add([0, 0], [0, 0]), [0, 0]);
-        assert_eq!(add([0, 1], [0, 2]), [0, 3]);
-        assert_eq!(add([1, 2], [3, 4]), [4, 6]);
-        assert_eq!(add([u128::MAX, 3], [4, 5]), [3, 9]);
+        assert_eq!(wadd([0, 0], [0, 0]), [0, 0]);
+        assert_eq!(wadd([0, 1], [0, 2]), [0, 3]);
+        assert_eq!(wadd([1, 2], [3, 4]), [4, 6]);
+        assert_eq!(wadd([u128::MAX, 3], [4, 5]), [3, 9]);
     }
 
     const X: U256 = [
