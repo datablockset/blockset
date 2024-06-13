@@ -223,8 +223,11 @@ mod test {
     fn test_osub() {
         assert_eq!(osub([0, 0], [0, 0]), ([0, 0], false));
         assert_eq!(osub([0, 1], [0, 2]), ([0, u128::MAX], true));
+        assert_eq!(osub([0, 2], [0, 1]), ([0, 1], false));
         assert_eq!(osub([1, 2], [3, 4]), ([u128::MAX - 1, u128::MAX - 2], true));
-        assert_eq!(wadd([u128::MAX, 3], [4, 5]), [3, 9]);
+        assert_eq!(osub([3, 4], [1, 2]), ([2, 2], false));
+        assert_eq!(osub([u128::MAX, 3], [4, 5]), ([u128::MAX - 4, u128::MAX - 1], true));
+        assert_eq!(osub([4, 5], [u128::MAX, 3]), ([5, 1], false));
     }
 
     const X: U256 = [
