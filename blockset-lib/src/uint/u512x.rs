@@ -18,6 +18,11 @@ pub const fn wadd([a0, a1]: U512, [b0, b1]: U512) -> U512 {
     [r0, u256x::wadd(u256x::wadd(a1, b1), u256x::from_bool(c))]
 }
 
+pub const fn wsub([a0, a1]: U512, [b0, b1]: U512) -> U512 {
+    let (r0, c) = u256x::osub(a0, b0);
+    [r0, u256x::wsub(u256x::wsub(a1, b1), u256x::from_bool(c))]
+}
+
 /// (a3 * b^3 + a2 * b^2 + a1 * b + a0) % (p1 * b + p0)
 /*
 pub const fn rem([a0, a1]: U512, d: U256) -> U256 {

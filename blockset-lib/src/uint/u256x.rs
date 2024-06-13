@@ -68,6 +68,11 @@ pub const fn osub([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
 }
 
 #[inline(always)]
+pub const fn wsub(a: U256, b: U256) -> U256 {
+    osub(a, b).0
+}
+
+#[inline(always)]
 pub const fn from_u128(a: u128) -> U256 {
     [a, 0]
 }
@@ -78,6 +83,13 @@ pub const fn from_bool(a: bool) -> U256 {
 }
 
 pub const ZERO: U256 = from_u128(0);
+
+pub const fn leading_zeros([a0, a1]: U256) -> u32 {
+    match a1.leading_zeros() {
+        128 => 128 + a0.leading_zeros(),
+        x => x
+    }
+}
 
 pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
     let r0 = [u128x::mul(a0, b0), ZERO];
@@ -98,9 +110,18 @@ pub fn div(a: U256, b: U256) -> (U256, U256) {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u256x::{mul, osub, wadd};
+    use crate::uint::u256x::{from_u128, leading_zeros, mul, osub, wadd, ZERO};
 
     use super::{shl, U256};
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_leading_zeros() {
+        assert_eq!(leading_zeros(ZERO), 256);
+        assert_eq!(leading_zeros(from_u128(1)), 255);
+        assert_eq!(leading_zeros([0, 1]), 127);
+        assert_eq!(leading_zeros([0, 1 << 127]), 0);
+    }
 
     #[test]
     #[wasm_bindgen_test]
