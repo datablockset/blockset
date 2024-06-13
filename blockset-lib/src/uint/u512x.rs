@@ -1,6 +1,6 @@
-use crate::uint::u256::U256;
+use crate::uint::u256x::U256;
 
-use super::u256;
+use super::u256x;
 
 pub type U512 = [U256; 2];
 
@@ -13,8 +13,8 @@ pub const fn get_u128(a: &U512, i: usize) -> u128 {
 }
 
 pub const fn add([a0, a1]: U512, [b0, b1]: U512) -> U512 {
-    let (r0, c) = u256::overflowing_add(a0, b0);
-    [r0, u256::add(u256::add(a1, b1), [c as u128, 0])]
+    let (r0, c) = u256x::overflowing_add(a0, b0);
+    [r0, u256x::add(u256x::add(a1, b1), [c as u128, 0])]
 }
 
 /// (a3 * b^3 + a2 * b^2 + a1 * b + a0) % (p1 * b + p0)
@@ -28,7 +28,7 @@ pub const fn rem([a0, a1]: U512, d: U256) -> U256 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u512::add;
+    use crate::uint::u512x::add;
 
     use super::{new, U512};
 

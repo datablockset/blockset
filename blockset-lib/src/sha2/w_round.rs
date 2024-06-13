@@ -1,7 +1,7 @@
 use crate::uint::{
-    u128::{from_u32x4, to_u32x4},
-    u32::add4,
-    u512::{get_u128, U512},
+    u128x::{from_u32x4, to_u32x4},
+    u32x::add4,
+    u512x::{get_u128, U512},
 };
 
 use super::sigma32::{SMALL0, SMALL1};

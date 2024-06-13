@@ -1,8 +1,8 @@
 use crate::uint::{
-    u128::{get_u32, to_u32x4},
-    u256::U256,
-    u32::{add, add5},
-    u512::{get_u128, new, U512},
+    u128x::{get_u32, to_u32x4},
+    u256x::U256,
+    u32x::{add, add5},
+    u512x::{get_u128, new, U512},
 };
 
 use super::sigma32::{BIG0, BIG1};

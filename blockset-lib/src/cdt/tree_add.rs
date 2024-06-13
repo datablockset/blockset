@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::uint::{u224::U224, u256::U256};
+use crate::uint::{u224x::U224, u256x::U256};
 
 pub trait TreeAdd {
     fn push(&mut self, node_id: &U256, main_height: usize) -> io::Result<u64>;

@@ -46,14 +46,15 @@ pub const fn from_u8x4(a: &[u8; 4]) -> u32 {
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
+    use super::{add, add3, add4, add5, to_u8x4};
 
     #[wasm_bindgen_test]
     #[test]
     fn test() {
-        assert_eq!(super::add(1, 2), 3);
-        assert_eq!(super::add3(1, 2, 3), 6);
-        assert_eq!(super::add4(1, 2, 3, 4), 10);
-        assert_eq!(super::add5(1, 2, 3, 4, 5), 15);
-        assert_eq!(super::to_u8x4(0x12345678), [0x78, 0x56, 0x34, 0x12]);
+        assert_eq!(add(1, 2), 3);
+        assert_eq!(add3(1, 2, 3), 6);
+        assert_eq!(add4(1, 2, 3, 4), 10);
+        assert_eq!(add5(1, 2, 3, 4, 5), 15);
+        assert_eq!(to_u8x4(0x12345678), [0x78, 0x56, 0x34, 0x12]);
     }
 }

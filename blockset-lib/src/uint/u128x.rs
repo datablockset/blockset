@@ -1,6 +1,6 @@
-use crate::uint::u32::add;
+use crate::uint::u32x::add;
 
-use super::u256::{self, U256};
+use super::u256x::{self, U256};
 
 /// Converts a 128-bit unsigned integer (`u128`) into a vector of four 32-bit unsigned integers (`[u32; 4]`).
 /// This function essentially 'splits' the 128-bit value into a vector of four components, each representing a
@@ -63,14 +63,14 @@ pub const fn mul(a: u128, b: u128) -> U256 {
         [x << 64, x >> 64]
     };
     let r2 = [0, a1 * b1];
-    u256::add(u256::add(r0, r1), r2)
+    u256x::add(u256x::add(r0, r1), r2)
 }
 
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u128::{mul, shl};
+    use crate::uint::u128x::{mul, shl};
 
     #[wasm_bindgen_test]
     #[test]

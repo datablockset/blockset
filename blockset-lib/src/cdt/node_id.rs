@@ -1,9 +1,9 @@
 use crate::{
     sha2::{compress::compress, sha224::SHA224},
     uint::{
-        u128::to_u32x4,
-        u224::U224,
-        u256::{bitor, shl, U256},
+        u128x::to_u32x4,
+        u224x::U224,
+        u256x::{bitor, shl, U256},
     },
 };
 
@@ -65,7 +65,7 @@ mod test {
 
     use crate::{
         cdt::node_id::{len, merge, remove_len, to_node_id, LEN_HI_POS},
-        uint::u256::{shl, U256},
+        uint::u256x::{shl, U256},
     };
 
     #[wasm_bindgen_test]

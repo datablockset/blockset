@@ -13,7 +13,7 @@ use crate::{
     cdt::node_type::NodeType,
     common::status_line::{mb, StatusLine},
     forest::{file::FileForest, node_id::ForestNodeId, Forest},
-    uint::u224::U224,
+    uint::u224x::U224,
 };
 
 use super::{add::posix_path, get_hash, invalid_input, js_string_to_string, str_to_hash, try_move};

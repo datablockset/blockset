@@ -1,6 +1,6 @@
 use crate::uint::{
-    u256::{u32x8_add, U256},
-    u512::U512,
+    u256x::{u32x8_add, U256},
+    u512x::U512,
 };
 
 use super::{round::round16, w_round::w_round16};

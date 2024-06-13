@@ -11,9 +11,9 @@ use crate::{
         tree_add::TreeAdd,
     },
     uint::{
-        u224::U224,
-        u256::{to_u224, U256},
-        u32::to_u8x4,
+        u224x::U224,
+        u256x::{to_u224, U256},
+        u32x::to_u8x4,
     },
 };
 
@@ -143,7 +143,7 @@ mod test {
         cdt::{main_tree::MainTreeAdd, node_type::NodeType, tree_add::TreeAdd},
         common::status_line::{mb, StatusLine},
         forest::{mem::MemForest, node_id::ForestNodeId, Forest},
-        uint::u224::U224,
+        uint::u224x::U224,
     };
 
     use super::ForestTreeAdd;
