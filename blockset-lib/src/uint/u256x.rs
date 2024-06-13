@@ -54,6 +54,7 @@ pub const fn oadd([a0, a1]: U256, [b0, b1]: U256) -> (U256, bool) {
     ([r0, r1], c0 | c1)
 }
 
+#[inline(always)]
 pub const fn wadd(a: U256, b: U256) -> U256 {
     oadd(a, b).0
 }
@@ -97,7 +98,7 @@ pub fn div(a: U256, b: U256) -> (U256, U256) {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u256x::{wadd, mul};
+    use crate::uint::u256x::{mul, osub, wadd};
 
     use super::{shl, U256};
 
@@ -214,6 +215,15 @@ mod test {
         assert_eq!(wadd([0, 0], [0, 0]), [0, 0]);
         assert_eq!(wadd([0, 1], [0, 2]), [0, 3]);
         assert_eq!(wadd([1, 2], [3, 4]), [4, 6]);
+        assert_eq!(wadd([u128::MAX, 3], [4, 5]), [3, 9]);
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_osub() {
+        assert_eq!(osub([0, 0], [0, 0]), ([0, 0], false));
+        assert_eq!(osub([0, 1], [0, 2]), ([0, u128::MAX], true));
+        assert_eq!(osub([1, 2], [3, 4]), ([u128::MAX - 1, u128::MAX - 2], true));
         assert_eq!(wadd([u128::MAX, 3], [4, 5]), [3, 9]);
     }
 
