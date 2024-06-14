@@ -1,6 +1,9 @@
 use crate::uint::u128x::{to_u32x4, u32x4_wadd};
 
-use super::{u128x, u512x::{self, U512}};
+use super::{
+    u128x,
+    u512x::{self, U512},
+};
 
 pub type U256 = [u128; 2];
 
@@ -92,7 +95,7 @@ pub const ZERO: U256 = from_u128(0);
 pub const fn leading_zeros([a0, a1]: U256) -> u32 {
     match a1.leading_zeros() {
         128 => 128 + a0.leading_zeros(),
-        x => x
+        x => x,
     }
 }
 
@@ -107,7 +110,9 @@ pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
 }
 
 pub fn div(a: U256, b: U256) -> (U256, U256) {
-    if less(&a, &b) { return (ZERO, a) }
+    if less(&a, &b) {
+        return (ZERO, a);
+    }
     (ZERO, a)
 }
 
@@ -260,7 +265,10 @@ mod test {
         assert_eq!(osub([0, 2], [0, 1]), ([0, 1], false));
         assert_eq!(osub([1, 2], [3, 4]), ([u128::MAX - 1, u128::MAX - 2], true));
         assert_eq!(osub([3, 4], [1, 2]), ([2, 2], false));
-        assert_eq!(osub([u128::MAX, 3], [4, 5]), ([u128::MAX - 4, u128::MAX - 1], true));
+        assert_eq!(
+            osub([u128::MAX, 3], [4, 5]),
+            ([u128::MAX - 4, u128::MAX - 1], true)
+        );
         assert_eq!(osub([4, 5], [u128::MAX, 3]), ([5, 1], false));
     }
 

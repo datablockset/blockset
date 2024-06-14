@@ -46,8 +46,8 @@ pub const fn from_u8x4(a: &[u8; 4]) -> u32 {
 
 #[cfg(test)]
 mod test {
+    use super::{to_u8x4, wadd, wadd3, wadd4, wadd5};
     use wasm_bindgen_test::wasm_bindgen_test;
-    use super::{wadd, wadd3, wadd4, wadd5, to_u8x4};
 
     #[wasm_bindgen_test]
     #[test]

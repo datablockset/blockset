@@ -36,7 +36,7 @@ const ZERO: U512 = [u256x::ZERO, u256x::ZERO];
 pub const fn leading_zeros([a0, a1]: U512) -> u32 {
     match u256x::leading_zeros(a1) {
         256 => 256 + u256x::leading_zeros(a0),
-        x => x
+        x => x,
     }
 }
 
@@ -65,11 +65,15 @@ pub const fn div_rem(mut a: U512, b: U512) -> [U512; 2] {
     let mut q = ZERO;
     loop {
         let a_offset = leading_zeros(a);
-        if a_offset > b_offset { break }
+        if a_offset > b_offset {
+            break;
+        }
         let mut offset = b_offset - a_offset;
         let mut bx = shl(&b, offset as i32);
         if less(a, bx) {
-            if offset == 0 { break }
+            if offset == 0 {
+                break;
+            }
             offset -= 1;
             bx = shl(&b, offset as i32);
         }
@@ -98,9 +102,28 @@ mod test {
     #[wasm_bindgen_test]
     fn test_div_rem() {
         // assert_eq!(div_rem([[0, 0], [0, 0]], [[0, 0], [0, 0]]), [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]);
-        assert_eq!(div_rem([[0, 0], [0, 0]], [[1, 0], [0, 0]]), [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]);
-        assert_eq!(div_rem([[1, 2], [3, 4]], [[1, 0], [0, 0]]), [[[1, 2], [3, 4]], [[0, 0], [0, 0]]]);
-        assert_eq!(div_rem([[1, 2], [3, 4]], [[2, 0], [0, 0]]), [[[0, 1 + (1 << 127)], [1, 2]], [[1, 0], [0, 0]]]);
+        assert_eq!(
+            div_rem([[0, 0], [0, 0]], [[1, 0], [0, 0]]),
+            [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
+        );
+        assert_eq!(
+            div_rem([[1, 2], [3, 4]], [[1, 0], [0, 0]]),
+            [[[1, 2], [3, 4]], [[0, 0], [0, 0]]]
+        );
+        assert_eq!(
+            div_rem([[1, 2], [3, 4]], [[2, 0], [0, 0]]),
+            [[[0, 1 + (1 << 127)], [1, 2]], [[1, 0], [0, 0]]]
+        );
+        assert_eq!(
+            div_rem([[1, 2], [3, 4]], [[3, 0], [0, 0]]),
+            [
+                [
+                    [0, 113427455640312821154458202477256070486],
+                    [113427455640312821154458202477256070486, 1]
+                ],
+                [[1, 0], [0, 0]]
+            ]
+        );
     }
 
     #[test]
