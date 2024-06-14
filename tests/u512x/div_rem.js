@@ -15,5 +15,4 @@ div_rem([1n, 2n, 3n, 4n], [1n, 0n, 0n, 0n])
 div_rem([1n, 2n, 3n, 4n], [2n, 0n, 0n, 0n])
 div_rem([1n, 2n, 3n, 4n], [3n, 0n, 0n, 0n])
 div_rem([1n, 2n, 3n, 4n], [3n, 5n, 0n, 0n])
-
-console.log(merge())
+div_rem([1n, 2n, 3n, 4n], [3n, 5n, 7n, 0n])
