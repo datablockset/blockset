@@ -23,6 +23,62 @@ pub const fn wsub([a0, a1]: U512, [b0, b1]: U512) -> U512 {
     [r0, u256x::wsub(u256x::wsub(a1, b1), u256x::from_bool(c))]
 }
 
+pub const fn less([a0, a1]: U512, [b0, b1]: U512) -> bool {
+    if u256x::eq(&a1, &b1) {
+        u256x::less(&a0, &b0)
+    } else {
+        u256x::less(&a1, &b1)
+    }
+}
+
+const ZERO: U512 = [u256x::ZERO, u256x::ZERO];
+
+pub const fn leading_zeros([a0, a1]: U512) -> u32 {
+    match u256x::leading_zeros(a1) {
+        256 => 256 + u256x::leading_zeros(a0),
+        x => x
+    }
+}
+
+pub const fn shl([lo, hi]: &U512, i: i32) -> U512 {
+    [
+        u256x::shl(lo, i),
+        u256x::bitor(&u256x::shl(hi, i), &u256x::shl(lo, i - 256)),
+    ]
+}
+
+pub const fn set_bit([a0, a1]: U512, i: u32) -> U512 {
+    if i < 256 {
+        [u256x::set_bit(a0, i), a1]
+    } else {
+        [a0, u256x::set_bit(a1, i - 256)]
+    }
+}
+
+pub const fn eq([a0, a1]: &U512, [b0, b1]: &U512) -> bool {
+    u256x::eq(a0, b0) && u256x::eq(a1, b1)
+}
+
+pub const fn div_rem(mut a: U512, b: U512) -> [U512; 2] {
+    assert!(!eq(&b, &ZERO));
+    let b_offset = leading_zeros(b);
+    let mut q = ZERO;
+    loop {
+        let a_offset = leading_zeros(a);
+        if a_offset > b_offset { break }
+        let mut offset = b_offset - a_offset;
+        let mut bx = shl(&b, offset as i32);
+        if less(a, bx) {
+            if offset == 0 { break }
+            offset -= 1;
+            bx = shl(&b, offset as i32);
+        }
+        a = wsub(a, bx);
+        q = set_bit(q, offset);
+    }
+    [q, a]
+}
+
 /// (a3 * b^3 + a2 * b^2 + a1 * b + a0) % (p1 * b + p0)
 /*
 pub const fn rem([a0, a1]: U512, d: U256) -> U256 {
@@ -34,9 +90,17 @@ pub const fn rem([a0, a1]: U512, d: U256) -> U256 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u512x::wadd;
+    use crate::uint::u512x::{div_rem, wadd};
 
     use super::{new, U512};
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_div_rem() {
+        // assert_eq!(div_rem([[0, 0], [0, 0]], [[0, 0], [0, 0]]), [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]);
+        assert_eq!(div_rem([[0, 0], [0, 0]], [[0, 0], [0, 1]]), [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]);
+        assert_eq!(div_rem([[1, 2], [3, 4]], [[0, 0], [0, 1]]), [[[1, 2], [3, 4]], [[0, 0], [0, 0]]]);
+    }
 
     #[test]
     #[wasm_bindgen_test]

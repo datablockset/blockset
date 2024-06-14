@@ -39,7 +39,7 @@ pub const fn merge(a: &U256, b: &U256) -> U256 {
     }
     let len = a_len + b_len;
     if len <= LEN_MAX {
-        set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len)), len)
+        set_len(&bitor(&remove_len(a), &shl(&remove_len(b), a_len as i32)), len)
     } else {
         let mut x = compress(SHA224, [*a, *b]);
         x[1] |= 0xFFFF_FFFF << 96;
@@ -81,7 +81,7 @@ mod test {
         assert_eq!(a, [0x12, 0]);
         b = remove_len(&b);
         assert_eq!(b, [0x34, 0]);
-        b = shl(&b, a_len);
+        b = shl(&b, a_len as i32);
         assert_eq!(b, [0x3400, 0]);
     }
 

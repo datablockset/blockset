@@ -66,6 +66,10 @@ pub const fn mul(a: u128, b: u128) -> U256 {
     u256x::wadd(u256x::wadd(r0, r1), r2)
 }
 
+pub const fn set_bit(a: u128, i: u32) -> u128 {
+    a | (1 << i)
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;

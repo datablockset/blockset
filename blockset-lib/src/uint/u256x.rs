@@ -1,4 +1,4 @@
-use crate::uint::u128x::{shl as shl128, to_u32x4, u32x4_wadd};
+use crate::uint::u128x::{to_u32x4, u32x4_wadd};
 
 use super::{u128x, u512x::{self, U512}};
 
@@ -10,16 +10,21 @@ pub const fn u32x8_wadd(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
 }
 
 #[inline(always)]
-pub const fn shl(&[lo, hi]: &U256, i: usize) -> U256 {
+pub const fn shl(&[lo, hi]: &U256, i: i32) -> U256 {
     [
-        shl128(lo, i as i32),
-        shl128(hi, i as i32) | shl128(lo, i as i32 - 128),
+        u128x::shl(lo, i),
+        u128x::shl(hi, i) | u128x::shl(lo, i - 128),
     ]
 }
 
 #[inline(always)]
 pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [a0 | b0, a1 | b1]
+}
+
+#[inline(always)]
+pub const fn eq(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
+    a0 == b0 && a1 == b1
 }
 
 // Don't use `<` for `U256` because it's not LE comparison.
@@ -104,6 +109,14 @@ pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
 pub fn div(a: U256, b: U256) -> (U256, U256) {
     if less(&a, &b) { return (ZERO, a) }
     (ZERO, a)
+}
+
+pub const fn set_bit([a0, a1]: U256, i: u32) -> U256 {
+    if i < 128 {
+        [u128x::set_bit(a0, i), a1]
+    } else {
+        [a0, u128x::set_bit(a1, i - 128)]
+    }
 }
 
 #[cfg(test)]
