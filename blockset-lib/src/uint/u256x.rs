@@ -14,16 +14,12 @@ pub const fn u32x8_wadd(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
 
 #[inline(always)]
 pub const fn shl(&[lo, hi]: &U256, i: i32) -> U256 {
+    let loi = u128x::shl(lo, i);
+    let hii = u128x::shl(hi, i);
     if i < 0 {
-        [
-            u128x::shl(lo, i) | u128x::shl(hi, i + 128),
-            u128x::shl(hi, i),
-        ]
+        [loi | u128x::shl(hi, i + 128), hii]
     } else {
-        [
-            u128x::shl(lo, i),
-            u128x::shl(hi, i) | u128x::shl(lo, i - 128),
-        ]
+        [loi, hii | u128x::shl(lo, i - 128)]
     }
 }
 
