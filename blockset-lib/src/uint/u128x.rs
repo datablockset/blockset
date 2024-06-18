@@ -101,10 +101,7 @@ mod test {
                 37_806_656_864_672
             ]
         );
-        assert_eq!(
-            mul(u128::MAX, u128::MAX),
-            [1, u128::MAX - 1]
-        );
+        assert_eq!(mul(u128::MAX, u128::MAX), [1, u128::MAX - 1]);
     }
 
     fn check_shl(a: u128, b: i32, expected: u128, f: fn(u128, i32) -> u128) {
