@@ -112,11 +112,28 @@ pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
     u512x::wadd(u512x::wadd(r0, r1), r2)
 }
 
-pub fn div(a: U256, b: U256) -> (U256, U256) {
-    if less(&a, &b) {
-        return (ZERO, a);
+pub const fn div_rem(mut a: U256, b: U256) -> [U256; 2] {
+    assert!(!eq(&b, &ZERO));
+    let b_offset = leading_zeros(b);
+    let mut q = ZERO;
+    loop {
+        let a_offset = leading_zeros(a);
+        if a_offset > b_offset {
+            break;
+        }
+        let mut offset = b_offset - a_offset;
+        let mut bx = shl(&b, offset as i32);
+        if less(&a, &bx) {
+            if offset == 0 {
+                break;
+            }
+            offset -= 1;
+            bx = shl(&b, offset as i32);
+        }
+        a = wsub(a, bx);
+        q = set_bit(q, offset);
     }
-    (ZERO, a)
+    [q, a]
 }
 
 pub const fn set_bit([a0, a1]: U256, i: u32) -> U256 {
@@ -131,7 +148,7 @@ pub const fn set_bit([a0, a1]: U256, i: u32) -> U256 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u256x::{from_u128, leading_zeros, mul, osub, wadd, ZERO};
+    use crate::uint::u256x::{div_rem, from_u128, leading_zeros, mul, osub, wadd, ZERO};
 
     use super::{shl, U256};
 
@@ -330,5 +347,22 @@ mod test {
         assert_eq!(shl(&X, 248), [0, 0x0100_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 255), [0, 0x8000_0000_0000_0000_0000_0000_0000_0000]);
         assert_eq!(shl(&X, 256), [0; 2]);
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_div_rem() {
+        // assert_eq!(div_rem([[0, 0], [0, 0]], [[0, 0], [0, 0]]), [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]);
+        assert_eq!(div_rem([0, 0], [1, 0]), [[0, 0], [0, 0]]);
+        assert_eq!(div_rem([1, 2], [1, 0]), [[1, 2], [0, 0]]);
+        assert_eq!(div_rem([1, 2], [2, 0]), [[0, 1], [1, 0]]);
+        assert_eq!(
+            div_rem([1, 2], [3, 0]),
+            [[226854911280625642308916404954512140971, 0], [0, 0]]
+        );
+        assert_eq!(
+            div_rem([1, 2], [3, 4]),
+            [[0, 0], [1, 2]]
+        );
     }
 }

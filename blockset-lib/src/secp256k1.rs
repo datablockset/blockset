@@ -16,7 +16,7 @@ const fn is_valid_private_key(key: U256) -> bool {
     u256x::less(&u256x::ZERO, &key) && is_valid(key)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 struct Scalar(U256);
 
 impl Scalar {
@@ -53,6 +53,17 @@ impl Scalar {
     const fn mul(self, b: Self) -> Self {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
+    /*
+    const fn reciprocal(self) -> [Self; 2] {
+        let mut a0: [Self; 2] = [Self::ONE, Self::ZERO];
+        let mut a1: [Self; 2] = [Self::ZERO, Self::ONE];
+        loop {
+            if Self::ONE.eq(self) {
+                return a1
+            }
+        }
+    }
+    */
 }
 
 const B: U256 = u256x::from_u128(7);
