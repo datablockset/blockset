@@ -263,7 +263,7 @@ mod test {
                 0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
                 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
             ])),
-            Scalar::new([0, 0])
+            Scalar::ZERO
         );
     }
 
