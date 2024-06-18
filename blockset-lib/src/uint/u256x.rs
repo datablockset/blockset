@@ -105,8 +105,8 @@ pub const fn leading_zeros([a0, a1]: U256) -> u32 {
 pub const fn mul([a0, a1]: U256, [b0, b1]: U256) -> U512 {
     let r0 = [u128x::mul(a0, b0), ZERO];
     let r1 = {
-        let [x0, x1] = wadd(u128x::mul(a1, b0), u128x::mul(a0, b1));
-        [[0, x0], [x1, 0]]
+        let ([x0, x1], c) = oadd(u128x::mul(a1, b0), u128x::mul(a0, b1));
+        [[0, x0], [x1, c as u128]]
     };
     let r2 = [ZERO, u128x::mul(a1, b1)];
     u512x::wadd(u512x::wadd(r0, r1), r2)
@@ -248,6 +248,10 @@ mod test {
                     84_629_886_702_508_214_136_893_118_870_499_585_684
                 ]
             ]
+        );
+        assert_eq!(
+            mul([u128::MAX, u128::MAX], [u128::MAX, u128::MAX]),
+            [[1, 0], [u128::MAX - 1, u128::MAX]]
         );
     }
 
