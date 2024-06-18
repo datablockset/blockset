@@ -59,8 +59,8 @@ pub const fn mul(a: u128, b: u128) -> U256 {
     let [b0, b1] = lo_hi(b);
     let r0 = [a0 * b0, 0];
     let r1 = {
-        let x = a1 * b0 + a0 * b1;
-        [x << 64, x >> 64]
+        let (x, o) = (a1 * b0).overflowing_add(a0 * b1);
+        [x << 64, (x >> 64) | ((o as u128) << 64)]
     };
     let r2 = [0, a1 * b1];
     u256x::wadd(u256x::wadd(r0, r1), r2)
@@ -100,6 +100,10 @@ mod test {
                 337_284_947_070_536_250_008_747_159_125_413_113_374,
                 37_806_656_864_672
             ]
+        );
+        assert_eq!(
+            mul(u128::MAX, u128::MAX),
+            [1, u128::MAX - 1]
         );
     }
 
