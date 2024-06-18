@@ -273,6 +273,6 @@ mod test {
         assert_eq!(Scalar::ZERO.mul(Scalar::MAX), Scalar::ZERO);
         assert_eq!(Scalar::ONE.mul(Scalar::ONE), Scalar::ONE);
         assert_eq!(Scalar::new([2, 0]).mul(Scalar::new([2, 0])), Scalar::new([4, 0]));
-        // assert_eq!(Scalar::MAX.mul(Scalar::MAX), Scalar::ONE);
+        assert_eq!(Scalar::MAX.mul(Scalar::MAX), Scalar::ONE);
     }
 }
