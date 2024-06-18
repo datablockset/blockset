@@ -53,13 +53,14 @@ impl Scalar {
     const fn mul(self, b: Self) -> Self {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
-    const fn reciprocal(mut self) -> [Self; 2] {
+    const fn reciprocal(mut self) -> Vec2 {
+        assert!(!Self::ZERO.eq(self));
         let mut a0 = P;
         let mut f0: [Self; 2] = [Self::ONE, Self::ZERO];
         let mut f1: [Self; 2] = [Self::ZERO, Self::ONE];
         loop {
             if Self::ONE.eq(self) {
-                return f1
+                return f1;
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
             a0 = self.0;
@@ -97,7 +98,10 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::secp256k1::{is_valid_private_key, Scalar, P};
+    use crate::{
+        secp256k1::{is_valid_private_key, Scalar, Vec2, P},
+        uint::u256x,
+    };
 
     #[test]
     #[wasm_bindgen_test]
@@ -306,5 +310,30 @@ mod test {
             Scalar::new([4, 0])
         );
         assert_eq!(Scalar::MAX.mul(Scalar::MAX), Scalar::ONE);
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_reciprocal() {
+        fn x(s: Scalar) {
+            let v = s.reciprocal();
+            assert_eq!(v[1].mul(s), Scalar::ONE);
+        }
+        fn f(s: Scalar, v: Vec2) {
+            assert_eq!(s.reciprocal(), v);
+            assert_eq!(v[1].mul(s), Scalar::ONE);
+        }
+        f(Scalar::ONE, [Scalar::ZERO, Scalar::ONE]);
+        f(Scalar::MAX, [Scalar::ONE, Scalar::MAX]);
+        x(Scalar::new([2, 0]));
+        x(Scalar::new([3, 0]));
+        x(Scalar::new([4, 0]));
+        x(Scalar::new([u128::MAX, 0]));
+        x(Scalar::new([5, 1]));
+        x(Scalar::new([u128::MAX, 1]));
+        x(Scalar::new([6, 2]));
+        x(Scalar::new([7, 3]));
+        x(Scalar::new([8, u128::MAX]));
+        x(Scalar::new([P[0] - 9, u128::MAX]));
     }
 }
