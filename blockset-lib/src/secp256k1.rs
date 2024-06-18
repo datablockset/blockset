@@ -1,4 +1,4 @@
-use crate::uint::u256x::{self, U256};
+use crate::uint::{u256x::{self, U256}, u512x};
 
 const P: U256 = [
     0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F,
@@ -17,6 +17,9 @@ const fn is_valid_private_key(key: U256) -> bool {
 struct Scalar(U256);
 
 impl Scalar {
+    const ZERO: Self = Self([0, 0]);
+    const ONE: Self = Self([1, 0]);
+    const MAX: Self = Self(u256x::wsub(P, [1, 0]));
     #[inline(always)]
     const fn new(key: U256) -> Self {
         assert!(is_valid(key));
@@ -28,10 +31,24 @@ impl Scalar {
     }
     const fn add(self, b: Self) -> Self {
         let (mut result, o) = u256x::oadd(self.0, b.0);
-        if o || !u256x::less(&result, &P) {
+        if o || !is_valid(result) {
             result = u256x::wsub(result, P)
         }
-        Scalar(result)
+        Self(result)
+    }
+    const fn sub(self, b: Self) -> Self {
+        let (mut result, b) = u256x::osub(self.0, b.0);
+        if b || !is_valid(result) {
+            result = u256x::wadd(result, P)
+        }
+        Self(result)
+    }
+    #[inline(always)]
+    const fn neg(self) -> Self {
+        Self::ZERO.sub(self)
+    }
+    const fn mul(self, b: Self) -> Self {
+        Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
 }
 
@@ -51,7 +68,7 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::secp256k1::{is_valid_private_key, Scalar};
+    use crate::secp256k1::{is_valid_private_key, Scalar, P};
 
     #[test]
     #[wasm_bindgen_test]
@@ -197,5 +214,65 @@ mod test {
                 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
             ])
         );
+    }
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_sub() {
+        assert_eq!(
+            Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])
+            .sub(Scalar::new([1, 0])),
+            Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2D,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])
+        );
+        assert_eq!(
+            Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])
+            .sub(Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2D,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])),
+            Scalar::new([1, 0])
+        );
+        assert_eq!(
+            Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2D,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])
+            .sub(Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])),
+            Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])
+        );
+        assert_eq!(
+            Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])
+            .sub(Scalar::new([
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
+                0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
+            ])),
+            Scalar::new([0, 0])
+        );
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_mul() {
+        assert_eq!(Scalar::ZERO.mul(Scalar::MAX), Scalar::ZERO);
+        assert_eq!(Scalar::ONE.mul(Scalar::ONE), Scalar::ONE);
+        assert_eq!(Scalar::new([2, 0]).mul(Scalar::new([2, 0])), Scalar::new([4, 0]));
+        assert_eq!(Scalar::MAX.mul(Scalar::MAX), Scalar::ONE);
     }
 }
