@@ -53,17 +53,32 @@ impl Scalar {
     const fn mul(self, b: Self) -> Self {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
-    /*
-    const fn reciprocal(self) -> [Self; 2] {
-        let mut a0: [Self; 2] = [Self::ONE, Self::ZERO];
-        let mut a1: [Self; 2] = [Self::ZERO, Self::ONE];
+    const fn reciprocal(mut self) -> [Self; 2] {
+        let mut a0 = P;
+        let mut f0: [Self; 2] = [Self::ONE, Self::ZERO];
+        let mut f1: [Self; 2] = [Self::ZERO, Self::ONE];
         loop {
             if Self::ONE.eq(self) {
-                return a1
+                return f1
             }
+            let [q, a2] = u256x::div_rem(a0, self.0);
+            a0 = self.0;
+            self = Scalar(a2);
+            let f2 = sub(f0, mul(f1, Scalar(q)));
+            f0 = f1;
+            f1 = f2;
         }
     }
-    */
+}
+
+type Vec2 = [Scalar; 2];
+
+const fn mul([x, y]: Vec2, a: Scalar) -> Vec2 {
+    [x.mul(a), y.mul(a)]
+}
+
+const fn sub([x0, y0]: Vec2, [x1, y1]: Vec2) -> Vec2 {
+    [x0.sub(x1), y0.sub(y1)]
 }
 
 const B: U256 = u256x::from_u128(7);
