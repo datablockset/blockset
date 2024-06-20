@@ -53,11 +53,11 @@ impl Scalar {
     const fn mul(self, b: Self) -> Self {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
-    const fn reciprocal(mut self) -> Vec2 {
+    const fn reciprocal2(mut self) -> Vec2 {
         assert!(!Self::ZERO.eq(self));
         let mut a0 = P;
-        let mut f0: [Self; 2] = [Self::ONE, Self::ZERO];
-        let mut f1: [Self; 2] = [Self::ZERO, Self::ONE];
+        let mut f0 = [Self::ONE, Self::ZERO];
+        let mut f1 = [Self::ZERO, Self::ONE];
         loop {
             if Self::ONE.eq(self) {
                 return f1;
@@ -66,6 +66,23 @@ impl Scalar {
             a0 = self.0;
             self = Scalar(a2);
             let f2 = sub(f0, mul(f1, Scalar(q)));
+            f0 = f1;
+            f1 = f2;
+        }
+    }
+    const fn reciprocal(mut self) -> Self {
+        assert!(!Self::ZERO.eq(self));
+        let mut a0 = P;
+        let mut f0 = Self::ZERO;
+        let mut f1 = Self::ONE;
+        loop {
+            if Self::ONE.eq(self) {
+                return f1;
+            }
+            let [q, a2] = u256x::div_rem(a0, self.0);
+            a0 = self.0;
+            self = Scalar(a2);
+            let f2 = f0.sub(f1.mul(Scalar(q)));
             f0 = f1;
             f1 = f2;
         }
@@ -317,10 +334,35 @@ mod test {
     fn test_reciprocal() {
         fn x(s: Scalar) {
             let v = s.reciprocal();
+            assert_eq!(v.mul(s), Scalar::ONE);
+        }
+        fn f(s: Scalar, v: Scalar) {
+            assert_eq!(s.reciprocal(), v);
+            assert_eq!(v.mul(s), Scalar::ONE);
+        }
+        f(Scalar::ONE, Scalar::ONE);
+        f(Scalar::MAX, Scalar::MAX);
+        x(Scalar::new([2, 0]));
+        x(Scalar::new([3, 0]));
+        x(Scalar::new([4, 0]));
+        x(Scalar::new([u128::MAX, 0]));
+        x(Scalar::new([5, 1]));
+        x(Scalar::new([u128::MAX, 1]));
+        x(Scalar::new([6, 2]));
+        x(Scalar::new([7, 3]));
+        x(Scalar::new([8, u128::MAX]));
+        x(Scalar::new([P[0] - 9, u128::MAX]));
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_reciprocal2() {
+        fn x(s: Scalar) {
+            let v = s.reciprocal2();
             assert_eq!(v[1].mul(s), Scalar::ONE);
         }
         fn f(s: Scalar, v: Vec2) {
-            assert_eq!(s.reciprocal(), v);
+            assert_eq!(s.reciprocal2(), v);
             assert_eq!(v[1].mul(s), Scalar::ONE);
         }
         f(Scalar::ONE, [Scalar::ZERO, Scalar::ONE]);
