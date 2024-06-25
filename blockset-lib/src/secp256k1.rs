@@ -24,7 +24,7 @@ impl Scalar {
     const ONE: Self = Self([1, 0]);
     const MAX: Self = Self(u256x::wsub(P, [1, 0]));
     // (P+1)/4
-    const SQR_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
+    const SQRT_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
     #[inline(always)]
     const fn new(key: U256) -> Self {
         assert!(is_valid(key));
@@ -101,8 +101,8 @@ impl Scalar {
         }
         result
     }
-    const fn sqr(self) -> Option<Self> {
-        let result = self.pow(Self::SQR_K);
+    const fn sqrt(self) -> Option<Self> {
+        let result = self.pow(Self::SQRT_K);
         if result.mul(result).eq(self) {
             Some(result)
         } else {
@@ -141,48 +141,48 @@ mod test {
 
     #[test]
     #[wasm_bindgen_test]
-    fn test_sqr() {
-        assert_eq!(Scalar::ONE.sqr(), Some(Scalar::ONE));
+    fn test_sqrt() {
+        assert_eq!(Scalar::ONE.sqrt(), Some(Scalar::ONE));
         let q2 = Scalar::new([
             25454351255596125846892804522787951607,
             43929286026618122883815740552890121610,
         ]);
-        assert_eq!(Scalar::new([2, 0]).sqr(), Some(q2));
-        assert_eq!(Scalar::new([3, 0]).sqr(), None);
-        assert_eq!(Scalar::new([4, 0]).sqr(), Some(Scalar::new([2, 0])));
-        assert_eq!(Scalar::new([5, 0]).sqr(), None);
-        assert_eq!(Scalar::new([6, 0]).sqr(), None);
-        assert_eq!(Scalar::new([7, 0]).sqr(), None);
-        assert_eq!(Scalar::new([8, 0]).sqr(), Some(q2.mul(Scalar::new([2, 0]))));
-        assert_eq!(Scalar::new([9, 0]).sqr(), Some(Scalar::new([3, 0]).neg()));
-        assert_eq!(Scalar::new([16, 0]).sqr(), Some(Scalar::new([4, 0])));
-        assert_eq!(Scalar::new([25, 0]).sqr(), Some(Scalar::new([5, 0]).neg()));
-        assert_eq!(Scalar::new([36, 0]).sqr(), Some(Scalar::new([6, 0]).neg()));
-        assert_eq!(Scalar::new([49, 0]).sqr(), Some(Scalar::new([7, 0]).neg()));
-        assert_eq!(Scalar::new([64, 0]).sqr(), Some(Scalar::new([8, 0])));
-        assert_eq!(Scalar::new([81, 0]).sqr(), Some(Scalar::new([9, 0])));
+        assert_eq!(Scalar::new([2, 0]).sqrt(), Some(q2));
+        assert_eq!(Scalar::new([3, 0]).sqrt(), None);
+        assert_eq!(Scalar::new([4, 0]).sqrt(), Some(Scalar::new([2, 0])));
+        assert_eq!(Scalar::new([5, 0]).sqrt(), None);
+        assert_eq!(Scalar::new([6, 0]).sqrt(), None);
+        assert_eq!(Scalar::new([7, 0]).sqrt(), None);
+        assert_eq!(Scalar::new([8, 0]).sqrt(), Some(q2.mul(Scalar::new([2, 0]))));
+        assert_eq!(Scalar::new([9, 0]).sqrt(), Some(Scalar::new([3, 0]).neg()));
+        assert_eq!(Scalar::new([16, 0]).sqrt(), Some(Scalar::new([4, 0])));
+        assert_eq!(Scalar::new([25, 0]).sqrt(), Some(Scalar::new([5, 0]).neg()));
+        assert_eq!(Scalar::new([36, 0]).sqrt(), Some(Scalar::new([6, 0]).neg()));
+        assert_eq!(Scalar::new([49, 0]).sqrt(), Some(Scalar::new([7, 0]).neg()));
+        assert_eq!(Scalar::new([64, 0]).sqrt(), Some(Scalar::new([8, 0])));
+        assert_eq!(Scalar::new([81, 0]).sqrt(), Some(Scalar::new([9, 0])));
         assert_eq!(
-            Scalar::new([100, 0]).sqr(),
+            Scalar::new([100, 0]).sqrt(),
             Some(Scalar::new([10, 0]).neg())
         );
-        assert_eq!(Scalar::new([121, 0]).sqr(), Some(Scalar::new([11, 0])));
+        assert_eq!(Scalar::new([121, 0]).sqrt(), Some(Scalar::new([11, 0])));
         assert_eq!(
-            Scalar::new([144, 0]).sqr(),
+            Scalar::new([144, 0]).sqrt(),
             Some(Scalar::new([12, 0]).neg())
         );
         assert_eq!(
-            Scalar::new([169, 0]).sqr(),
+            Scalar::new([169, 0]).sqrt(),
             Some(Scalar::new([13, 0]).neg())
         );
         assert_eq!(
-            Scalar::new([196, 0]).sqr(),
+            Scalar::new([196, 0]).sqrt(),
             Some(Scalar::new([14, 0]).neg())
         );
-        assert_eq!(Scalar::new([225, 0]).sqr(), Some(Scalar::new([15, 0])));
+        assert_eq!(Scalar::new([225, 0]).sqrt(), Some(Scalar::new([15, 0])));
         for i in 1..10000 {
             let c = Scalar::new([i, 0]);
             let c2 = c.mul(c);
-            let s = c2.sqr().unwrap();
+            let s = c2.sqrt().unwrap();
             assert!(c.eq(s) || c.eq(s.neg()));
         }
     }
