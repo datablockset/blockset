@@ -43,7 +43,10 @@ impl Scalar {
     }
     const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
-        if b /*|| !is_valid(result)*/ { // ????
+        if b
+        /*|| !is_valid(result)*/
+        {
+            // ????
             result = u256x::wadd(result, P)
         }
         Self(result)
@@ -142,7 +145,10 @@ mod test {
     #[wasm_bindgen_test]
     fn test_sqr() {
         assert_eq!(Scalar::ONE.sqr(), Some(Scalar::ONE));
-        let q2 = Scalar::new([25454351255596125846892804522787951607, 43929286026618122883815740552890121610]);
+        let q2 = Scalar::new([
+            25454351255596125846892804522787951607,
+            43929286026618122883815740552890121610,
+        ]);
         assert_eq!(Scalar::new([2, 0]).sqr(), Some(q2));
         assert_eq!(Scalar::new([3, 0]).sqr(), None);
         assert_eq!(Scalar::new([4, 0]).sqr(), Some(Scalar::new([2, 0])));
@@ -157,11 +163,23 @@ mod test {
         assert_eq!(Scalar::new([49, 0]).sqr(), Some(Scalar::new([7, 0]).neg()));
         assert_eq!(Scalar::new([64, 0]).sqr(), Some(Scalar::new([8, 0])));
         assert_eq!(Scalar::new([81, 0]).sqr(), Some(Scalar::new([9, 0])));
-        assert_eq!(Scalar::new([100, 0]).sqr(), Some(Scalar::new([10, 0]).neg()));
+        assert_eq!(
+            Scalar::new([100, 0]).sqr(),
+            Some(Scalar::new([10, 0]).neg())
+        );
         assert_eq!(Scalar::new([121, 0]).sqr(), Some(Scalar::new([11, 0])));
-        assert_eq!(Scalar::new([144, 0]).sqr(), Some(Scalar::new([12, 0]).neg()));
-        assert_eq!(Scalar::new([169, 0]).sqr(), Some(Scalar::new([13, 0]).neg()));
-        assert_eq!(Scalar::new([196, 0]).sqr(), Some(Scalar::new([14, 0]).neg()));
+        assert_eq!(
+            Scalar::new([144, 0]).sqr(),
+            Some(Scalar::new([12, 0]).neg())
+        );
+        assert_eq!(
+            Scalar::new([169, 0]).sqr(),
+            Some(Scalar::new([13, 0]).neg())
+        );
+        assert_eq!(
+            Scalar::new([196, 0]).sqr(),
+            Some(Scalar::new([14, 0]).neg())
+        );
         assert_eq!(Scalar::new([225, 0]).sqr(), Some(Scalar::new([15, 0])));
         for i in 1..10000 {
             let c = Scalar::new([i, 0]);
@@ -199,7 +217,10 @@ mod test {
         assert_eq!(s2.pow(s2), s4);
         assert_eq!(s2.pow(s3), s8);
         assert_eq!(s2.pow(Scalar::new([128, 0])), Scalar::new([0, 1]));
-        assert_eq!(s2.pow(Scalar::new([255, 0])), Scalar::new([0, 0x8000_0000_0000_0000_0000_0000_0000_0000]));
+        assert_eq!(
+            s2.pow(Scalar::new([255, 0])),
+            Scalar::new([0, 0x8000_0000_0000_0000_0000_0000_0000_0000])
+        );
         // 3
         common(s3);
         assert_eq!(s3.pow(s2), s9);
