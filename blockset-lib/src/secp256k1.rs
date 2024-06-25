@@ -40,13 +40,11 @@ impl Scalar {
             result = u256x::wsub(result, P)
         }
         Self(result)
+        // self.sub(b.neg())
     }
     const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
-        if b
-        /*|| !is_valid(result)*/
-        {
-            // ????
+        if b {
             result = u256x::wadd(result, P)
         }
         Self(result)
