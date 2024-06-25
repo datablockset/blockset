@@ -12,7 +12,6 @@ pub const fn u32x8_wadd(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [u32x4_wadd(a0, b0), u32x4_wadd(a1, b1)]
 }
 
-#[inline(always)]
 pub const fn shl(&[lo, hi]: &U256, i: i32) -> U256 {
     let loi = u128x::shl(lo, i);
     let hii = u128x::shl(hi, i);
@@ -21,6 +20,11 @@ pub const fn shl(&[lo, hi]: &U256, i: i32) -> U256 {
     } else {
         [loi, hii | u128x::shl(lo, i - 128)]
     }
+}
+
+#[inline(always)]
+pub const fn shr(a: &U256, i: i32) -> U256 {
+    shl(a, -i)
 }
 
 #[inline(always)]

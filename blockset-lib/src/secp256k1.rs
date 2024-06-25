@@ -23,6 +23,8 @@ impl Scalar {
     const ZERO: Self = Self([0, 0]);
     const ONE: Self = Self([1, 0]);
     const MAX: Self = Self(u256x::wsub(P, [1, 0]));
+    // (P+1)/4
+    const SQR_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
     #[inline(always)]
     const fn new(key: U256) -> Self {
         assert!(is_valid(key));
@@ -41,7 +43,7 @@ impl Scalar {
     }
     const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
-        if b || !is_valid(result) {
+        if b /*|| !is_valid(result)*/ { // ????
             result = u256x::wadd(result, P)
         }
         Self(result)
@@ -64,8 +66,8 @@ impl Scalar {
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
             a0 = self.0;
-            self = Scalar(a2);
-            let f2 = sub(f0, mul(f1, Scalar(q)));
+            self = Self(a2);
+            let f2 = sub(f0, mul(f1, Self(q)));
             f0 = f1;
             f1 = f2;
         }
@@ -81,10 +83,29 @@ impl Scalar {
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
             a0 = self.0;
-            self = Scalar(a2);
-            let f2 = f0.sub(f1.mul(Scalar(q)));
+            self = Self(a2);
+            let f2 = f0.sub(f1.mul(Self(q)));
             f0 = f1;
             f1 = f2;
+        }
+    }
+    const fn pow(mut self, mut n: Self) -> Self {
+        let mut result = Self::ONE;
+        while !Self::ZERO.eq(n) {
+            if n.0[0] & 1 == 1 {
+                result = result.mul(self);
+            }
+            self = self.mul(self);
+            n.0 = u256x::shr(&n.0, 1);
+        }
+        result
+    }
+    const fn sqr(self) -> Option<Self> {
+        let result = self.pow(Self::SQR_K);
+        if result.mul(result).eq(self) {
+            Some(result)
+        } else {
+            None
         }
     }
 }
@@ -115,10 +136,79 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{
-        secp256k1::{is_valid_private_key, Scalar, Vec2, P},
-        uint::u256x,
-    };
+    use crate::secp256k1::{is_valid_private_key, Scalar, Vec2, P};
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_sqr() {
+        assert_eq!(Scalar::ONE.sqr(), Some(Scalar::ONE));
+        let q2 = Scalar::new([25454351255596125846892804522787951607, 43929286026618122883815740552890121610]);
+        assert_eq!(Scalar::new([2, 0]).sqr(), Some(q2));
+        assert_eq!(Scalar::new([3, 0]).sqr(), None);
+        assert_eq!(Scalar::new([4, 0]).sqr(), Some(Scalar::new([2, 0])));
+        assert_eq!(Scalar::new([5, 0]).sqr(), None);
+        assert_eq!(Scalar::new([6, 0]).sqr(), None);
+        assert_eq!(Scalar::new([7, 0]).sqr(), None);
+        assert_eq!(Scalar::new([8, 0]).sqr(), Some(q2.mul(Scalar::new([2, 0]))));
+        assert_eq!(Scalar::new([9, 0]).sqr(), Some(Scalar::new([3, 0]).neg()));
+        assert_eq!(Scalar::new([16, 0]).sqr(), Some(Scalar::new([4, 0])));
+        assert_eq!(Scalar::new([25, 0]).sqr(), Some(Scalar::new([5, 0]).neg()));
+        assert_eq!(Scalar::new([36, 0]).sqr(), Some(Scalar::new([6, 0]).neg()));
+        assert_eq!(Scalar::new([49, 0]).sqr(), Some(Scalar::new([7, 0]).neg()));
+        assert_eq!(Scalar::new([64, 0]).sqr(), Some(Scalar::new([8, 0])));
+        assert_eq!(Scalar::new([81, 0]).sqr(), Some(Scalar::new([9, 0])));
+        assert_eq!(Scalar::new([100, 0]).sqr(), Some(Scalar::new([10, 0]).neg()));
+        assert_eq!(Scalar::new([121, 0]).sqr(), Some(Scalar::new([11, 0])));
+        assert_eq!(Scalar::new([144, 0]).sqr(), Some(Scalar::new([12, 0]).neg()));
+        assert_eq!(Scalar::new([169, 0]).sqr(), Some(Scalar::new([13, 0]).neg()));
+        assert_eq!(Scalar::new([196, 0]).sqr(), Some(Scalar::new([14, 0]).neg()));
+        assert_eq!(Scalar::new([225, 0]).sqr(), Some(Scalar::new([15, 0])));
+        for i in 1..10000 {
+            let c = Scalar::new([i, 0]);
+            let c2 = c.mul(c);
+            let s = c2.sqr().unwrap();
+            assert!(c.eq(s) || c.eq(s.neg()));
+        }
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_pow() {
+        let s2 = Scalar::new([2, 0]);
+        let s3 = Scalar::new([3, 0]);
+        let s4 = Scalar::new([4, 0]);
+        let s8 = Scalar::new([8, 0]);
+        let s9 = Scalar::new([9, 0]);
+        let s27 = Scalar::new([27, 0]);
+        const MAX_S1: Scalar = Scalar::MAX.sub(Scalar::ONE);
+        fn common(s: Scalar) {
+            assert_eq!(s.pow(Scalar::ZERO), Scalar::ONE);
+            assert_eq!(s.pow(Scalar::ONE), s);
+            // https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
+            // a^(p-1) % p = 1
+            assert_eq!(s.pow(MAX_S1), s.reciprocal());
+            assert_eq!(s.pow(Scalar::MAX), Scalar::ONE);
+        }
+        // 0
+        assert_eq!(Scalar::ZERO.pow(Scalar::ZERO), Scalar::ONE);
+        assert_eq!(Scalar::ZERO.pow(Scalar::MAX), Scalar::ZERO);
+        // 1
+        common(Scalar::ONE);
+        // 2
+        common(s2);
+        assert_eq!(s2.pow(s2), s4);
+        assert_eq!(s2.pow(s3), s8);
+        assert_eq!(s2.pow(Scalar::new([128, 0])), Scalar::new([0, 1]));
+        assert_eq!(s2.pow(Scalar::new([255, 0])), Scalar::new([0, 0x8000_0000_0000_0000_0000_0000_0000_0000]));
+        // 3
+        common(s3);
+        assert_eq!(s3.pow(s2), s9);
+        assert_eq!(s3.pow(s3), s27);
+        // MAX-1
+        common(MAX_S1);
+        // MAX
+        common(Scalar::MAX);
+    }
 
     #[test]
     #[wasm_bindgen_test]
