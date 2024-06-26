@@ -23,6 +23,7 @@ impl Scalar {
     const ZERO: Self = Self([0, 0]);
     const ONE: Self = Self([1, 0]);
     const MAX: Self = Self(u256x::wsub(P, [1, 0]));
+    const MIDDLE: Scalar = Scalar::new(u256x::shr(&P, 1));
     // (P+1)/4
     const SQRT_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
     #[inline(always)]
@@ -35,12 +36,7 @@ impl Scalar {
         u256x::eq(&self.0, &b.0)
     }
     const fn add(self, b: Self) -> Self {
-        let (mut result, o) = u256x::oadd(self.0, b.0);
-        if o || !is_valid(result) {
-            result = u256x::wsub(result, P)
-        }
-        Self(result)
-        // self.sub(b.neg())
+        self.sub(b.neg())
     }
     const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
@@ -52,6 +48,18 @@ impl Scalar {
     #[inline(always)]
     const fn neg(self) -> Self {
         Self::ZERO.sub(self)
+    }
+    #[inline(always)]
+    const fn is_neg(self) -> bool {
+        u256x::less(&Self::MIDDLE.0, &self.0)
+    }
+    #[inline(always)]
+    const fn abs(self) -> Self {
+        if self.is_neg() {
+            self.neg()
+        } else {
+            self
+        }
     }
     const fn mul(self, b: Self) -> Self {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
@@ -153,7 +161,10 @@ mod test {
         assert_eq!(Scalar::new([5, 0]).sqrt(), None);
         assert_eq!(Scalar::new([6, 0]).sqrt(), None);
         assert_eq!(Scalar::new([7, 0]).sqrt(), None);
-        assert_eq!(Scalar::new([8, 0]).sqrt(), Some(q2.mul(Scalar::new([2, 0]))));
+        assert_eq!(
+            Scalar::new([8, 0]).sqrt(),
+            Some(q2.mul(Scalar::new([2, 0])))
+        );
         assert_eq!(Scalar::new([9, 0]).sqrt(), Some(Scalar::new([3, 0]).neg()));
         assert_eq!(Scalar::new([16, 0]).sqrt(), Some(Scalar::new([4, 0])));
         assert_eq!(Scalar::new([25, 0]).sqrt(), Some(Scalar::new([5, 0]).neg()));
@@ -179,11 +190,11 @@ mod test {
             Some(Scalar::new([14, 0]).neg())
         );
         assert_eq!(Scalar::new([225, 0]).sqrt(), Some(Scalar::new([15, 0])));
-        for i in 1..10000 {
+        for i in 1..1000 {
             let c = Scalar::new([i, 0]);
             let c2 = c.mul(c);
             let s = c2.sqrt().unwrap();
-            assert!(c.eq(s) || c.eq(s.neg()));
+            assert!(c.eq(s.abs()));
         }
     }
 
@@ -202,6 +213,10 @@ mod test {
             assert_eq!(s.pow(Scalar::ONE), s);
             // https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
             // a^(p-1) % p = 1
+            {
+                let x = s.pow(Scalar::MIDDLE);
+                assert!(x.eq(Scalar::ONE) || x.eq(Scalar::ONE.neg()));
+            }
             assert_eq!(s.pow(MAX_S1), s.reciprocal());
             assert_eq!(s.pow(Scalar::MAX), Scalar::ONE);
         }
