@@ -194,7 +194,7 @@ mod test {
             let c = Scalar::new([i, 0]);
             let c2 = c.mul(c);
             let s = c2.sqrt().unwrap();
-            assert!(c.eq(s.abs()));
+            assert_eq!(c, s.abs());
         }
     }
 
@@ -213,10 +213,7 @@ mod test {
             assert_eq!(s.pow(Scalar::ONE), s);
             // https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
             // a^(p-1) % p = 1
-            {
-                let x = s.pow(Scalar::MIDDLE);
-                assert!(x.eq(Scalar::ONE) || x.eq(Scalar::ONE.neg()));
-            }
+            assert_eq!(s.pow(Scalar::MIDDLE).abs(), Scalar::ONE);
             assert_eq!(s.pow(MAX_S1), s.reciprocal());
             assert_eq!(s.pow(Scalar::MAX), Scalar::ONE);
         }
