@@ -3,6 +3,7 @@ use crate::uint::{
     u512x,
 };
 
+// https://en.bitcoin.it/wiki/Secp256k1
 const P: U256 = [
     0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F,
     0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF,
@@ -19,13 +20,15 @@ const fn is_valid_private_key(key: U256) -> bool {
 #[derive(Debug, PartialEq, Clone, Copy)]
 struct Scalar(U256);
 
+const N: U256 = [0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE];
+
 impl Scalar {
-    const X0: Self = Self::new([0, 0]);
-    const X1: Self = Self::new([1, 0]);
-    const X3: Self = Self::new([3, 0]);
-    const X7: Self = Self::new([7, 0]);
+    const _0: Self = Self::n(0);
+    const _1: Self = Self::n(1);
+    const _3: Self = Self::n(3);
+    const _7: Self = Self::n(7);
     const MAX: Self = Self::new(u256x::wsub(P, [1, 0]));
-    const MIDDLE: Scalar = Scalar::new(u256x::shr(&P, 1));
+    const MIDDLE: Scalar = Self::new(u256x::shr(&P, 1));
     // (P+1)/4
     const SQRT_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
     // Gx
@@ -38,9 +41,13 @@ impl Scalar {
         0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
     ]);
     #[inline(always)]
-    const fn new(key: U256) -> Self {
-        assert!(is_valid(key));
-        Self(key)
+    const fn new(num: U256) -> Self {
+        assert!(is_valid(num));
+        Self(num)
+    }
+    #[inline(always)]
+    const fn n(num: u128) -> Self {
+        Self::new([num, 0])
     }
     #[inline(always)]
     const fn eq(self, b: Self) -> bool {
@@ -58,7 +65,7 @@ impl Scalar {
     }
     #[inline(always)]
     const fn neg(self) -> Self {
-        Self::X0.sub(self)
+        Self::_0.sub(self)
     }
     #[inline(always)]
     const fn is_neg(self) -> bool {
@@ -76,12 +83,12 @@ impl Scalar {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
     const fn reciprocal2(mut self) -> Vec2 {
-        assert!(!Self::X0.eq(self));
+        assert!(!Self::_0.eq(self));
         let mut a0 = P;
-        let mut f0 = [Self::X1, Self::X0];
-        let mut f1 = [Self::X0, Self::X1];
+        let mut f0 = [Self::_1, Self::_0];
+        let mut f1 = [Self::_0, Self::_1];
         loop {
-            if Self::X1.eq(self) {
+            if Self::_1.eq(self) {
                 return f1;
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
@@ -93,12 +100,12 @@ impl Scalar {
         }
     }
     const fn reciprocal(mut self) -> Self {
-        assert!(!Self::X0.eq(self));
+        assert!(!Self::_0.eq(self));
         let mut a0 = P;
-        let mut f0 = Self::X0;
-        let mut f1 = Self::X1;
+        let mut f0 = Self::_0;
+        let mut f1 = Self::_1;
         loop {
-            if Self::X1.eq(self) {
+            if Self::_1.eq(self) {
                 return f1;
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
@@ -110,8 +117,8 @@ impl Scalar {
         }
     }
     const fn pow(mut self, mut n: Self) -> Self {
-        let mut result = Self::X1;
-        while !Self::X0.eq(n) {
+        let mut result = Self::_1;
+        while !Self::_0.eq(n) {
             if n.0[0] & 1 == 1 {
                 result = result.mul(self);
             }
@@ -129,7 +136,7 @@ impl Scalar {
         }
     }
     const fn y2(self) -> Self {
-        self.pow(Self::X3).add(Self::X7)
+        self.pow(Self::_3).add(Self::_7)
     }
     const fn y(self) -> Option<Self> {
         self.y2().sqrt()
@@ -164,32 +171,54 @@ mod test {
 
     use crate::secp256k1::{is_valid_private_key, Scalar, Vec2, P};
 
+    const Q2: Scalar = Scalar::new([
+        25454351255596125846892804522787951607,
+        43929286026618122883815740552890121610,
+    ]);
+
     #[test]
     #[wasm_bindgen_test]
     fn test_y() {
         assert_eq!(Scalar::GX.y2(), Scalar::GY.mul(Scalar::GY));
         assert_eq!(Scalar::GX.y().unwrap(), Scalar::GY);
+        fn check(lo: u128, hi: u128, some: bool) {
+            assert_eq!(Scalar::new([lo, hi]).y().is_some(), some);
+        }
+        // some random numbers
+        check(
+            0x9fd69639_62398010_7c2f54a3_5a168569,
+            0xc288ac7d_64d0e032_1978d304_cce41ac9,
+            true,
+        );
+        check(
+            0xdee33137_a71b5674_78700202_824cc0b4,
+            0x0c7e1456_b02e4892_ae84b0d8_fbc104f6,
+            true,
+        );
+        check(
+            0xf8278695_19ceeb05_02738f13_0ee52287,
+            0x604c5652_7ee62bb6_925b7286_69e67659,
+            false,
+        );
+        //
+        assert_eq!(Scalar::_1.y().unwrap(), Q2.mul(Scalar::n(2)));
     }
 
     #[test]
     #[wasm_bindgen_test]
     fn test_sqrt() {
-        assert_eq!(Scalar::X1.sqrt(), Some(Scalar::X1));
-        let q2 = Scalar::new([
-            25454351255596125846892804522787951607,
-            43929286026618122883815740552890121610,
-        ]);
-        assert_eq!(Scalar::new([2, 0]).sqrt(), Some(q2));
-        assert_eq!(Scalar::new([3, 0]).sqrt(), None);
-        assert_eq!(Scalar::new([4, 0]).sqrt(), Some(Scalar::new([2, 0])));
-        assert_eq!(Scalar::new([5, 0]).sqrt(), None);
-        assert_eq!(Scalar::new([6, 0]).sqrt(), None);
-        assert_eq!(Scalar::new([7, 0]).sqrt(), None);
+        assert_eq!(Scalar::_1.sqrt(), Some(Scalar::_1));
+        assert_eq!(Scalar::n(2).sqrt(), Some(Q2));
+        assert_eq!(Scalar::n(3).sqrt(), None);
+        assert_eq!(Scalar::n(4).sqrt(), Some(Scalar::n(2)));
+        assert_eq!(Scalar::n(5).sqrt(), None);
+        assert_eq!(Scalar::n(6).sqrt(), None);
+        assert_eq!(Scalar::n(7).sqrt(), None);
         assert_eq!(
             Scalar::new([8, 0]).sqrt(),
-            Some(q2.mul(Scalar::new([2, 0])))
+            Some(Q2.mul(Scalar::n(2)))
         );
-        assert_eq!(Scalar::new([9, 0]).sqrt(), Some(Scalar::new([3, 0]).neg()));
+        assert_eq!(Scalar::n(9).sqrt(), Some(Scalar::n(3).neg()));
         assert_eq!(Scalar::new([16, 0]).sqrt(), Some(Scalar::new([4, 0])));
         assert_eq!(Scalar::new([25, 0]).sqrt(), Some(Scalar::new([5, 0]).neg()));
         assert_eq!(Scalar::new([36, 0]).sqrt(), Some(Scalar::new([6, 0]).neg()));
@@ -230,26 +259,26 @@ mod test {
     #[wasm_bindgen_test]
     fn test_pow() {
         let s2 = Scalar::new([2, 0]);
-        let s3 = Scalar::X3;
+        let s3 = Scalar::_3;
         let s4 = Scalar::new([4, 0]);
         let s8 = Scalar::new([8, 0]);
         let s9 = Scalar::new([9, 0]);
         let s27 = Scalar::new([27, 0]);
-        const MAX_S1: Scalar = Scalar::MAX.sub(Scalar::X1);
+        const MAX_S1: Scalar = Scalar::MAX.sub(Scalar::_1);
         fn common(s: Scalar) {
-            assert_eq!(s.pow(Scalar::X0), Scalar::X1);
-            assert_eq!(s.pow(Scalar::X1), s);
+            assert_eq!(s.pow(Scalar::_0), Scalar::_1);
+            assert_eq!(s.pow(Scalar::_1), s);
             // https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
             // a^(p-1) % p = 1
-            assert_eq!(s.pow(Scalar::MIDDLE).abs(), Scalar::X1);
+            assert_eq!(s.pow(Scalar::MIDDLE).abs(), Scalar::_1);
             assert_eq!(s.pow(MAX_S1), s.reciprocal());
-            assert_eq!(s.pow(Scalar::MAX), Scalar::X1);
+            assert_eq!(s.pow(Scalar::MAX), Scalar::_1);
         }
         // 0
-        assert_eq!(Scalar::X0.pow(Scalar::X0), Scalar::X1);
-        assert_eq!(Scalar::X0.pow(Scalar::MAX), Scalar::X0);
+        assert_eq!(Scalar::_0.pow(Scalar::_0), Scalar::_1);
+        assert_eq!(Scalar::_0.pow(Scalar::MAX), Scalar::_0);
         // 1
-        common(Scalar::X1);
+        common(Scalar::_1);
         // 2
         common(s2);
         assert_eq!(s2.pow(s2), s4);
@@ -260,9 +289,9 @@ mod test {
             Scalar::new([0, 0x8000_0000_0000_0000_0000_0000_0000_0000])
         );
         // 3
-        common(Scalar::X3);
-        assert_eq!(Scalar::X3.pow(s2), s9);
-        assert_eq!(Scalar::X3.pow(Scalar::X3), s27);
+        common(Scalar::_3);
+        assert_eq!(Scalar::_3.pow(s2), s9);
+        assert_eq!(Scalar::_3.pow(Scalar::_3), s27);
         // Gx
         common(Scalar::GX);
         // MIDDLE
@@ -466,20 +495,20 @@ mod test {
                 0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2E,
                 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF
             ])),
-            Scalar::X0
+            Scalar::_0
         );
     }
 
     #[test]
     #[wasm_bindgen_test]
     fn test_mul() {
-        assert_eq!(Scalar::X0.mul(Scalar::MAX), Scalar::X0);
-        assert_eq!(Scalar::X1.mul(Scalar::X1), Scalar::X1);
+        assert_eq!(Scalar::_0.mul(Scalar::MAX), Scalar::_0);
+        assert_eq!(Scalar::_1.mul(Scalar::_1), Scalar::_1);
         assert_eq!(
             Scalar::new([2, 0]).mul(Scalar::new([2, 0])),
             Scalar::new([4, 0])
         );
-        assert_eq!(Scalar::MAX.mul(Scalar::MAX), Scalar::X1);
+        assert_eq!(Scalar::MAX.mul(Scalar::MAX), Scalar::_1);
     }
 
     #[test]
@@ -487,13 +516,13 @@ mod test {
     fn test_reciprocal() {
         fn x(s: Scalar) {
             let v = s.reciprocal();
-            assert_eq!(v.mul(s), Scalar::X1);
+            assert_eq!(v.mul(s), Scalar::_1);
         }
         fn f(s: Scalar, v: Scalar) {
             assert_eq!(s.reciprocal(), v);
-            assert_eq!(v.mul(s), Scalar::X1);
+            assert_eq!(v.mul(s), Scalar::_1);
         }
-        f(Scalar::X1, Scalar::X1);
+        f(Scalar::_1, Scalar::_1);
         f(Scalar::MAX, Scalar::MAX);
         x(Scalar::new([2, 0]));
         x(Scalar::new([3, 0]));
@@ -512,14 +541,14 @@ mod test {
     fn test_reciprocal2() {
         fn x(s: Scalar) {
             let v = s.reciprocal2();
-            assert_eq!(v[1].mul(s), Scalar::X1);
+            assert_eq!(v[1].mul(s), Scalar::_1);
         }
         fn f(s: Scalar, v: Vec2) {
             assert_eq!(s.reciprocal2(), v);
-            assert_eq!(v[1].mul(s), Scalar::X1);
+            assert_eq!(v[1].mul(s), Scalar::_1);
         }
-        f(Scalar::X1, [Scalar::X0, Scalar::X1]);
-        f(Scalar::MAX, [Scalar::X1, Scalar::MAX]);
+        f(Scalar::_1, [Scalar::_0, Scalar::_1]);
+        f(Scalar::MAX, [Scalar::_1, Scalar::MAX]);
         x(Scalar::new([2, 0]));
         x(Scalar::new([3, 0]));
         x(Scalar::new([4, 0]));
