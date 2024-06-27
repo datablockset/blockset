@@ -2,7 +2,7 @@ use nanvm_lib::common::cast::Cast;
 
 use crate::{
     cdt::node_id::merge,
-    uint::u256::{great, U256},
+    uint::u256x::{great, U256},
 };
 
 // It should work faster than (a ^ b).leading_zeros().
@@ -88,7 +88,7 @@ mod test {
             node_id::{merge, to_node_id},
             subtree::Node,
         },
-        uint::u256::U256,
+        uint::u256x::U256,
     };
 
     use super::{height, SubTree};

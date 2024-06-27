@@ -2,7 +2,7 @@ use std::io::{self, Write};
 
 use io_trait::Io;
 
-use crate::uint::u64::div_rem;
+use crate::uint::u64x::div_rem;
 
 pub struct StatusLine<'a, T: Io> {
     io: &'a T,
