@@ -73,7 +73,7 @@ impl Scalar {
         u256x::less(&Self::MIDDLE.0, &self.0)
     }
     #[inline(always)]
-    const fn abs(self) -> Self {
+    pub const fn abs(self) -> Self {
         if self.is_neg() {
             self.neg()
         } else {

@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::uint::u256x::{self, get_bit, U256};
 
 use super::scalar::Scalar;
@@ -17,11 +19,23 @@ const fn eq(a: Point, b: Point) -> bool {
 
 const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
 
+const fn check([x, y]: Point) -> bool {
+    if x.eq(Scalar::_0) {
+        return y.eq(Scalar::_0);
+    }
+    if let Some(xy) = x.y() {
+        return xy.abs().eq(y.abs())
+    }
+    false
+}
+
 const fn from_m([x, y]: Point, pqx: Scalar, m: Scalar) -> Point {
     let m2 = m.mul(m);
     let rx = m2.sub(pqx);
     let ry = m.mul(rx.sub(x)).add(y);
-    [rx, ry.neg()]
+    let r = [rx, ry.neg()];
+    assert!(check(r));
+    r
 }
 
 const fn neg([x, y]: Point) -> Point {
@@ -34,7 +48,14 @@ const fn double(p: Point) -> Point {
     if y.eq(Scalar::_0) {
         return O
     }
-    from_m(p, x.mul(Scalar::_2), x.div(y).mul(_3_DIV_2))
+    from_m(p, x.mul(Scalar::_2), x.mul(x).div(y).mul(_3_DIV_2))
+}
+
+const fn from_x(x: Scalar) -> Point {
+    if let Some(y) = x.y() {
+        return [x, y];
+    }
+    panic!();
 }
 
 const fn add(p: Point, q: Point) -> Point {
@@ -71,9 +92,9 @@ const fn mul(mut p: Point, mut n: U256) -> Point {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::secp256k1::{point::{neg, O}, scalar::{Scalar, N}};
+    use crate::{secp256k1::{point::{from_x, neg, O, Y}, scalar::{Scalar, N}}, uint::u256x};
 
-    use super::mul;
+    use super::{double, mul, Point, X};
 
     #[test]
     #[wasm_bindgen_test]
@@ -85,15 +106,31 @@ mod tests {
         assert_eq!(mul(O, N), O);
     }
 
+    fn check(p: Point) {
+        // assert_eq!(p[X].y().unwrap().abs(), p[Y].abs());
+        p[X].y().unwrap();
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_double() {
+        let p = from_x(Scalar::_1);
+        let p1 = double(p);
+        let p2 = double(p1);
+        let p3 = double(p2);
+    }
+
     #[test]
     #[wasm_bindgen_test]
     fn test_mul_1() {
         // Scalar::_0 has no `y`
-        let x = Scalar::_1;
-        let p = [x, x.y().unwrap()];
+        let p = from_x(Scalar::_1);
         let pn = neg(p);
         assert_eq!(mul(p, [0, 0]), O);
         assert_eq!(mul(p, [1, 0]), p);
+        assert_eq!(mul(p, N), O);
+        assert_eq!(mul(p, u256x::wsub(N, [1, 0])), pn);
+        //
         let f = |s| {
             let r = mul(p, s);
             let rn = mul(pn, s);
@@ -114,6 +151,5 @@ mod tests {
         f([2, 2]);
         f([0, 3]);
         f([3, 3]);
-        f(N);
     }
 }
