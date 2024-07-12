@@ -18,17 +18,18 @@ const fn is_valid_private_key(key: U256) -> bool {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-struct Scalar(U256);
+pub struct Scalar(U256);
 
-const N: U256 = [0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE];
+pub const N: U256 = [0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE];
 
 impl Scalar {
-    const _0: Self = Self::n(0);
-    const _1: Self = Self::n(1);
-    const _3: Self = Self::n(3);
-    const _7: Self = Self::n(7);
-    const MAX: Self = Self::new(u256x::wsub(P, [1, 0]));
-    const MIDDLE: Scalar = Self::new(u256x::shr(&P, 1));
+    pub const _0: Self = Self::n(0);
+    pub const _1: Self = Self::n(1);
+    pub const _2: Self = Self::n(2);
+    pub const _3: Self = Self::n(3);
+    pub const _7: Self = Self::n(7);
+    pub const MAX: Self = Self::new(u256x::wsub(P, [1, 0]));
+    pub const MIDDLE: Scalar = Self::new(u256x::shr(&P, 1));
     // (P+1)/4
     const SQRT_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
     // Gx
@@ -50,13 +51,13 @@ impl Scalar {
         Self::new([num, 0])
     }
     #[inline(always)]
-    const fn eq(self, b: Self) -> bool {
+    pub const fn eq(self, b: Self) -> bool {
         u256x::eq(&self.0, &b.0)
     }
-    const fn add(self, b: Self) -> Self {
+    pub const fn add(self, b: Self) -> Self {
         self.sub(b.neg())
     }
-    const fn sub(self, b: Self) -> Self {
+    pub const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
         if b {
             result = u256x::wadd(result, P)
@@ -64,7 +65,7 @@ impl Scalar {
         Self(result)
     }
     #[inline(always)]
-    const fn neg(self) -> Self {
+    pub const fn neg(self) -> Self {
         Self::_0.sub(self)
     }
     #[inline(always)]
@@ -79,7 +80,7 @@ impl Scalar {
             self
         }
     }
-    const fn mul(self, b: Self) -> Self {
+    pub const fn mul(self, b: Self) -> Self {
         Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
     }
     const fn reciprocal2(mut self) -> Vec2 {
@@ -99,7 +100,7 @@ impl Scalar {
             f1 = f2;
         }
     }
-    const fn reciprocal(mut self) -> Self {
+    pub const fn reciprocal(mut self) -> Self {
         assert!(!Self::_0.eq(self));
         let mut a0 = P;
         let mut f0 = Self::_0;
@@ -116,14 +117,20 @@ impl Scalar {
             f1 = f2;
         }
     }
+    pub const fn div(self, b: Self) -> Self {
+        self.mul(b.reciprocal())
+    }
     const fn pow(mut self, mut n: Self) -> Self {
         let mut result = Self::_1;
-        while !Self::_0.eq(n) {
+        loop {
             if n.0[0] & 1 == 1 {
                 result = result.mul(self);
             }
-            self = self.mul(self);
             n.0 = u256x::shr(&n.0, 1);
+            if Self::_0.eq(n) {
+                break
+            }
+            self = self.mul(self);
         }
         result
     }
@@ -138,7 +145,7 @@ impl Scalar {
     const fn y2(self) -> Self {
         self.pow(Self::_3).add(Self::_7)
     }
-    const fn y(self) -> Option<Self> {
+    pub const fn y(self) -> Option<Self> {
         self.y2().sqrt()
     }
 }
@@ -169,7 +176,7 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::secp256k1::{is_valid_private_key, Scalar, Vec2, P};
+    use super::{is_valid_private_key, Scalar, Vec2, P};
 
     const Q2: Scalar = Scalar::new([
         25454351255596125846892804522787951607,
@@ -213,6 +220,7 @@ mod test {
         assert_eq!(Scalar::n(4).sqrt(), Some(Scalar::n(2)));
         assert_eq!(Scalar::n(5).sqrt(), None);
         assert_eq!(Scalar::n(6).sqrt(), None);
+        // So $y^2 = x^3 + 7$ is not defined when $x = 0$.
         assert_eq!(Scalar::n(7).sqrt(), None);
         assert_eq!(
             Scalar::new([8, 0]).sqrt(),
