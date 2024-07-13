@@ -19,25 +19,11 @@ const fn eq(a: Point, b: Point) -> bool {
 
 const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
 
-const fn check([x, y]: Point) -> bool {
-    true
-    /*
-    if x.eq(Scalar::_0) {
-        return y.eq(Scalar::_0);
-    }
-    if let Some(xy) = x.y() {
-        return xy.abs().eq(y.abs())
-    }
-    false
-    */
-}
-
 const fn from_m([x, y]: Point, pqx: Scalar, m: Scalar) -> Point {
     let m2 = m.mul(m);
     let rx = m2.sub(pqx);
     let ry = m.mul(rx.sub(x)).add(y);
     let r = [rx, ry.neg()];
-    assert!(check(r));
     r
 }
 
