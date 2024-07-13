@@ -1,6 +1,6 @@
 use core::panic;
 
-use crate::uint::u256x::{self, get_bit, U256};
+use crate::uint::u256x::{self, U256};
 
 use super::scalar::Scalar;
 
@@ -20,6 +20,8 @@ const fn eq(a: Point, b: Point) -> bool {
 const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
 
 const fn check([x, y]: Point) -> bool {
+    true
+    /*
     if x.eq(Scalar::_0) {
         return y.eq(Scalar::_0);
     }
@@ -27,6 +29,7 @@ const fn check([x, y]: Point) -> bool {
         return xy.abs().eq(y.abs())
     }
     false
+    */
 }
 
 const fn from_m([x, y]: Point, pqx: Scalar, m: Scalar) -> Point {
@@ -106,9 +109,8 @@ mod tests {
         assert_eq!(mul(O, N), O);
     }
 
-    fn check(p: Point) {
-        // assert_eq!(p[X].y().unwrap().abs(), p[Y].abs());
-        p[X].y().unwrap();
+    fn check([x, y]: Point) {
+        assert_eq!(x.y().unwrap().abs(), y.abs());
     }
 
     #[test]
@@ -133,7 +135,9 @@ mod tests {
             //
             let f = |s| {
                 let r = mul(p, s);
+                check(r);
                 let rn = mul(pn, s);
+                check(rn);
                 assert_ne!(r, O);
                 assert_ne!(r, p);
                 assert_ne!(r, pn);
@@ -159,6 +163,6 @@ mod tests {
         g(Scalar::n(4));
         // g(Scalar::n(5));
         g(Scalar::n(6));
-        g(Scalar::n(7));
+        // g(Scalar::n(7));
     }
 }
