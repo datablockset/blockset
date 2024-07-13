@@ -20,7 +20,10 @@ const fn is_valid_private_key(key: U256) -> bool {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Scalar(U256);
 
-pub const N: U256 = [0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE];
+pub const N: U256 = [
+    0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
+    0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
+];
 
 impl Scalar {
     pub const _0: Self = Self::n(0);
@@ -128,7 +131,7 @@ impl Scalar {
             }
             n.0 = u256x::shr(&n.0, 1);
             if Self::_0.eq(n) {
-                break
+                break;
             }
             self = self.mul(self);
         }
@@ -222,10 +225,7 @@ mod test {
         assert_eq!(Scalar::n(6).sqrt(), None);
         // So $y^2 = x^3 + 7$ is not defined when $x = 0$.
         assert_eq!(Scalar::n(7).sqrt(), None);
-        assert_eq!(
-            Scalar::new([8, 0]).sqrt(),
-            Some(Q2.mul(Scalar::n(2)))
-        );
+        assert_eq!(Scalar::new([8, 0]).sqrt(), Some(Q2.mul(Scalar::n(2))));
         assert_eq!(Scalar::n(9).sqrt(), Some(Scalar::n(3).neg()));
         assert_eq!(Scalar::new([16, 0]).sqrt(), Some(Scalar::new([4, 0])));
         assert_eq!(Scalar::new([25, 0]).sqrt(), Some(Scalar::new([5, 0]).neg()));

@@ -37,7 +37,7 @@ const fn double(p: Point) -> Point {
     let [x, y] = p;
     // if y = 0, it means either the point is `O` or `m` is not defined.
     if y.eq(Scalar::_0) {
-        return O
+        return O;
     }
     from_m(p, x.mul(Scalar::_2), x.mul(x).div(y).mul(_3_DIV_2))
 }
@@ -53,7 +53,7 @@ const fn add(p: Point, q: Point) -> Point {
     let [px, py] = p;
     let [qx, qy] = q;
     if px.eq(qx) {
-        return if py.eq(qy) { double(p) } else { O }
+        return if py.eq(qy) { double(p) } else { O };
     }
     if eq(p, O) {
         return q;
@@ -72,7 +72,7 @@ const fn mul(mut p: Point, mut n: U256) -> Point {
         }
         n = u256x::shr(&n, 1);
         if u256x::eq(&n, &u256x::ZERO) {
-            break
+            break;
         }
         p = double(p);
     }
@@ -83,7 +83,13 @@ const fn mul(mut p: Point, mut n: U256) -> Point {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{secp256k1::{point::{from_x, neg, O, Y}, scalar::{Scalar, N}}, uint::u256x};
+    use crate::{
+        secp256k1::{
+            point::{from_x, neg, O, Y},
+            scalar::{Scalar, N},
+        },
+        uint::u256x,
+    };
 
     use super::{double, mul, Point, G, X};
 
@@ -143,9 +149,7 @@ mod tests {
             f([0, 3]);
             f([3, 3]);
         };
-        let s = |x| {
-            g(from_x(x))
-        };
+        let s = |x| g(from_x(x));
         // s(Scalar::_0);
         s(Scalar::_1);
         s(Scalar::_2);

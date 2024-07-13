@@ -149,11 +149,7 @@ pub const fn set_bit([a0, a1]: U256, i: u32) -> U256 {
 }
 
 pub const fn get_bit([a0, a1]: U256, i: u32) -> bool {
-    let x = if i < 128 {
-        a0 >> i
-    } else {
-        a1 >> (i - 128)
-    };
+    let x = if i < 128 { a0 >> i } else { a1 >> (i - 128) };
     (x & 1) != 0
 }
 
