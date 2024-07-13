@@ -123,33 +123,42 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test_mul_1() {
-        // Scalar::_0 has no `y`
-        let p = from_x(Scalar::_1);
-        let pn = neg(p);
-        assert_eq!(mul(p, [0, 0]), O);
-        assert_eq!(mul(p, [1, 0]), p);
-        assert_eq!(mul(p, N), O);
-        assert_eq!(mul(p, u256x::wsub(N, [1, 0])), pn);
-        //
-        let f = |s| {
-            let r = mul(p, s);
-            let rn = mul(pn, s);
-            assert_ne!(r, O);
-            assert_ne!(r, p);
-            assert_ne!(r, pn);
-            assert_ne!(rn, O);
-            assert_ne!(rn, p);
-            assert_ne!(rn, pn);
-            assert_ne!(r, rn);
-            assert_eq!(r, neg(rn));
+        let g = |x| {
+            let p = from_x(x);
+            let pn = neg(p);
+            assert_eq!(mul(p, [0, 0]), O);
+            assert_eq!(mul(p, [1, 0]), p);
+            assert_eq!(mul(p, N), O);
+            assert_eq!(mul(p, u256x::wsub(N, [1, 0])), pn);
+            //
+            let f = |s| {
+                let r = mul(p, s);
+                let rn = mul(pn, s);
+                assert_ne!(r, O);
+                assert_ne!(r, p);
+                assert_ne!(r, pn);
+                assert_ne!(rn, O);
+                assert_ne!(rn, p);
+                assert_ne!(rn, pn);
+                assert_ne!(r, rn);
+                assert_eq!(r, neg(rn));
+            };
+            f([2, 0]);
+            f([3, 0]);
+            f([0, 1]);
+            f([1, 1]);
+            f([0, 2]);
+            f([2, 2]);
+            f([0, 3]);
+            f([3, 3]);
         };
-        f([2, 0]);
-        f([3, 0]);
-        f([0, 1]);
-        f([1, 1]);
-        f([0, 2]);
-        f([2, 2]);
-        f([0, 3]);
-        f([3, 3]);
+        // g(Scalar::_0);
+        g(Scalar::_1);
+        g(Scalar::_2);
+        g(Scalar::_3);
+        g(Scalar::n(4));
+        // g(Scalar::n(5));
+        g(Scalar::n(6));
+        g(Scalar::n(7));
     }
 }

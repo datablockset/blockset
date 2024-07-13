@@ -47,7 +47,7 @@ impl Scalar {
         Self(num)
     }
     #[inline(always)]
-    const fn n(num: u128) -> Self {
+    pub const fn n(num: u128) -> Self {
         Self::new([num, 0])
     }
     #[inline(always)]
