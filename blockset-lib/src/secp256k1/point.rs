@@ -13,6 +13,8 @@ const Y: usize = 1;
 // even more, when x = 0, y is not defined.
 const O: Point = [Scalar::_0, Scalar::_0];
 
+const G: Point = [Scalar::GX, Scalar::GY];
+
 const fn eq(a: Point, b: Point) -> bool {
     a[X].eq(b[X]) && a[Y].eq(b[Y])
 }
@@ -83,7 +85,7 @@ mod tests {
 
     use crate::{secp256k1::{point::{from_x, neg, O, Y}, scalar::{Scalar, N}}, uint::u256x};
 
-    use super::{double, mul, Point, X};
+    use super::{double, mul, Point, G, X};
 
     #[test]
     #[wasm_bindgen_test]
@@ -111,8 +113,7 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test_mul_1() {
-        let g = |x| {
-            let p = from_x(x);
+        let g = |p| {
             let pn = neg(p);
             assert_eq!(mul(p, [0, 0]), O);
             assert_eq!(mul(p, [1, 0]), p);
@@ -142,13 +143,17 @@ mod tests {
             f([0, 3]);
             f([3, 3]);
         };
-        // g(Scalar::_0);
-        g(Scalar::_1);
-        g(Scalar::_2);
-        g(Scalar::_3);
-        g(Scalar::n(4));
+        let s = |x| {
+            g(from_x(x))
+        };
+        // s(Scalar::_0);
+        s(Scalar::_1);
+        s(Scalar::_2);
+        s(Scalar::_3);
+        s(Scalar::n(4));
         // g(Scalar::n(5));
-        g(Scalar::n(6));
+        s(Scalar::n(6));
         // g(Scalar::n(7));
+        g(G);
     }
 }

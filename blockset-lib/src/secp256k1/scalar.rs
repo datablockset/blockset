@@ -33,11 +33,11 @@ impl Scalar {
     // (P+1)/4
     const SQRT_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
     // Gx
-    const GX: Scalar = Scalar::new([
+    pub const GX: Scalar = Scalar::new([
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
         0x79BE667E_F9DCBBAC_55A06295_CE870B07,
     ]);
-    const GY: Scalar = Scalar::new([
+    pub const GY: Scalar = Scalar::new([
         0xFD17B448_A6855419_9C47D08F_FB10D4B8,
         0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
     ]);
