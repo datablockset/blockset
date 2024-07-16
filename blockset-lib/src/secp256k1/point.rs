@@ -49,7 +49,7 @@ const fn from_x(x: Scalar) -> Point {
     panic!();
 }
 
-const fn add(p: Point, q: Point) -> Point {
+pub const fn add(p: Point, q: Point) -> Point {
     let [px, py] = p;
     let [qx, qy] = q;
     if px.eq(&qx) {
@@ -83,12 +83,10 @@ pub const fn mul(mut p: Point, mut n: Order) -> Point {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{
-        secp256k1::{
-            point::{from_x, neg, O, Y},
-            scalar::Scalar, Order,
-        },
-        uint::u256x,
+    use crate::secp256k1::{
+        point::{from_x, neg, O, Y},
+        scalar::Scalar,
+        Order,
     };
 
     use super::{double, mul, Point, G, X};
