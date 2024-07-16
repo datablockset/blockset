@@ -1,6 +1,6 @@
 use crate::uint::u256x::U256;
 
-const SHA256: U256 = [
+pub const SHA256: U256 = [
     0xa54ff53a_3c6ef372_bb67ae85_6a09e667,
     0x5be0cd19_1f83d9ab_9b05688c_510e527f,
 ];
