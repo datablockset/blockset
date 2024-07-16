@@ -29,8 +29,12 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
         Self(num)
     }
     #[inline(always)]
-    pub const fn new(num: U256) -> Self {
-        assert!(Self::is_valid(num));
+    pub const fn new(mut num: U256) -> Self {
+        num = if u256x::less(&num, &Self::P) {
+            num
+        } else {
+            u256x::wsub(num, Self::P)
+        };
         Self(num)
     }
     #[inline(always)]
