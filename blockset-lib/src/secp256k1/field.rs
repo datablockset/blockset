@@ -3,7 +3,8 @@ use crate::uint::{
     u512x,
 };
 
-struct Field<const P0: u128, const P1: u128>(U256);
+#[derive(PartialEq, Debug)]
+pub struct Field<const P0: u128, const P1: u128>(pub U256);
 
 impl<const P0: u128, const P1: u128> Clone for Field<P0, P1> {
     fn clone(&self) -> Self {
@@ -14,18 +15,21 @@ impl<const P0: u128, const P1: u128> Clone for Field<P0, P1> {
 impl<const P0: u128, const P1: u128> Copy for Field<P0, P1> {}
 
 impl<const P0: u128, const P1: u128> Field<P0, P1> {
-    const P: U256 = [P0, P1];
-    const _0: Self = Self::n(0);
-    const _1: Self = Self::n(1);
+    pub const P: U256 = [P0, P1];
+    pub const _0: Self = Self::n(0);
+    pub const _1: Self = Self::n(1);
     pub const MAX: Self = Self::new(u256x::wsub(Self::P, [1, 0]));
     pub const MIDDLE: Self = Self::new(u256x::shr(&Self::P, 1));
-    const SQRT_K: Self = Self::new(u256x::shr(&u256x::wadd(Self::P, [1, 0]), 2));
     const fn is_valid(key: U256) -> bool {
         u256x::less(&key, &Self::P)
     }
     //
     #[inline(always)]
-    const fn new(num: U256) -> Self {
+    pub const unsafe fn unchecked_new(num: U256) -> Self {
+        Self(num)
+    }
+    #[inline(always)]
+    pub const fn new(num: U256) -> Self {
         assert!(Self::is_valid(num));
         Self(num)
     }
@@ -38,7 +42,7 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
         u256x::eq(&self.0, &b.0)
     }
     //
-    const fn sub(self, b: Self) -> Self {
+    pub const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
         if b {
             result = u256x::wadd(result, Self::P)
@@ -88,7 +92,7 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
     pub const fn div(self, b: Self) -> Self {
         self.mul(b.reciprocal())
     }
-    const fn pow(mut self, mut n: Self) -> Self {
+    pub const fn pow(mut self, mut n: Self) -> Self {
         let mut result = Self::_1;
         loop {
             if n.0[0] & 1 == 1 {

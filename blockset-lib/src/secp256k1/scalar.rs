@@ -1,40 +1,30 @@
-use crate::uint::{
-    u256x::{self, U256},
-    u512x,
-};
+use crate::uint::u256x::{self, U256};
 
-// https://en.bitcoin.it/wiki/Secp256k1
-const P: U256 = [
-    0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F,
-    0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF,
-];
+use super::field::Field;
 
 const fn is_valid(key: U256) -> bool {
-    u256x::less(&key, &P)
+    u256x::less(&key, &Scalar::P)
 }
 
 const fn is_valid_private_key(key: U256) -> bool {
     u256x::less(&u256x::ZERO, &key) && is_valid(key)
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Scalar(U256);
+// https://en.bitcoin.it/wiki/Secp256k1
+pub type Scalar =
+    Field<0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF>;
 
-pub const N: U256 = [
-    0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
-    0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
-];
+// pub const N: U256 = [
+//    0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
+//    0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
+//];
 
 impl Scalar {
-    pub const _0: Self = Self::n(0);
-    pub const _1: Self = Self::n(1);
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
     pub const _7: Self = Self::n(7);
-    pub const MAX: Self = Self::new(u256x::wsub(P, [1, 0]));
-    pub const MIDDLE: Scalar = Self::new(u256x::shr(&P, 1));
     // (P+1)/4
-    const SQRT_K: Scalar = Scalar::new(u256x::shr(&u256x::wadd(P, [1, 0]), 2));
+    const SQRT_K: Self = Self::new(u256x::shr(&u256x::wadd(Self::P, [1, 0]), 2));
     // Gx
     pub const GX: Scalar = Scalar::new([
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
@@ -44,55 +34,13 @@ impl Scalar {
         0xFD17B448_A6855419_9C47D08F_FB10D4B8,
         0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
     ]);
-    #[inline(always)]
-    const fn new(num: U256) -> Self {
-        assert!(is_valid(num));
-        Self(num)
-    }
-    #[inline(always)]
-    pub const fn n(num: u128) -> Self {
-        Self::new([num, 0])
-    }
-    #[inline(always)]
-    pub const fn eq(self, b: Self) -> bool {
-        u256x::eq(&self.0, &b.0)
-    }
-    pub const fn add(self, b: Self) -> Self {
-        self.sub(b.neg())
-    }
-    pub const fn sub(self, b: Self) -> Self {
-        let (mut result, b) = u256x::osub(self.0, b.0);
-        if b {
-            result = u256x::wadd(result, P)
-        }
-        Self(result)
-    }
-    #[inline(always)]
-    pub const fn neg(self) -> Self {
-        Self::_0.sub(self)
-    }
-    #[inline(always)]
-    const fn is_neg(self) -> bool {
-        u256x::less(&Self::MIDDLE.0, &self.0)
-    }
-    #[inline(always)]
-    pub const fn abs(self) -> Self {
-        if self.is_neg() {
-            self.neg()
-        } else {
-            self
-        }
-    }
-    pub const fn mul(self, b: Self) -> Self {
-        Self(u512x::div_rem(u256x::mul(self.0, b.0), [P, u256x::ZERO])[1][0])
-    }
     const fn reciprocal2(mut self) -> Vec2 {
-        assert!(!Self::_0.eq(self));
-        let mut a0 = P;
+        assert!(!Self::_0.eq(&self));
+        let mut a0 = Self::P;
         let mut f0 = [Self::_1, Self::_0];
         let mut f1 = [Self::_0, Self::_1];
         loop {
-            if Self::_1.eq(self) {
+            if Self::_1.eq(&self) {
                 return f1;
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
@@ -103,43 +51,9 @@ impl Scalar {
             f1 = f2;
         }
     }
-    pub const fn reciprocal(mut self) -> Self {
-        assert!(!Self::_0.eq(self));
-        let mut a0 = P;
-        let mut f0 = Self::_0;
-        let mut f1 = Self::_1;
-        loop {
-            if Self::_1.eq(self) {
-                return f1;
-            }
-            let [q, a2] = u256x::div_rem(a0, self.0);
-            a0 = self.0;
-            self = Self(a2);
-            let f2 = f0.sub(f1.mul(Self(q)));
-            f0 = f1;
-            f1 = f2;
-        }
-    }
-    pub const fn div(self, b: Self) -> Self {
-        self.mul(b.reciprocal())
-    }
-    const fn pow(mut self, mut n: Self) -> Self {
-        let mut result = Self::_1;
-        loop {
-            if n.0[0] & 1 == 1 {
-                result = result.mul(self);
-            }
-            n.0 = u256x::shr(&n.0, 1);
-            if Self::_0.eq(n) {
-                break;
-            }
-            self = self.mul(self);
-        }
-        result
-    }
     const fn sqrt(self) -> Option<Self> {
         let result = self.pow(Self::SQRT_K);
-        if result.mul(result).eq(self) {
+        if result.mul(result).eq(&self) {
             Some(result)
         } else {
             None
@@ -179,7 +93,7 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::{is_valid_private_key, Scalar, Vec2, P};
+    use super::{is_valid_private_key, Scalar, Vec2};
 
     const Q2: Scalar = Scalar::new([
         25454351255596125846892804522787951607,
@@ -541,7 +455,7 @@ mod test {
         x(Scalar::new([6, 2]));
         x(Scalar::new([7, 3]));
         x(Scalar::new([8, u128::MAX]));
-        x(Scalar::new([P[0] - 9, u128::MAX]));
+        x(Scalar::new([Scalar::P[0] - 9, u128::MAX]));
     }
 
     #[test]
@@ -566,6 +480,6 @@ mod test {
         x(Scalar::new([6, 2]));
         x(Scalar::new([7, 3]));
         x(Scalar::new([8, u128::MAX]));
-        x(Scalar::new([P[0] - 9, u128::MAX]));
+        x(Scalar::new([Scalar::P[0] - 9, u128::MAX]));
     }
 }
