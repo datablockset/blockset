@@ -1,41 +1,33 @@
-use std::marker::PhantomData;
-
 use crate::uint::{
     u256x::{self, U256},
     u512x,
 };
 
-trait U256Const {
-    const VALUE: U256;
-}
+struct Field<const P0: u128, const P1: u128>(U256);
 
-struct Field<P: U256Const>(U256, PhantomData<P>);
-
-impl<P: U256Const> Clone for Field<P> {
+impl<const P0: u128, const P1: u128> Clone for Field<P0, P1> {
     fn clone(&self) -> Self {
-        Self(self.0.clone(), self.1.clone())
+        Self(self.0)
     }
 }
 
-impl<P: U256Const> Copy for Field<P> {}
+impl<const P0: u128, const P1: u128> Copy for Field<P0, P1> {}
 
-impl<P: U256Const> Field<P> {
+impl<const P0: u128, const P1: u128> Field<P0, P1> {
+    const P: U256 = [P0, P1];
     const _0: Self = Self::n(0);
     const _1: Self = Self::n(1);
-    pub const MAX: Self = Self::new(u256x::wsub(P::VALUE, [1, 0]));
-    pub const MIDDLE: Self = Self::new(u256x::shr(&P::VALUE, 1));
-    const SQRT_K: Self = Self::new(u256x::shr(&u256x::wadd(P::VALUE, [1, 0]), 2));
+    pub const MAX: Self = Self::new(u256x::wsub(Self::P, [1, 0]));
+    pub const MIDDLE: Self = Self::new(u256x::shr(&Self::P, 1));
+    const SQRT_K: Self = Self::new(u256x::shr(&u256x::wadd(Self::P, [1, 0]), 2));
     const fn is_valid(key: U256) -> bool {
-        u256x::less(&key, &P::VALUE)
+        u256x::less(&key, &Self::P)
     }
     //
-    const fn unchecked_new(v: U256) -> Self {
-        Self(v, PhantomData)
-    }
     #[inline(always)]
     const fn new(num: U256) -> Self {
         assert!(Self::is_valid(num));
-        Self::unchecked_new(num)
+        Self(num)
     }
     #[inline(always)]
     pub const fn n(num: u128) -> Self {
@@ -49,9 +41,9 @@ impl<P: U256Const> Field<P> {
     const fn sub(self, b: Self) -> Self {
         let (mut result, b) = u256x::osub(self.0, b.0);
         if b {
-            result = u256x::wadd(result, P::VALUE)
+            result = u256x::wadd(result, Self::P)
         }
-        Self::unchecked_new(result)
+        Self(result)
     }
     #[inline(always)]
     pub const fn neg(self) -> Self {
@@ -74,11 +66,11 @@ impl<P: U256Const> Field<P> {
     }
     //
     pub const fn mul(self, b: Self) -> Self {
-        Self::unchecked_new(u512x::div_rem(u256x::mul(self.0, b.0), [P::VALUE, u256x::ZERO])[1][0])
+        Self(u512x::div_rem(u256x::mul(self.0, b.0), [Self::P, u256x::ZERO])[1][0])
     }
     pub const fn reciprocal(mut self) -> Self {
         assert!(!Self::_0.eq(&self));
-        let mut a0 = P::VALUE;
+        let mut a0 = Self::P;
         let mut f0 = Self::_0;
         let mut f1 = Self::_1;
         loop {
@@ -87,8 +79,8 @@ impl<P: U256Const> Field<P> {
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
             a0 = self.0;
-            self = Self::unchecked_new(a2);
-            let f2 = f0.sub(f1.mul(Self::unchecked_new(q)));
+            self = Self(a2);
+            let f2 = f0.sub(f1.mul(Self(q)));
             f0 = f1;
             f1 = f2;
         }
