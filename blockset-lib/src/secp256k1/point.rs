@@ -4,7 +4,7 @@ use crate::uint::u256x::{self, U256};
 
 use super::scalar::Scalar;
 
-type Point = [Scalar; 2];
+pub type Point = [Scalar; 2];
 
 const X: usize = 0;
 const Y: usize = 1;
@@ -13,7 +13,7 @@ const Y: usize = 1;
 // even more, when x = 0, y is not defined.
 const O: Point = [Scalar::_0, Scalar::_0];
 
-const G: Point = [Scalar::GX, Scalar::GY];
+pub const G: Point = [Scalar::GX, Scalar::GY];
 
 const fn eq(a: Point, b: Point) -> bool {
     a[X].eq(b[X]) && a[Y].eq(b[Y])
@@ -64,7 +64,7 @@ const fn add(p: Point, q: Point) -> Point {
     from_m(p, px.add(qx), py.sub(qy).div(px.sub(qx)))
 }
 
-const fn mul(mut p: Point, mut n: U256) -> Point {
+pub const fn mul(mut p: Point, mut n: U256) -> Point {
     let mut r = O;
     loop {
         if n[0] & 1 != 0 {
