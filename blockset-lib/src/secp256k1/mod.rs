@@ -38,15 +38,19 @@ mod tests {
     #[wasm_bindgen_test]
     fn test() {
         let f = |p, h, k| {
+            // Alice
             let private_key = Order::new(p);
             let public_key = private_key.public_key();
             let hash = Order::new(h);
             let k = Order::new(k);
             let signature = private_key.sign(hash, k);
+            // Bob
             let result = verify(public_key, hash, signature);
             assert!(result);
+            // Enemy
             let w_private_key = private_key.add(Order::_1);
             let w_signature = w_private_key.sign(hash, k);
+            // Bob
             let w_result = verify(public_key, hash, w_signature);
             assert!(!w_result);
         };
