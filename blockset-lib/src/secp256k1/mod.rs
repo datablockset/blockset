@@ -5,6 +5,8 @@ mod scalar;
 use field::Field;
 use point::{Point, G};
 
+use crate::hmac::hmac;
+
 type Order = Field<0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE>;
 
 type Signature = [Order; 2];
@@ -13,7 +15,8 @@ impl Order {
     const fn public_key(self) -> Point {
         point::mul(G, self)
     }
-    pub const fn sign(self, z: Order, k: Order) -> Signature {
+    pub const fn sign(self, z: Order) -> Signature {
+        let k = Order::new(hmac(self.0, z.0));
         let r = Order::new(point::mul(G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
@@ -44,14 +47,13 @@ mod tests {
             let private_key = Order::new(p);
             let public_key = private_key.public_key();
             let hash = Order::new(h);
-            let k = Order::new(hmac(private_key.0, hash.0));
-            let signature = private_key.sign(hash, k);
+            let signature = private_key.sign(hash);
             // Bob
             let result = verify(public_key, hash, signature);
             assert!(result);
             // Enemy
             let w_private_key = private_key.add(Order::_1);
-            let w_signature = w_private_key.sign(hash, k);
+            let w_signature = w_private_key.sign(hash);
             // Bob
             let w_result = verify(public_key, hash, w_signature);
             assert!(!w_result);
@@ -86,9 +88,6 @@ mod tests {
                 2222222222_3333333333_4444444444_555555555,
             ],
         );
-        f(
-            [u128::MAX, u128::MAX],
-            [u128::MAX, u128::MAX],
-        );
+        f([u128::MAX, u128::MAX], [u128::MAX, u128::MAX]);
     }
 }

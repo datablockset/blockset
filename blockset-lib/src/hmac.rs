@@ -1,6 +1,9 @@
 use crate::{
     sha2::{sha256::SHA256, state::State},
-    uint::{u256x::{self, U256}, u512x::{self, U512}},
+    uint::{
+        u256x::{self, U256},
+        u512x::{self, U512},
+    },
 };
 
 const fn repeat(v: u128) -> U256 {
