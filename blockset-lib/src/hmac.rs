@@ -19,7 +19,11 @@ const fn sha256(data: U512) -> U256 {
     state.end(u512x::ZERO, 0)
 }
 
+const fn op(key: U256, pad: U256, data: U256) -> U256 {
+    sha256([u256x::bitor(&key, &pad), data])
+}
+
 pub const fn hmac(key: U256, msg: U256) -> U256 {
-    let hash = sha256([u256x::bitor(&key, &I_PAD), msg]);
-    sha256([u256x::bitor(&key, &O_PAD), hash])
+    let hash = op(key, I_PAD, msg);
+    op(key, O_PAD, hash)
 }
