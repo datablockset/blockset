@@ -9,7 +9,10 @@ pub const SHA224: U256 = [
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{sha2::compress::compress, uint::{u256x::U256, u512x::U512}};
+    use crate::{
+        sha2::compress::compress,
+        uint::{u256x::U256, u512x::U512},
+    };
 
     use super::SHA224;
 
