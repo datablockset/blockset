@@ -31,7 +31,7 @@ pub const fn less([a0, a1]: U512, [b0, b1]: U512) -> bool {
     }
 }
 
-const ZERO: U512 = [u256x::ZERO, u256x::ZERO];
+pub const ZERO: U512 = [u256x::ZERO, u256x::ZERO];
 
 pub const fn leading_zeros([a0, a1]: U512) -> u32 {
     match u256x::leading_zeros(a1) {

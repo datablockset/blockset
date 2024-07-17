@@ -32,17 +32,19 @@ const fn verify(pub_key: Point, z: Order, [r, s]: Signature) -> bool {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
+    use crate::hmac::hmac;
+
     use super::{verify, Order};
 
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        let f = |p, h, k| {
+        let f = |p, h| {
             // Alice
             let private_key = Order::new(p);
             let public_key = private_key.public_key();
             let hash = Order::new(h);
-            let k = Order::new(k);
+            let k = Order::new(hmac(private_key.0, hash.0));
             let signature = private_key.sign(hash, k);
             // Bob
             let result = verify(public_key, hash, signature);
@@ -63,10 +65,6 @@ mod tests {
                 34567890_1234567890_1234567890_1234567890,
                 4567890_1234567890_1234567890_1234567890_1,
             ],
-            [
-                567890_1234567890_1234567890_1234567890_12,
-                67890_1234567890_1234567890_1234567890_123,
-            ],
         );
         f(
             [
@@ -76,10 +74,6 @@ mod tests {
             [
                 90_1234567890_1234567890_1234567890_123456,
                 1234567890_1234567890_1234567890_123456790,
-            ],
-            [
-                1234567890_1234567890_1234567890_123456792,
-                34567890_1234567890_1234567890_1234567891,
             ],
         );
         f(
@@ -91,13 +85,8 @@ mod tests {
                 8888888888_9999999999_0000000000_11111111,
                 2222222222_3333333333_4444444444_555555555,
             ],
-            [
-                6666666666_7777777777_8888888888_99999999,
-                3333333333_4444444444_5555555555_66666666,
-            ],
         );
         f(
-            [u128::MAX, u128::MAX],
             [u128::MAX, u128::MAX],
             [u128::MAX, u128::MAX],
         );
