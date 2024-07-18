@@ -55,10 +55,7 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        let f = |init, k, len| {
-            let state = HashState::new(init);
-            state.end(k, len)
-        };
+        let f = |init, k, len| HashState::new(init).end(k, len);
         // d14a028c_2a3a2bc9_476102bb_288234c4
         // 15a2b01f_828ea62a_c5b3e42f
         {
@@ -336,6 +333,28 @@ mod tests {
             u256x::swap32([
                 0xf080b3f_5dd8bc2e7_3bbf9702_923f5b5e,
                 0xa32254a_85e25153b_03f9cd3e_c2cfd74a
+            ])
+        );
+        // "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEFabcdefghi"
+        // d4f8ba39f2bbf210e284c3df1af0f4a842d56f8d59a13f9ccbc762d97487ff0a
+        assert_eq!(
+            f(
+                SHA256,
+                [
+                    [
+                        0x43444546_38394142_34353637_30313233,
+                        0x43444546_38394142_34353637_30313233
+                    ],
+                    [
+                        0x43444546_38394142_34353637_30313233,
+                        0x69000000_65666768_61626364
+                    ]
+                ],
+                456
+            ),
+            u256x::swap32([
+                0x42d56f8_d59a13f9c_cbc762d9_7487ff0a,
+                0xd4f8ba3_9f2bbf210_e284c3df_1af0f4a8
             ])
         );
     }
