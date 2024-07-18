@@ -26,12 +26,13 @@ impl HashState {
             data = u512x::set_bit(data, p + (31 - q));
         }
         self.len += len as u64;
+        let data11 = u128x::swap32(self.len as u128);
         if len < 511 - 64 {
-            data[1][1] |= u128x::swap32(self.len as u128);
+            data[1][1] |= data11;
             self.hash = compress(self.hash, data);
         } else {
             self.hash = compress(self.hash, data);
-            self.hash = compress(self.hash, [[self.len as u128, 0], [0, 0]]);
+            self.hash = compress(self.hash, [[0, 0], [0, data11]]);
         }
         self.hash
     }
@@ -77,12 +78,22 @@ mod tests {
                 0x7852b855_a495991b_649b934c_27ae41e4,
             ],
         );
+        // "0"
         // 5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9
         assert_eq!(
             f(SHA256, [[0x3000_0000, 0], [0, 0]], 8),
             u256x::swap32([
                 0xc2dbc23_9dd4e91b4_6729d73a_27fb57e9,
                 0x5feceb6_6ffc86f38_d952786c_6d696c79,
+            ])
+        );
+        // "01"
+        // 938db8c9f82c8cb58d3f3ef4fd250036a48d26a712753d2fde5abd03a85cabf4
+        assert_eq!(
+            f(SHA256, [[0x3031_0000, 0], [0, 0]], 16),
+            u256x::swap32([
+                0xa48d26a_712753d2f_de5abd03_a85cabf4,
+                0x938db8c_9f82c8cb5_8d3f3ef4_fd250036
             ])
         );
     }
