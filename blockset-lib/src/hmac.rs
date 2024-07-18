@@ -1,5 +1,5 @@
 use crate::{
-    sha2::{sha256::SHA256, hash_state::HashState},
+    sha2::{hash_state::HashState, sha256::SHA256},
     uint::{
         u256x::{self, U256},
         u512x::{self, U512},

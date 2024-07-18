@@ -1,4 +1,7 @@
-use crate::uint::{u256x::U256, u512x::{self, U512}};
+use crate::uint::{
+    u256x::U256,
+    u512x::{self, U512},
+};
 
 use super::hash_state::HashState;
 
