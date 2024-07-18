@@ -44,6 +44,11 @@ pub const fn from_u8x4(a: &[u8; 4]) -> u32 {
     u32::from_le_bytes(*a)
 }
 
+#[inline(always)]
+pub const fn div_rem(a: u32, b: u32) -> [u32; 2] {
+    [a / b, a % b]
+}
+
 #[cfg(test)]
 mod test {
     use super::{to_u8x4, wadd, wadd3, wadd4, wadd5};
