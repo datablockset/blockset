@@ -1,5 +1,5 @@
 use crate::uint::{
-    u128x, u256x::U256, u32x, u512x::{self, U512}
+    u128x, u256x::U256, u512x::{self, U512}
 };
 
 use super::compress::compress;
@@ -22,8 +22,9 @@ impl HashState {
     pub const fn end(mut self, mut data: U512, len: u16) -> U256 {
         assert!(len < 512);
         {
-            let [p, q] = u32x::div_rem(len as u32, 32);
-            data = u512x::set_bit(data, p + (31 - q));
+            let q = len & 0x1F;
+            let p = len & 0xFFE0;
+            data = u512x::set_bit(data, (p | (0x1F - q)) as u32);
         }
         self.len += len as u64;
         let data11 = u128x::swap32(self.len as u128);
@@ -96,5 +97,34 @@ mod tests {
                 0x938db8c_9f82c8cb5_8d3f3ef4_fd250036
             ])
         );
+        // "012"
+        // bf6aaaab7c143ca12ae448c69fb72bb4cf1b29154b9086a927a0a91ae334cdf7
+        assert_eq!(
+            f(SHA256, [[0x3031_3200, 0], [0, 0]], 24),
+            u256x::swap32([
+                0xcf1b291_54b9086a9_27a0a91a_e334cdf7,
+                0xbf6aaaa_b7c143ca1_2ae448c6_9fb72bb4
+            ])
+        );
+        // "0123"
+        // 1be2e452b46d7a0d9656bbb1f768e8248eba1b75baed65f5d99eafa948899a6a
+        assert_eq!(
+            f(SHA256, [[0x3031_3233, 0], [0, 0]], 32),
+            u256x::swap32([
+                0x8eba1b7_5baed65f5_d99eafa9_48899a6a,
+                0x1be2e45_2b46d7a0d_9656bbb1_f768e824
+            ])
+        );
+        /*
+        // "01234"
+        // c565fe03ca9b6242e01dfddefe9bba3d98b270e19cd02fd85ceaf75e2b25bf12
+        assert_eq!(
+            f(SHA256, [[0x3400_0000_3031_3233, 0], [0, 0]], 40),
+            u256x::swap32([
+                0x98b270e_19cd02fd8_5ceaf75e_2b25bf12,
+                0xc565fe0_3ca9b6242_e01dfdde_fe9bba3d
+            ])
+        );
+        */
     }
 }
