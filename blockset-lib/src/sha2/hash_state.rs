@@ -1,6 +1,6 @@
 use crate::uint::{
     u128x,
-    u256x::U256,
+    u256x::{self, U256},
     u512x::{self, U512},
 };
 
@@ -21,8 +21,12 @@ impl HashState {
             len: self.len + 512,
         }
     }
-    pub const fn end(mut self, mut data: U512, len: u16) -> U256 {
-        assert!(len < 512);
+    pub const fn end(mut self, mut data: U512, mut len: u16) -> U256 {
+        if len >= 512 {
+            self = self.push(data);
+            data = u512x::ZERO;
+            len = 0;
+        }
         {
             let q = len & 0x1F;
             let p = len & 0xFFE0;
@@ -35,7 +39,7 @@ impl HashState {
             self.hash = compress(self.hash, data);
         } else {
             self.hash = compress(self.hash, data);
-            self.hash = compress(self.hash, [[0, 0], [0, data11]]);
+            self.hash = compress(self.hash, [u256x::ZERO, [0, data11]]);
         }
         self.hash
     }
@@ -465,6 +469,50 @@ mod tests {
             u256x::swap32([
                 0x6d59546_227dc233c_decb8ad7_0c2a944d,
                 0x245f184_2136a9c65_6b541043_52e73420
+            ])
+        );
+        // "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEFabcdefghijklmno"
+        // 02198db64650f032738690585554acd9e9030a85b55d0ec46be30cb2ac05992c
+        assert_eq!(
+            f(
+                SHA256,
+                [
+                    [
+                        0x43444546_38394142_34353637_30313233,
+                        0x43444546_38394142_34353637_30313233
+                    ],
+                    [
+                        0x43444546_38394142_34353637_30313233,
+                        0x6D6E6F00_696A6B6C_65666768_61626364
+                    ]
+                ],
+                504
+            ),
+            u256x::swap32([
+                0xe9030a8_5b55d0ec4_6be30cb2_ac05992c,
+                0x02198db_64650f032_73869058_5554acd9
+            ])
+        );
+        // "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEFabcdefghijklmnop"
+        // ef8e2b127f816dee68cd063810d0976ade5e30b2ea59c47de2ac2c3a7b8f9471
+        assert_eq!(
+            f(
+                SHA256,
+                [
+                    [
+                        0x43444546_38394142_34353637_30313233,
+                        0x43444546_38394142_34353637_30313233
+                    ],
+                    [
+                        0x43444546_38394142_34353637_30313233,
+                        0x6D6E6F70_696A6B6C_65666768_61626364
+                    ]
+                ],
+                512
+            ),
+            u256x::swap32([
+                0xde5e30b_2ea59c47d_e2ac2c3a_7b8f9471,
+                0xef8e2b1_27f816dee_68cd0638_10d0976a
             ])
         );
     }
