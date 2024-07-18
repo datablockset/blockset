@@ -115,7 +115,6 @@ mod tests {
                 0x1be2e45_2b46d7a0d_9656bbb1_f768e824
             ])
         );
-        /*
         // "01234"
         // c565fe03ca9b6242e01dfddefe9bba3d98b270e19cd02fd85ceaf75e2b25bf12
         assert_eq!(
@@ -125,6 +124,14 @@ mod tests {
                 0xc565fe0_3ca9b6242_e01dfdde_fe9bba3d
             ])
         );
-        */
+        // "01234567"
+        // 924592b9b103f14f833faafb67f480691f01988aa457c0061769f58cd47311bc
+        assert_eq!(
+            f(SHA256, [[0x3435_3637_3031_3233, 0], [0, 0]], 64),
+            u256x::swap32([
+                0x1f01988_aa457c006_1769f58c_d47311bc,
+                0x924592b_9b103f14f_833faafb_67f48069
+            ])
+        );
     }
 }
