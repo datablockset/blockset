@@ -39,6 +39,17 @@ pub const fn u32x4_wadd(a: u128, b: u128) -> u128 {
 }
 
 #[inline(always)]
+pub const fn swap64(a: u128) -> u128 {
+    (a >> 64) | (a << 64)
+}
+
+#[inline(always)]
+pub const fn swap32(a: u128) -> u128 {
+    const MASK: u128 = 0xFFFF_FFFF_0000_0000_FFFF_FFFF;
+    swap64(((a >> 32) & MASK) | ((a & MASK) << 32))
+}
+
+#[inline(always)]
 pub const fn shl(u: u128, i: i32) -> u128 {
     match i {
         -127..=-1 => u >> -i,

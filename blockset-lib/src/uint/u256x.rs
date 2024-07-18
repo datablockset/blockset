@@ -153,6 +153,10 @@ pub const fn get_bit([a0, a1]: U256, i: u32) -> bool {
     (x & 1) != 0
 }
 
+pub const fn swap32([a0, a1]: U256) -> U256 {
+    [u128x::swap32(a1), u128x::swap32(a0)]
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
