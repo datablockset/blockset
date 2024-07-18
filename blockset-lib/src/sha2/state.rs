@@ -1,5 +1,5 @@
 use crate::uint::{
-    u256x::U256,
+    u256x::{self, U256},
     u512x::{self, U512},
 };
 
@@ -19,7 +19,84 @@ impl State {
             len: 0,
         }
     }
+    const fn swap128(mut a: u128) -> u128 {
+        {
+            const MASK: u128 = 0x0000FFFF_0000FFFF_0000FFFF_0000FFFF;
+            a = ((a & MASK) << 16) | ((a >> 16) & MASK);
+        }
+        {
+            const MASK: u128 = 0x00FF00FF_00FF00FF_00FF00FF_00FF00FF;
+            a = ((a & MASK) << 8) | ((a >> 8) & MASK);
+        }
+        a
+    }
+    const fn swap256([a0, a1]: U256) -> U256 {
+        [Self::swap128(a0), Self::swap128(a1)]
+    }
+    const fn swap512([a0, a1]: U512) -> U512 {
+        [Self::swap256(a0), Self::swap256(a1)]
+    }
     const fn end(self) -> U256 {
-        self.state.end(self.buffer, self.len)
+        self.state.end(Self::swap512(self.buffer), self.len)
+    }
+    const fn push(mut self, buffer: U512, len: u16) -> Self {
+        let d = self.len as i32;
+        self.buffer = u512x::bitor(&self.buffer, &u512x::shl(&buffer, d));
+        self.len += len;
+        if self.len >= 0x200 {
+            self.state = self.state.push(Self::swap512(self.buffer));
+            self.len -= 0x200;
+            self.buffer = u512x::shl(&buffer, d - 0x200);
+        }
+        self
+    }
+
+    const fn push_u8(self, v: u8) -> Self {
+        self.push([[v as u128, 0], u256x::ZERO], 8)
+    }
+
+    const fn push_array(mut self, v: &[u8]) -> Self {
+        let len = v.len();
+        let mut i = 0;
+        loop {
+            if i == len {
+                return self;
+            }
+            self = self.push_u8(v[i]);
+            i += 1;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use crate::{sha2::sha256::SHA256, uint::u256x};
+
+    use super::State;
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test() {
+        let f = |v, a0, a1| {
+            let h = State::new(SHA256).push_array(v).end();
+            assert_eq!(h, u256x::swap32([a1, a0]));
+        };
+        f(
+            b"",
+            0xe3b0c442_98fc1c14_9afbf4c8_996fb924,
+            0x27ae41e4_649b934c_a495991b_7852b855,
+        );
+        f(
+            b"0",
+            0x5feceb6_6ffc86f38_d952786c_6d696c79,
+            0xc2dbc23_9dd4e91b4_6729d73a_27fb57e9,
+        );
+        f(
+            b"The quick brown fox jumps over the lazy dog",
+            0xd7a8fbb3_07d78094_69ca9abc_b0082e4f,
+            0x8d5651e4_6d3cdb76_2d02d0bf_37c9e592,
+        );
     }
 }

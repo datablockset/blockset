@@ -41,10 +41,13 @@ pub const fn leading_zeros([a0, a1]: U512) -> u32 {
 }
 
 pub const fn shl([lo, hi]: &U512, i: i32) -> U512 {
-    [
-        u256x::shl(lo, i),
-        u256x::bitor(&u256x::shl(hi, i), &u256x::shl(lo, i - 256)),
-    ]
+    let loi = u256x::shl(lo, i);
+    let hii = u256x::shl(hi, i);
+    if i < 0 {
+        [u256x::bitor(&loi, &u256x::shl(hi, i + 256)), hii]
+    } else {
+        [loi, u256x::bitor(&hii, &u256x::shl(lo, i - 256))]
+    }
 }
 
 pub const fn set_bit([a0, a1]: U512, i: u32) -> U512 {
@@ -81,6 +84,15 @@ pub const fn div_rem(mut a: U512, b: U512) -> [U512; 2] {
         q = set_bit(q, offset);
     }
     [q, a]
+}
+
+pub const fn swap32([a0, a1]: U512) -> U512 {
+    [u256x::swap32(a1), u256x::swap32(a0)]
+}
+
+#[inline(always)]
+pub const fn bitor(&[a0, a1]: &U512, &[b0, b1]: &U512) -> U512 {
+    [u256x::bitor(&a0, &b0), u256x::bitor(&a1, &b1)]
 }
 
 #[cfg(test)]
