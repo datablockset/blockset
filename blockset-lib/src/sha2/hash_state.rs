@@ -15,11 +15,14 @@ impl HashState {
     pub const fn new(hash: U256) -> Self {
         Self { hash, len: 0 }
     }
-    pub const fn push(self, data: U512) -> Self {
-        Self {
-            hash: compress(self.hash, data),
-            len: self.len + 0x200,
-        }
+    const fn swap_compress(mut self, data: U512) -> Self {
+        self.hash = compress(self.hash, data /*u512x::swap32(data)*/);
+        self
+    }
+    pub const fn push(mut self, data: U512) -> Self {
+        self = self.swap_compress(data);
+        self.len += 0x200;
+        self
     }
     pub const fn end(mut self, mut data: U512, mut len: u16) -> U256 {
         assert!(len <= 0x200);
@@ -37,10 +40,10 @@ impl HashState {
         let data11 = u128x::swap32(self.len as u128);
         if len < 0x1FF - 0x40 {
             data[1][1] |= data11;
-            self.hash = compress(self.hash, data);
+            self = self.swap_compress(data);
         } else {
-            self.hash = compress(self.hash, data);
-            self.hash = compress(self.hash, [u256x::ZERO, [0, data11]]);
+            self = self.swap_compress(data);
+            self = self.swap_compress([u256x::ZERO, [0, data11]]);
         }
         self.hash
     }
