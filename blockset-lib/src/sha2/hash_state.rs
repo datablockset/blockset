@@ -16,7 +16,7 @@ impl HashState {
         Self { hash, len: 0 }
     }
     const fn swap_compress(mut self, data: U512) -> Self {
-        self.hash = compress(self.hash, data /*u512x::swap32(data)*/);
+        self.hash = compress(self.hash, u512x::swap32(data));
         self
     }
     pub const fn push(mut self, data: U512) -> Self {
@@ -31,19 +31,15 @@ impl HashState {
             data = u512x::ZERO;
             len = 0;
         }
-        {
-            let q = len & 0x1F;
-            let p = len & 0xFFE0;
-            data = u512x::set_bit(data, (p | (0x1F - q)) as u32);
-        }
+        data = u512x::set_bit(data, 0x1FF - len as u32);
         self.len += len as u64;
-        let data11 = u128x::swap32(self.len as u128);
+        let data00 = self.len as u128;
         if len < 0x1FF - 0x40 {
-            data[1][1] |= data11;
+            data[0][0] |= data00;
             self = self.swap_compress(data);
         } else {
             self = self.swap_compress(data);
-            self = self.swap_compress([u256x::ZERO, [0, data11]]);
+            self = self.swap_compress([[data00, 0], u256x::ZERO]);
         }
         self.hash
     }
