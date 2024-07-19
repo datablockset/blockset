@@ -8,6 +8,19 @@ pub const fn swap32(a: u64) -> u64 {
     (a >> 32) | (a << 32)
 }
 
+#[inline(always)]
+const fn swap(a: u64, mask: u64, size: u8) -> u64 {
+    ((a & mask) << size) | ((a >> size) & mask)
+}
+
+pub const fn swap16(a: u64) -> u64 {
+    swap32(swap(a, 0x0000FFFF_0000FFFF, 16))
+}
+
+pub const fn swap8(a: u64) -> u64 {
+    swap16(swap(a, 0x00FF00FF_00FF00FF, 8))
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
