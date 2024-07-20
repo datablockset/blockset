@@ -19,40 +19,23 @@ impl State {
             len: 0,
         }
     }
-    const fn swap128(mut a: u128) -> u128 {
-        {
-            const MASK: u128 = 0x0000FFFF_0000FFFF_0000FFFF_0000FFFF;
-            a = ((a & MASK) << 16) | ((a >> 16) & MASK);
-        }
-        {
-            const MASK: u128 = 0x00FF00FF_00FF00FF_00FF00FF_00FF00FF;
-            a = ((a & MASK) << 8) | ((a >> 8) & MASK);
-        }
-        a
-    }
-    const fn swap256([a0, a1]: U256) -> U256 {
-        [Self::swap128(a0), Self::swap128(a1)]
-    }
-    const fn swap512([a0, a1]: U512) -> U512 {
-        [Self::swap256(a0), Self::swap256(a1)]
-    }
     const fn end(self) -> U256 {
-        self.state.end(Self::swap512(self.buffer), self.len)
+        self.state.end(self.buffer, self.len)
     }
     const fn push(mut self, buffer: U512, len: u16) -> Self {
         let d = self.len as i32;
-        self.buffer = u512x::bitor(&self.buffer, &u512x::shl(&buffer, d));
+        self.buffer = u512x::bitor(&self.buffer, &u512x::shl(&buffer, -d));
         self.len += len;
         if self.len >= 0x200 {
-            self.state = self.state.push(Self::swap512(self.buffer));
+            self.state = self.state.push(self.buffer);
             self.len -= 0x200;
-            self.buffer = u512x::shl(&buffer, d - 0x200);
+            self.buffer = u512x::shl(&buffer, 0x200 - d);
         }
         self
     }
 
     const fn push_u8(self, v: u8) -> Self {
-        self.push([[v as u128, 0], u256x::ZERO], 8)
+        self.push(u512x::be((v as u128) << 120, 0, 0, 0), 8)
     }
 
     const fn push_array(mut self, v: &[u8]) -> Self {
@@ -79,9 +62,9 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        let f = |v, a0, a1| {
+        let f = |v, a1, a0| {
             let h = State::new(SHA256).push_array(v).end();
-            assert_eq!(h, u256x::swap32([a1, a0]));
+            assert_eq!(h, u256x::swap32([a0, a1]));
         };
         f(
             b"",

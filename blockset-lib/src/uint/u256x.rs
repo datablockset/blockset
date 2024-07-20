@@ -8,6 +8,11 @@ use super::{
 pub type U256 = [u128; 2];
 
 #[inline(always)]
+pub const fn be(a1: u128, a0: u128) -> U256 {
+    [a0, a1]
+}
+
+#[inline(always)]
 pub const fn u32x8_wadd(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
     [u32x4_wadd(a0, b0), u32x4_wadd(a1, b1)]
 }

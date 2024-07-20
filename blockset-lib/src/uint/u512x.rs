@@ -5,7 +5,12 @@ use super::u256x;
 pub type U512 = [U256; 2];
 
 #[inline(always)]
-pub const fn new(a: u128, b: u128, c: u128, d: u128) -> U512 {
+pub const fn be(a3: u128, a2: u128, a1: u128, a0: u128) -> U512 {
+    [[a0, a1], [a2, a3]]
+}
+
+#[inline(always)]
+pub const fn le(a: u128, b: u128, c: u128, d: u128) -> U512 {
     [[a, b], [c, d]]
 }
 
@@ -99,9 +104,9 @@ pub const fn bitor(&[a0, a1]: &U512, &[b0, b1]: &U512) -> U512 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::u512x::{div_rem, wadd};
+    use crate::uint::u512x::{div_rem, le, wadd};
 
-    use super::{new, U512};
+    use super::U512;
 
     #[test]
     #[wasm_bindgen_test]
@@ -332,12 +337,12 @@ mod test {
     //#[inline(never)]
     fn create(a: u128, b: u128, c: u128, d: u128) {
         for i in 0..10 {
-            let x = create2(a, b, c, d, i, new);
+            let x = create2(a, b, c, d, i, le);
             assert_eq!(x[0][0], a * i);
             assert_eq!(x[0][1], b + i);
             assert_eq!(x[1][0], c / (i + 1));
             assert_eq!(x[1][1], d - 1);
-            let xa = new(a, b + i, c / (i + 1), d - 1);
+            let xa = le(a, b + i, c / (i + 1), d - 1);
             assert_eq!(xa[0][0], a);
             assert_eq!(xa[0][1], b + i);
             assert_eq!(xa[1][0], c / (i + 1));

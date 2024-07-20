@@ -45,7 +45,7 @@ pub const fn swap64(a: u128) -> u128 {
 
 #[inline(always)]
 pub const fn swap32(a: u128) -> u128 {
-    const MASK: u128 = 0xFFFF_FFFF_0000_0000_FFFF_FFFF;
+    const MASK: u128 = 0x0000_0000_FFFF_FFFF_0000_0000_FFFF_FFFF;
     swap64(((a >> 32) & MASK) | ((a & MASK) << 32))
 }
 
