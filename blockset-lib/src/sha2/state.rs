@@ -62,9 +62,9 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        let f = |v, a0, a1| {
+        let f = |v, a1, a0| {
             let h = State::new(SHA256).push_array(v).end();
-            assert_eq!(h, u256x::swap32([a1, a0]));
+            assert_eq!(h, u256x::swap32([a0, a1]));
         };
         f(
             b"",
