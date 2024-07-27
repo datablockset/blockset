@@ -57,5 +57,32 @@ mod tests {
                 0xb613679a_0814d9ec_772f95d7_78c35fc5,
             ])
         );
+        assert_eq!(
+            State::new(u512x::be(
+                0x1000_0000_0000_0000_0000_0000_0000_0000,
+                0,
+                0,
+                0
+            ))
+            .end(),
+            u256x::swap32([
+                0x720f729a_884cf655_581a0f6b_83e05d01,
+                0xe5ed5d2c_d3d2da2c_8a23322c_a509cc41
+            ])
+        );
+        assert_eq!(
+            State::new(u512x::be(
+                0x1000_0000_0000_0000_0000_0000_0000_0000,
+                0,
+                0,
+                0
+            ))
+            .push_array(b"The quick brown fox jumps over the lazy dog")
+            .end(),
+            u256x::swap32([
+                0x3f900df9_52fcd88a_d4dc6134_a2b7af12,
+                0x0b8e8977_aa8b1ad0_5691c746_04ed9cf6
+            ])
+        )
     }
 }
