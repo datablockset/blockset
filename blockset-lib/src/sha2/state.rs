@@ -31,7 +31,6 @@ impl State {
         self.rest = rest;
         self
     }
-
     pub const fn push_array(mut self, v: &[u8]) -> Self {
         let len = v.len();
         let mut i = 0;

@@ -1,4 +1,7 @@
-use crate::uint::u512x::{self, U512};
+use crate::uint::{
+    u256x::{self, U256},
+    u512x::{self, U512},
+};
 
 #[derive(Default)]
 pub struct BeChunk {
@@ -26,6 +29,9 @@ impl BeChunk {
             None
         };
         (r0, self)
+    }
+    pub const fn u256(v: U256) -> Self {
+        BeChunk::new([u256x::_0, v], 0x100)
     }
     pub const fn u8(v: u8) -> Self {
         BeChunk::new(u512x::be((v as u128) << 0x78, 0, 0, 0), 8)
