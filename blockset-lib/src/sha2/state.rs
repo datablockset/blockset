@@ -23,20 +23,13 @@ impl State {
     pub const fn end(self) -> U256 {
         self.state.end(self.rest)
     }
-    pub const fn push(mut self, BeChunk { data, len }: BeChunk) -> Self {
-        let d = self.rest.len as i32;
-        self.rest.data = u512x::bitor(&self.rest.data, &u512x::shl(&data, -d));
-        self.rest.len += len;
-        if self.rest.len >= 0x200 {
-            self.state = self.state.push(self.rest.data);
-            self.rest.len -= 0x200;
-            self.rest.data = u512x::shl(&data, 0x200 - d);
+    pub const fn push(mut self, rest: BeChunk) -> Self {
+        let (v, rest) = self.rest.chain(rest);
+        if let Some(v) = v {
+            self.state = self.state.push(v);
         }
+        self.rest = rest;
         self
-    }
-
-    pub const fn push_u8(self, v: u8) -> Self {
-        self.push(BeChunk::new(u512x::be((v as u128) << 0x78, 0, 0, 0), 8))
     }
 
     pub const fn push_array(mut self, v: &[u8]) -> Self {
@@ -46,7 +39,7 @@ impl State {
             if i == len {
                 return self;
             }
-            self = self.push_u8(v[i]);
+            self = self.push(BeChunk::u8(v[i]));
             i += 1;
         }
     }
