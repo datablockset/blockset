@@ -31,7 +31,7 @@ impl HashState {
         assert!(len <= 0x200);
         if len == 0x200 {
             self = self.push(data);
-            data = u512x::ZERO;
+            data = u512x::_0;
             len = 0;
         }
         data = u512x::set_bit(data, 0x1FF - len as u32);
@@ -42,7 +42,7 @@ impl HashState {
             self = self.swap_compress(data);
         } else {
             self = self.swap_compress(data);
-            self = self.swap_compress([[data00, 0], u256x::ZERO]);
+            self = self.swap_compress([[data00, 0], u256x::_0]);
         }
         self.hash
     }
@@ -66,7 +66,7 @@ mod tests {
         // d14a028c_2a3a2bc9_476102bb_288234c4
         // 15a2b01f_828ea62a_c5b3e42f
         {
-            let mut h = f(SHA224, u512x::ZERO, 0);
+            let mut h = f(SHA224, u512x::_0, 0);
             h[1] |= 0xFFFF_FFFF << 96;
             assert_eq!(
                 h,
@@ -79,7 +79,7 @@ mod tests {
         // e3b0c442_98fc1c14_9afbf4c8_996fb924
         // 27ae41e4_649b934c_a495991b_7852b855
         assert_eq!(
-            f(SHA256, u512x::ZERO, 0),
+            f(SHA256, u512x::_0, 0),
             [
                 0x996fb924_9afbf4c8_98fc1c14_e3b0c442,
                 0x7852b855_a495991b_649b934c_27ae41e4,

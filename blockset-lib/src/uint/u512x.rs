@@ -36,7 +36,7 @@ pub const fn less([a0, a1]: U512, [b0, b1]: U512) -> bool {
     }
 }
 
-pub const ZERO: U512 = [u256x::ZERO, u256x::ZERO];
+pub const _0: U512 = [u256x::_0, u256x::_0];
 
 pub const fn leading_zeros([a0, a1]: U512) -> u32 {
     match u256x::leading_zeros(a1) {
@@ -68,9 +68,9 @@ pub const fn eq([a0, a1]: &U512, [b0, b1]: &U512) -> bool {
 }
 
 pub const fn div_rem(mut a: U512, b: U512) -> [U512; 2] {
-    assert!(!eq(&b, &ZERO));
+    assert!(!eq(&b, &_0));
     let b_offset = leading_zeros(b);
-    let mut q = ZERO;
+    let mut q = _0;
     loop {
         let a_offset = leading_zeros(a);
         if a_offset > b_offset {

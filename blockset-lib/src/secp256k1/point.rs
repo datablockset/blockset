@@ -71,7 +71,7 @@ pub const fn mul(mut p: Point, mut n: Order) -> Point {
             r = add(r, p);
         }
         n.0 = u256x::shr(&n.0, 1);
-        if u256x::eq(&n.0, &u256x::ZERO) {
+        if u256x::eq(&n.0, &u256x::_0) {
             break;
         }
         p = double(p);

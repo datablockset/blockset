@@ -15,7 +15,7 @@ impl State {
     pub const fn from_hash_state(state: HashState) -> Self {
         Self {
             state,
-            buffer: u512x::ZERO,
+            buffer: u512x::_0,
             len: 0,
         }
     }
@@ -38,7 +38,7 @@ impl State {
     }
 
     pub const fn push_u8(self, v: u8) -> Self {
-        self.push(u512x::be((v as u128) << 120, 0, 0, 0), 8)
+        self.push(u512x::be((v as u128) << 0x78, 0, 0, 0), 8)
     }
 
     pub const fn push_array(mut self, v: &[u8]) -> Self {

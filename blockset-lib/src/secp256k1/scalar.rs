@@ -7,7 +7,7 @@ const fn is_valid(key: U256) -> bool {
 }
 
 const fn is_valid_private_key(key: U256) -> bool {
-    u256x::less(&u256x::ZERO, &key) && is_valid(key)
+    u256x::less(&u256x::_0, &key) && is_valid(key)
 }
 
 // https://en.bitcoin.it/wiki/Secp256k1

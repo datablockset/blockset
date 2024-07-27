@@ -74,7 +74,7 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
     }
     //
     pub const fn mul(self, b: Self) -> Self {
-        Self(u512x::div_rem(u256x::mul(self.0, b.0), [Self::P, u256x::ZERO])[1][0])
+        Self(u512x::div_rem(u256x::mul(self.0, b.0), [Self::P, u256x::_0])[1][0])
     }
     pub const fn reciprocal(mut self) -> Self {
         assert!(!Self::_0.eq(&self));
