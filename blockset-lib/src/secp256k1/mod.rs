@@ -5,7 +5,7 @@ mod scalar;
 use field::Field;
 use point::{Point, G};
 
-// use crate::hmac::hmac;
+use crate::{hmac::HmacSha256, sha2::be_chink::BeChunk, uint::u256x};
 
 type Order = Field<0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE>;
 
@@ -15,14 +15,15 @@ impl Order {
     const fn public_key(self) -> Point {
         point::mul(G, self)
     }
-    /*
     pub const fn sign(self, z: Order) -> Signature {
-        let k = Order::new(hmac(self.0, z.0));
+        let h = HmacSha256::new([u256x::_0, self.0])
+            .push(BeChunk::new([u256x::_0, z.0], 0x100))
+            .end();
+        let k = Order::new(h);
         let r = Order::new(point::mul(G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
     }
-    */
 }
 
 const fn verify(pub_key: Point, z: Order, [r, s]: Signature) -> bool {
@@ -41,7 +42,6 @@ mod tests {
 
     use super::{verify, Order};
 
-    /*
     #[test]
     #[wasm_bindgen_test]
     fn test() {
@@ -93,5 +93,4 @@ mod tests {
         );
         f([u128::MAX, u128::MAX], [u128::MAX, u128::MAX]);
     }
-    */
 }

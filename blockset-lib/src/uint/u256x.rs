@@ -177,6 +177,15 @@ mod test {
 
     #[test]
     #[wasm_bindgen_test]
+    fn test_literal() {
+        const fn be(a: &[u8; 32]) -> U256 {
+            [0, 0]
+        }
+        be(b"01234567890123456789012345678901");
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
     fn test_leading_zeros() {
         assert_eq!(leading_zeros(_0), 256);
         assert_eq!(leading_zeros(from_u128(1)), 255);

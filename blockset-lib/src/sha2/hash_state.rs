@@ -1,10 +1,9 @@
 use crate::uint::{
-    u128x,
     u256x::{self, U256},
     u512x::{self, U512},
 };
 
-use super::{compress::compress, state::State};
+use super::{be_chink::BeChunk, compress::compress, state::State};
 
 pub struct HashState {
     hash: U256,
@@ -27,7 +26,7 @@ impl HashState {
         self.len += 0x200;
         self
     }
-    pub const fn end(mut self, mut data: U512, mut len: u16) -> U256 {
+    pub const fn end(mut self, BeChunk { mut data, mut len }: BeChunk) -> U256 {
         assert!(len <= 0x200);
         if len == 0x200 {
             self = self.push(data);
@@ -53,7 +52,7 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        sha2::{sha224::SHA224, sha256::SHA256},
+        sha2::{hash_state::BeChunk, sha224::SHA224, sha256::SHA256},
         uint::{u256x, u512x},
     };
 
@@ -62,7 +61,7 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test() {
-        let f = |init, k, len| HashState::new(init).end(k, len);
+        let f = |init, k, len| HashState::new(init).end(BeChunk::new(k, len));
         // d14a028c_2a3a2bc9_476102bb_288234c4
         // 15a2b01f_828ea62a_c5b3e42f
         {

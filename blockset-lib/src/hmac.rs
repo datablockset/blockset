@@ -1,5 +1,5 @@
 use crate::{
-    sha2::{self, hash_state::HashState, sha256::SHA256},
+    sha2::{self, be_chink::BeChunk, hash_state::HashState, sha256::SHA256},
     uint::{
         u256x::{self, U256},
         u512x::{self, U512},
@@ -14,7 +14,8 @@ const fn repeat(v: u128) -> U512 {
 const I_PAD: U512 = repeat(0x36363636_36363636_36363636_36363636);
 const O_PAD: U512 = repeat(0x5C5C5C5C_5C5C5C5C_5C5C5C5C_5C5C5C5C);
 
-struct HmacSha256 {
+// https://cryptii.com/pipes/hmac
+pub struct HmacSha256 {
     state: sha2::state::State,
     key: U512,
 }
@@ -23,19 +24,26 @@ impl HmacSha256 {
     const fn hash_state(key: U512, pad: U512) -> HashState {
         HashState::new(SHA256).push(u512x::bitxor(&key, &pad))
     }
-    const fn new(key: U512) -> Self {
+    pub const fn new(key: U512) -> Self {
         Self {
             state: Self::hash_state(key, I_PAD).state(),
             key,
         }
+    }
+    pub const fn push(mut self, rest: BeChunk) -> Self {
+        self.state = self.state.push(rest);
+        self
     }
     #[inline(always)]
     const fn push_array(mut self, a: &[u8]) -> Self {
         self.state = self.state.push_array(a);
         self
     }
-    const fn end(self) -> U256 {
-        Self::hash_state(self.key, O_PAD).end([u256x::_0, u256x::swap32(self.state.end())], 0x100)
+    pub const fn end(self) -> U256 {
+        Self::hash_state(self.key, O_PAD).end(BeChunk::new(
+            [u256x::_0, u256x::swap32(self.state.end())],
+            0x100,
+        ))
     }
 }
 

@@ -3,42 +3,40 @@ use crate::uint::{
     u512x::{self, U512},
 };
 
-use super::hash_state::HashState;
+use super::{be_chink::BeChunk, hash_state::HashState};
 
 pub struct State {
     state: HashState,
-    buffer: U512,
-    len: u16,
+    rest: BeChunk,
 }
 
 impl State {
     pub const fn from_hash_state(state: HashState) -> Self {
         Self {
             state,
-            buffer: u512x::_0,
-            len: 0,
+            rest: BeChunk::default(),
         }
     }
     pub const fn new(hash: U256) -> Self {
         Self::from_hash_state(HashState::new(hash))
     }
     pub const fn end(self) -> U256 {
-        self.state.end(self.buffer, self.len)
+        self.state.end(self.rest)
     }
-    pub const fn push(mut self, buffer: U512, len: u16) -> Self {
-        let d = self.len as i32;
-        self.buffer = u512x::bitor(&self.buffer, &u512x::shl(&buffer, -d));
-        self.len += len;
-        if self.len >= 0x200 {
-            self.state = self.state.push(self.buffer);
-            self.len -= 0x200;
-            self.buffer = u512x::shl(&buffer, 0x200 - d);
+    pub const fn push(mut self, BeChunk { data, len }: BeChunk) -> Self {
+        let d = self.rest.len as i32;
+        self.rest.data = u512x::bitor(&self.rest.data, &u512x::shl(&data, -d));
+        self.rest.len += len;
+        if self.rest.len >= 0x200 {
+            self.state = self.state.push(self.rest.data);
+            self.rest.len -= 0x200;
+            self.rest.data = u512x::shl(&data, 0x200 - d);
         }
         self
     }
 
     pub const fn push_u8(self, v: u8) -> Self {
-        self.push(u512x::be((v as u128) << 0x78, 0, 0, 0), 8)
+        self.push(BeChunk::new(u512x::be((v as u128) << 0x78, 0, 0, 0), 8))
     }
 
     pub const fn push_array(mut self, v: &[u8]) -> Self {
