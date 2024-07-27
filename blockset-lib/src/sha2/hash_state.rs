@@ -3,7 +3,7 @@ use crate::uint::{
     u512x::{self, U512},
 };
 
-use super::{be_chink::BeChunk, compress::compress, state::State};
+use super::{be_chunk::BeChunk, compress::compress, state::State};
 
 pub struct HashState {
     hash: U256,

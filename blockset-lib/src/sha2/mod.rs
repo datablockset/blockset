@@ -3,7 +3,7 @@ mod sigma32;
 mod w_round;
 
 // pub
-pub mod be_chink;
+pub mod be_chunk;
 pub mod compress;
 pub mod hash_state;
 pub mod sha224;
