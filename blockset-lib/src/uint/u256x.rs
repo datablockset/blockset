@@ -38,6 +38,11 @@ pub const fn bitor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
 }
 
 #[inline(always)]
+pub const fn bitxor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
+    [a0 ^ b0, a1 ^ b1]
+}
+
+#[inline(always)]
 pub const fn eq(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
     a0 == b0 && a1 == b1
 }

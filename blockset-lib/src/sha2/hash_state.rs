@@ -4,7 +4,7 @@ use crate::uint::{
     u512x::{self, U512},
 };
 
-use super::compress::compress;
+use super::{compress::compress, state::State};
 
 pub struct HashState {
     hash: U256,
@@ -14,6 +14,9 @@ pub struct HashState {
 impl HashState {
     pub const fn new(hash: U256) -> Self {
         Self { hash, len: 0 }
+    }
+    pub const fn state(self) -> State {
+        State::from_hash_state(self)
     }
     const fn swap_compress(mut self, data: U512) -> Self {
         self.hash = compress(self.hash, u512x::swap32(data));

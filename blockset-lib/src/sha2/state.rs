@@ -1,28 +1,31 @@
 use crate::uint::{
-    u256x::{self, U256},
+    u256x::U256,
     u512x::{self, U512},
 };
 
 use super::hash_state::HashState;
 
-struct State {
+pub struct State {
     state: HashState,
     buffer: U512,
     len: u16,
 }
 
 impl State {
-    const fn new(hash: U256) -> Self {
+    pub const fn from_hash_state(state: HashState) -> Self {
         Self {
-            state: HashState::new(hash),
+            state,
             buffer: u512x::ZERO,
             len: 0,
         }
     }
-    const fn end(self) -> U256 {
+    pub const fn new(hash: U256) -> Self {
+        Self::from_hash_state(HashState::new(hash))
+    }
+    pub const fn end(self) -> U256 {
         self.state.end(self.buffer, self.len)
     }
-    const fn push(mut self, buffer: U512, len: u16) -> Self {
+    pub const fn push(mut self, buffer: U512, len: u16) -> Self {
         let d = self.len as i32;
         self.buffer = u512x::bitor(&self.buffer, &u512x::shl(&buffer, -d));
         self.len += len;
@@ -34,11 +37,11 @@ impl State {
         self
     }
 
-    const fn push_u8(self, v: u8) -> Self {
+    pub const fn push_u8(self, v: u8) -> Self {
         self.push(u512x::be((v as u128) << 120, 0, 0, 0), 8)
     }
 
-    const fn push_array(mut self, v: &[u8]) -> Self {
+    pub const fn push_array(mut self, v: &[u8]) -> Self {
         let len = v.len();
         let mut i = 0;
         loop {

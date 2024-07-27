@@ -100,6 +100,11 @@ pub const fn bitor(&[a0, a1]: &U512, &[b0, b1]: &U512) -> U512 {
     [u256x::bitor(&a0, &b0), u256x::bitor(&a1, &b1)]
 }
 
+#[inline(always)]
+pub const fn bitxor(&[a0, a1]: &U512, &[b0, b1]: &U512) -> U512 {
+    [u256x::bitxor(&a0, &b0), u256x::bitxor(&a1, &b1)]
+}
+
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
