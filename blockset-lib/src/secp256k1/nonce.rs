@@ -1,3 +1,5 @@
+// RFC6979 https://www.rfc-editor.org/rfc/rfc6979
+
 use crate::{
     hmac::HmacSha256,
     sha2::be_chunk::BeChunk,
