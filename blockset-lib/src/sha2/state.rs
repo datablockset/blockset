@@ -23,7 +23,7 @@ impl State {
     pub const fn end(self) -> U256 {
         self.state.end(self.rest)
     }
-    pub const fn push(mut self, rest: BeChunk) -> Self {
+    pub const fn push(mut self, rest: &BeChunk) -> Self {
         let (v, rest) = self.rest.chain(rest);
         if let Some(v) = v {
             self.state = self.state.push(v);
@@ -38,7 +38,7 @@ impl State {
             if i == len {
                 return self;
             }
-            self = self.push(BeChunk::u8(v[i]));
+            self = self.push(&BeChunk::u8(v[i]));
             i += 1;
         }
     }

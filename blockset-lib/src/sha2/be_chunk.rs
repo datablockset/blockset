@@ -16,7 +16,7 @@ impl BeChunk {
     pub const fn default() -> Self {
         Self::new(u512x::_0, 0)
     }
-    pub const fn chain(mut self, BeChunk { data, len }: BeChunk) -> (Option<U512>, Self) {
+    pub const fn chain(mut self, &BeChunk { data, len }: &BeChunk) -> (Option<U512>, Self) {
         let d = self.len as i32;
         self.data = u512x::bitor(&self.data, &u512x::shl(&data, -d));
         self.len += len;

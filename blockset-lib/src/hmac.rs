@@ -30,7 +30,7 @@ impl HmacSha256 {
             key,
         }
     }
-    pub const fn push(mut self, rest: BeChunk) -> Self {
+    pub const fn push(mut self, rest: &BeChunk) -> Self {
         self.state = self.state.push(rest);
         self
     }

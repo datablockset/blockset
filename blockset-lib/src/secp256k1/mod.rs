@@ -6,6 +6,8 @@ mod scalar;
 use field::Field;
 use point::{Point, G};
 
+use crate::sha2::be_chunk::BeChunk;
+
 type Order = Field<0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE>;
 
 type Signature = [Order; 2];
@@ -15,7 +17,7 @@ impl Order {
         point::mul(G, self)
     }
     pub const fn sign(self, z: Order) -> Signature {
-        let k = nonce::nonce(self.0, z.0);
+        let k = nonce::nonce(self.0, BeChunk::u256(z.0));
         let r = Order::new(point::mul(G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
