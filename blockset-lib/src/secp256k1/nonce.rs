@@ -85,7 +85,10 @@ mod tests {
         );
         const LEN8: u16 = ((LEN + 7) >> 3) << 3;
         let chunk = |x| BeChunk::new(u512x::shl(&[x, u256x::_0], 512 - LEN8 as i32), LEN8);
-        // h1 = u256x::shl(&h1, I);
-        let _ = nonce::<0x00000000_00020108_A2E0CC0D_99F8A5EF, 0x4_00000000>(&chunk(X), &chunk(h1));
+        let n = nonce::<0x00000000_00020108_A2E0CC0D_99F8A5EF, 0x4_00000000>(&chunk(X), &chunk(h1));
+        assert_eq!(
+            n.0,
+            u256x::be(0x02_3AF4074C, 0x90A02B3F_E61D286D_5C87F425_E6BDD81B)
+        );
     }
 }
