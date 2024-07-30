@@ -56,7 +56,7 @@ mod tests {
         const X: U256 = u256x::be(0x0_9A4D6792, 0x295A7F73_0FC3F2B4_9CBC0F62_E862272F);
         const UX: U256 = u256x::be(0x7_9AEE090D, 0xB05EC252_D5CB4452_F356BE19_8A4FF96F);
         const UY: U256 = u256x::be(0x7_82E29634, 0xDDC9A31E_F40386E8_96BAA18B_53AFA5A3);
-        let mut h1 = u256x::swap32(State::new(SHA256).push_array(b"sample").end());
+        let mut h1 = State::new(SHA256).push_array(b"sample").end();
         assert_eq!(
             h1,
             u256x::be(

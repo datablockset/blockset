@@ -40,10 +40,7 @@ impl HmacSha256 {
         self
     }
     pub const fn end(self) -> U256 {
-        Self::hash_state(self.key, O_PAD).end(BeChunk::new(
-            [u256x::_0, u256x::swap32(self.state.end())],
-            0x100,
-        ))
+        Self::hash_state(self.key, O_PAD).end(BeChunk::new([u256x::_0, self.state.end()], 0x100))
     }
 }
 
@@ -60,10 +57,10 @@ mod tests {
     fn test() {
         assert_eq!(
             HmacSha256::new(u512x::_0).end(),
-            u256x::swap32([
+            [
                 0xff1697c4_93715653_c6c71214_4292c5ad,
                 0xb613679a_0814d9ec_772f95d7_78c35fc5,
-            ])
+            ]
         );
         assert_eq!(
             HmacSha256::new(u512x::be(
@@ -73,10 +70,10 @@ mod tests {
                 0
             ))
             .end(),
-            u256x::swap32([
+            [
                 0x720f729a_884cf655_581a0f6b_83e05d01,
                 0xe5ed5d2c_d3d2da2c_8a23322c_a509cc41
-            ])
+            ]
         );
         assert_eq!(
             HmacSha256::new(u512x::be(
@@ -87,10 +84,10 @@ mod tests {
             ))
             .push_array(b"The quick brown fox jumps over the lazy dog")
             .end(),
-            u256x::swap32([
+            [
                 0x3f900df9_52fcd88a_d4dc6134_a2b7af12,
                 0x0b8e8977_aa8b1ad0_5691c746_04ed9cf6
-            ])
+            ]
         );
         assert_eq!(
             HmacSha256::new(u512x::be(
@@ -101,10 +98,10 @@ mod tests {
             ))
             .push_array(b"The quick brown fox jumps over the lazy dog")
             .end(),
-            u256x::swap32([
+            [
                 0xdcf8a948_20e1e8eb_0010e0b2_14b89fa8,
                 0x8d0e6c9d_de99251d_18203a1a_c3288a93,
-            ])
+            ]
         )
     }
 }

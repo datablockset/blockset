@@ -1,5 +1,5 @@
 use crate::uint::{
-    u256x::U256,
+    u256x::{self, U256},
     u512x::{self, U512},
 };
 
@@ -57,7 +57,7 @@ mod tests {
     fn test() {
         let f = |v, a1, a0| {
             let h = State::new(SHA256).push_array(v).end();
-            assert_eq!(h, u256x::swap32([a0, a1]));
+            assert_eq!(h, [a0, a1]);
         };
         f(
             b"",
