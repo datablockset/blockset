@@ -43,6 +43,11 @@ pub const fn bitxor(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
 }
 
 #[inline(always)]
+pub const fn bitand(&[a0, a1]: &U256, &[b0, b1]: &U256) -> U256 {
+    [a0 & b0, a1 & b1]
+}
+
+#[inline(always)]
 pub const fn eq(&[a0, a1]: &U256, &[b0, b1]: &U256) -> bool {
     a0 == b0 && a1 == b1
 }
@@ -108,6 +113,8 @@ pub const fn from_bool(a: bool) -> U256 {
 }
 
 pub const _0: U256 = from_u128(0);
+pub const _1: U256 = from_u128(1);
+pub const MAX: U256 = [u128::MAX, u128::MAX];
 
 pub const fn leading_zeros([a0, a1]: U256) -> u32 {
     match a1.leading_zeros() {

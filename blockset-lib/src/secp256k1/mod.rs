@@ -14,7 +14,6 @@ impl Order {
     const fn public_key(self) -> Point {
         point::mul(G, self)
     }
-
     pub const fn sign(self, z: Order) -> Signature {
         let k = nonce::nonce(self.0, z.0);
         let r = Order::new(point::mul(G, k)[0].0);
