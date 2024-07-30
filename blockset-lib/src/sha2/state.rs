@@ -1,7 +1,4 @@
-use crate::uint::{
-    u256x::{self, U256},
-    u512x::{self, U512},
-};
+use crate::uint::u256x::U256;
 
 use super::{be_chunk::BeChunk, hash_state::HashState};
 
@@ -48,7 +45,7 @@ impl State {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{sha2::sha256::SHA256, uint::u256x};
+    use crate::sha2::sha256::SHA256;
 
     use super::State;
 
