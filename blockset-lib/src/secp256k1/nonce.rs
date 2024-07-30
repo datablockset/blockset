@@ -17,6 +17,15 @@ pub const fn nonce<const A0: u128, const A1: u128>(pk: &BeChunk, m: &BeChunk) ->
     let p = Field::<A0, A1>::P;
     let offset = u256x::leading_zeros(p) as i32;
     let len = 256 - offset;
+    const fn c(p: U256, mut v: U256) -> BeChunk {
+        let offset = u256x::leading_zeros(p) as i32;
+        v = u256x::shl(&u256x::shr(&v, offset), offset);
+        if !u256x::less(&v, &p) {
+            v = u256x::wsub(v, p);
+        }
+        let offset8 = (offset >> 3) << 3;
+        BeChunk::new([u256x::_0, u256x::shl(&v, offset8)], 256 - offset8 as u16)
+    }
     let mut vk = VK {
         v: [
             0x01010101_01010101_01010101_01010101,
