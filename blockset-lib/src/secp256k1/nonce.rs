@@ -44,8 +44,7 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        sha2::{sha256::SHA256, state::State},
-        uint::u256x::{self, U256},
+        secp256k1::nonce::nonce, sha2::{be_chunk::BeChunk, sha256::SHA256, state::State}, uint::u256x::{self, U256}
     };
 
     #[test]
@@ -73,6 +72,7 @@ mod tests {
             h1,
             u256x::be(0x01_795EDF0D, 0x54DB760F_156D0DAC_04C0322B_3A204224)
         );
-        h1 = u256x::shl(&h1, I);
+        // h1 = u256x::shl(&h1, I);
+        // let _ = nonce::<0x00000000_00020108_A2E0CC0D_99F8A5EF, 0x4_00000000>(u256x::shl(&X, I), BeChunk::new([h1, u256x::_0], LEN as u16));
     }
 }
