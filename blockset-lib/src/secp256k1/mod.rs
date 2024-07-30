@@ -17,7 +17,7 @@ impl Order {
         point::mul(G, self)
     }
     pub const fn sign(self, z: Order) -> Signature {
-        let k = nonce::nonce(&BeChunk::u256(self.0), &BeChunk::u256(z.0));
+        let k = nonce::nonce(&self.0, &z.0);
         let r = Order::new(point::mul(G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]

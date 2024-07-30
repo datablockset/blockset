@@ -13,18 +13,19 @@ struct VK {
     k: U256,
 }
 
-pub const fn nonce<const A0: u128, const A1: u128>(pk: &BeChunk, m: &BeChunk) -> Field<A0, A1> {
+pub const fn nonce<const A0: u128, const A1: u128>(pk: &U256, m: &U256) -> Field<A0, A1> {
     let p = Field::<A0, A1>::P;
     let offset = u256x::leading_zeros(p) as i32;
-    let len = 256 - offset;
     const fn c(p: U256, mut v: U256) -> BeChunk {
-        let offset = u256x::leading_zeros(p) as i32;
-        v = u256x::shl(&u256x::shr(&v, offset), offset);
         if !u256x::less(&v, &p) {
             v = u256x::wsub(v, p);
         }
+        let offset = u256x::leading_zeros(p);
         let offset8 = (offset >> 3) << 3;
-        BeChunk::new([u256x::_0, u256x::shl(&v, offset8)], 256 - offset8 as u16)
+        BeChunk::new(
+            [u256x::_0, u256x::shl(&v, offset8 as i32)],
+            256 - offset8 as u16,
+        )
     }
     let mut vk = VK {
         v: [
@@ -47,8 +48,10 @@ pub const fn nonce<const A0: u128, const A1: u128>(pk: &BeChunk, m: &BeChunk) ->
         vk.v = g(&vk);
         vk
     }
-    vk = f(pk, m, vk, 0x00);
-    vk = f(pk, m, vk, 0x01);
+    let pkc = c(p, *pk);
+    let mc = c(p, *m);
+    vk = f(&pkc, &mc, vk, 0x00);
+    vk = f(&pkc, &mc, vk, 0x01);
     loop {
         vk.v = g(&vk);
         let k = u256x::shr(&vk.v, offset);
@@ -91,16 +94,7 @@ mod tests {
         const LEN: u16 = 163;
         const I: i32 = 256 - LEN as i32;
         h1 = u256x::shr(&h1, I);
-        if !u256x::less(&h1, &Q) {
-            h1 = u256x::wsub(h1, Q)
-        };
-        assert_eq!(
-            h1,
-            u256x::be(0x01_795EDF0D, 0x54DB760F_156D0DAC_04C0322B_3A204224)
-        );
-        const LEN8: u16 = ((LEN + 7) >> 3) << 3;
-        let chunk = |x| BeChunk::new(u512x::shl(&[x, u256x::_0], 512 - LEN8 as i32), LEN8);
-        let n = nonce::<0x00000000_00020108_A2E0CC0D_99F8A5EF, 0x4_00000000>(&chunk(X), &chunk(h1));
+        let n = nonce::<0x00000000_00020108_A2E0CC0D_99F8A5EF, 0x4_00000000>(&X, &h1);
         assert_eq!(
             n.0,
             u256x::be(0x02_3AF4074C, 0x90A02B3F_E61D286D_5C87F425_E6BDD81B)
