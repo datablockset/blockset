@@ -14,6 +14,9 @@ struct VK {
 }
 
 pub const fn nonce<const A0: u128, const A1: u128>(pk: &BeChunk, m: &BeChunk) -> Field<A0, A1> {
+    let p = Field::<A0, A1>::P;
+    let offset = u256x::leading_zeros(p) as i32;
+    let len = 256 - offset;
     let mut vk = VK {
         v: [
             0x01010101_01010101_01010101_01010101,
@@ -27,22 +30,23 @@ pub const fn nonce<const A0: u128, const A1: u128>(pk: &BeChunk, m: &BeChunk) ->
     const fn g(vk: &VK) -> U256 {
         h(vk).end()
     }
-    const fn f(pk: &BeChunk, m: &BeChunk, mut vk: VK, s: u8) -> VK {
-        vk.k = h(&vk).push(&BeChunk::u8(s)).push(pk).push(m).end();
+    const fn s(vk: &VK, b: u8) -> HmacSha256 {
+        h(vk).push(&BeChunk::u8(b))
+    }
+    const fn f(pk: &BeChunk, m: &BeChunk, mut vk: VK, b: u8) -> VK {
+        vk.k = s(&vk, b).push(pk).push(m).end();
         vk.v = g(&vk);
         vk
     }
     vk = f(pk, m, vk, 0x00);
     vk = f(pk, m, vk, 0x01);
-    let p = Field::<A0, A1>::P;
-    let s = u256x::leading_zeros(p) as i32;
     loop {
         vk.v = g(&vk);
-        let k = u256x::shr(&vk.v, s);
+        let k = u256x::shr(&vk.v, offset);
         if u256x::less(&k, &p) {
             return Field::<A0, A1>::new(k);
         }
-        vk.k = h(&vk).push(&BeChunk::u8(0x00)).end();
+        vk.k = s(&vk, 0x00).end();
         vk.v = g(&vk);
     }
 }
