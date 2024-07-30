@@ -15,13 +15,13 @@ struct VK {
 
 pub const fn nonce<const A0: u128, const A1: u128>(pk: &U256, m: &U256) -> Field<A0, A1> {
     let p = Field::<A0, A1>::P;
-    let offset = u256x::leading_zeros(p) as i32;
-    const fn c(p: U256, mut v: U256) -> BeChunk {
+    let offset = Field::<A0, A1>::OFFSET as i32;
+    const fn c<const A0: u128, const A1: u128>(mut v: U256) -> BeChunk {
+        let p = Field::<A0, A1>::P;
         if !u256x::less(&v, &p) {
             v = u256x::wsub(v, p);
         }
-        let offset = u256x::leading_zeros(p);
-        let offset8 = (offset >> 3) << 3;
+        let offset8 = Field::<A0, A1>::OFFSET8;
         BeChunk::new(
             [u256x::_0, u256x::shl(&v, offset8 as i32)],
             256 - offset8 as u16,
@@ -48,8 +48,8 @@ pub const fn nonce<const A0: u128, const A1: u128>(pk: &U256, m: &U256) -> Field
         vk.v = g(&vk);
         vk
     }
-    let pkc = c(p, *pk);
-    let mc = c(p, *m);
+    let pkc = c::<A0, A1>(*pk);
+    let mc = c::<A0, A1>(*m);
     vk = f(&pkc, &mc, vk, 0x00);
     vk = f(&pkc, &mc, vk, 0x01);
     loop {

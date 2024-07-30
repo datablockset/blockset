@@ -16,6 +16,8 @@ impl<const P0: u128, const P1: u128> Copy for Field<P0, P1> {}
 
 impl<const P0: u128, const P1: u128> Field<P0, P1> {
     pub const P: U256 = [P0, P1];
+    pub const OFFSET: u32 = u256x::leading_zeros(Self::P);
+    pub const OFFSET8: u32 = Self::OFFSET >> 3 << 3;
     pub const _0: Self = Self::n(0);
     pub const _1: Self = Self::n(1);
     pub const MAX: Self = Self::new(u256x::wsub(Self::P, [1, 0]));
