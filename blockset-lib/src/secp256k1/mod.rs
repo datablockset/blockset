@@ -1,15 +1,10 @@
 mod field;
+mod nonce;
 mod point;
 mod scalar;
 
 use field::Field;
 use point::{Point, G};
-
-use crate::{
-    hmac::HmacSha256,
-    sha2::be_chunk::BeChunk,
-    uint::u256x::{self, U256},
-};
 
 type Order = Field<0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE>;
 
@@ -19,38 +14,9 @@ impl Order {
     const fn public_key(self) -> Point {
         point::mul(G, self)
     }
-    pub const fn nonce(pk: U256, m: U256) -> Order {
-        let mut vk = (
-            [
-                0x01010101_01010101_01010101_01010101,
-                0x01010101_01010101_01010101_01010101,
-            ],
-            u256x::_0,
-        );
-        const fn g((v, k): (U256, U256)) -> U256 {
-            HmacSha256::new([u256x::_0, k]).push(BeChunk::u256(v)).end()
-        }
-        const fn f(pk: U256, m: U256, mut vk: (U256, U256), s: u8) -> (U256, U256) {
-            vk.0 = HmacSha256::new([u256x::_0, vk.0])
-                .push(BeChunk::u256(vk.1))
-                .push(BeChunk::u8(s))
-                .push(BeChunk::u256(pk))
-                .push(BeChunk::u256(m))
-                .end();
-            vk.1 = g(vk);
-            vk
-        }
-        vk = f(pk, m, vk, 0x00);
-        vk = f(pk, m, vk, 0x01);
-        loop {
-            vk.1 = g(vk);
-            if u256x::less(&vk.1, &Order::P) {
-                return Order::new(vk.1);
-            }
-        }
-    }
+
     pub const fn sign(self, z: Order) -> Signature {
-        let k = Self::nonce(self.0, z.0);
+        let k = nonce::nonce(self.0, z.0);
         let r = Order::new(point::mul(G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
