@@ -1,7 +1,8 @@
-use std::marker::PhantomData;
-
 use crate::{
-    field::{prime::Prime, prime_field::PrimeField},
+    field::{
+        elliptic_curve::EllipticCurve, prime::Prime,
+        prime_field_scalar::PrimeFieldScalar,
+    },
     uint::u256x::{self, U256},
 };
 
@@ -13,24 +14,6 @@ const fn is_valid_private_key(key: U256) -> bool {
     u256x::less(&u256x::_0, &key) && is_valid(key)
 }
 
-pub trait Order: Prime {}
-
-pub struct CurveN<C: Curve>(PhantomData<C>);
-
-impl<C: Curve> Prime for CurveN<C> {
-    const P: U256 = C::N;
-}
-
-impl<C: Curve> Order for CurveN<C> {}
-
-pub trait Curve: Prime {
-    const GX: U256;
-    const GY: U256;
-    const A: U256;
-    const B: U256;
-    const N: U256;
-}
-
 pub struct Secp256k1P();
 
 impl Prime for Secp256k1P {
@@ -40,7 +23,7 @@ impl Prime for Secp256k1P {
     );
 }
 
-impl Curve for Secp256k1P {
+impl EllipticCurve for Secp256k1P {
     const GX: U256 = u256x::be(
         0x79BE667E_F9DCBBAC_55A06295_CE870B07,
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
@@ -58,9 +41,9 @@ impl Curve for Secp256k1P {
 }
 
 // https://en.bitcoin.it/wiki/Secp256k1
-pub type Scalar = PrimeField<Secp256k1P>;
+pub type Scalar = PrimeFieldScalar<Secp256k1P>;
 
-impl<P: Curve> PrimeField<P> {
+impl<P: EllipticCurve> PrimeFieldScalar<P> {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
     pub const _3_DIV_2: Self = Self::_3.div(Self::_2);
@@ -97,9 +80,9 @@ impl<P: Curve> PrimeField<P> {
     }
 }
 
-type Vec2<P> = [PrimeField<P>; 2];
+type Vec2<P> = [PrimeFieldScalar<P>; 2];
 
-const fn mul<P: Prime>([x, y]: Vec2<P>, a: PrimeField<P>) -> Vec2<P> {
+const fn mul<P: Prime>([x, y]: Vec2<P>, a: PrimeFieldScalar<P>) -> Vec2<P> {
     [x.mul(a), y.mul(a)]
 }
 

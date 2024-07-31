@@ -1,34 +1,32 @@
-mod field;
 mod nonce;
 mod point;
 mod scalar;
 
 use point::Point;
-use scalar::{Curve, CurveN};
 
-use crate::field::prime_field::PrimeField;
+use crate::field::{elliptic_curve::EllipticCurve, elliptic_curve_n::EllipticCurveN, prime_field_scalar::PrimeFieldScalar};
 
-type Order<C: Curve> = PrimeField<CurveN<C>>;
+type Order<C: EllipticCurve> = PrimeFieldScalar<EllipticCurveN<C>>;
 
-type Signature<C: Curve> = [PrimeField<CurveN<C>>; 2];
+type Signature<C: EllipticCurve> = [PrimeFieldScalar<EllipticCurveN<C>>; 2];
 
-impl<C: Curve> Order<C> {
+impl<C: EllipticCurve> Order<C> {
     const fn public_key(self) -> Point<C> {
-        point::mul(PrimeField::G, self)
+        point::mul(PrimeFieldScalar::G, self)
     }
     pub const fn sign(self, z: Self) -> Signature<C> {
         let k = nonce::nonce(&self.0, &z.0);
-        let r = Self::new(point::mul(PrimeField::G, k)[0].0);
+        let r = Self::new(point::mul(PrimeFieldScalar::G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
     }
 }
 
-const fn verify<C: Curve>(pub_key: Point<C>, z: Order<C>, [r, s]: Signature<C>) -> bool {
+const fn verify<C: EllipticCurve>(pub_key: Point<C>, z: Order<C>, [r, s]: Signature<C>) -> bool {
     let si = s.reciprocal();
     let u1 = z.mul(si);
     let u2 = r.mul(si);
-    let p = Order::new(point::add(point::mul(PrimeField::G, u1), point::mul(pub_key, u2))[0].0);
+    let p = Order::new(point::add(point::mul(PrimeFieldScalar::G, u1), point::mul(pub_key, u2))[0].0);
     p.eq(&r)
 }
 

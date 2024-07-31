@@ -1,7 +1,7 @@
 // RFC6979 https://www.rfc-editor.org/rfc/rfc6979
 
 use crate::{
-    field::{prime::Prime, prime_field::PrimeField},
+    field::{prime::Prime, prime_field_scalar::PrimeFieldScalar},
     hmac::HmacSha256,
     sha2::be_chunk::BeChunk,
     uint::u256x::{self, U256},
@@ -12,15 +12,15 @@ struct VK {
     k: U256,
 }
 
-pub const fn nonce<P: Prime>(pk: &U256, m: &U256) -> PrimeField<P> {
-    let p = PrimeField::<P>::P;
-    let offset = PrimeField::<P>::OFFSET as i32;
+pub const fn nonce<P: Prime>(pk: &U256, m: &U256) -> PrimeFieldScalar<P> {
+    let p = PrimeFieldScalar::<P>::P;
+    let offset = PrimeFieldScalar::<P>::OFFSET as i32;
     const fn c<P: Prime>(mut v: U256) -> BeChunk {
-        let p = PrimeField::<P>::P;
+        let p = PrimeFieldScalar::<P>::P;
         if !u256x::less(&v, &p) {
             v = u256x::wsub(v, p);
         }
-        let offset8 = PrimeField::<P>::OFFSET8;
+        let offset8 = PrimeFieldScalar::<P>::OFFSET8;
         BeChunk::new(
             [u256x::_0, u256x::shl(&v, offset8 as i32)],
             256 - offset8 as u16,
@@ -55,7 +55,7 @@ pub const fn nonce<P: Prime>(pk: &U256, m: &U256) -> PrimeField<P> {
         vk.v = g(&vk);
         let k = u256x::shr(&vk.v, offset);
         if u256x::less(&k, &p) {
-            return PrimeField::<P>::new(k);
+            return PrimeFieldScalar::<P>::new(k);
         }
         vk.k = s(&vk, 0x00).end();
         vk.v = g(&vk);
