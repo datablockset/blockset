@@ -40,6 +40,8 @@ impl<P: Prime> Field<P> {
     pub const _1: Self = Self::n(1);
     pub const MAX: Self = Self::new(u256x::wsub(Self::P, [1, 0]));
     pub const MIDDLE: Self = Self::new(u256x::shr(&Self::P, 1));
+    // (P+1)/4
+    const SQRT_K: Self = Self::new(u256x::shr(&u256x::wadd(Self::P, [1, 0]), 2));
     const fn is_valid(key: U256) -> bool {
         u256x::less(&key, &Self::P)
     }
@@ -129,5 +131,14 @@ impl<P: Prime> Field<P> {
             self = self.mul(self);
         }
         result
+    }
+    pub const fn sqrt(self) -> Option<Self> {
+        assert!(Self::P[0] & 3 == 3);
+        let result = self.pow(Self::SQRT_K);
+        if result.mul(result).eq(&self) {
+            Some(result)
+        } else {
+            None
+        }
     }
 }

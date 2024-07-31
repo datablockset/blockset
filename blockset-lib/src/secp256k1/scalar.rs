@@ -26,8 +26,6 @@ impl Scalar {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
     pub const _7: Self = Self::n(7);
-    // (P+1)/4
-    const SQRT_K: Self = Self::new(u256x::shr(&u256x::wadd(Self::P, [1, 0]), 2));
     // Gx
     pub const GX: Scalar = Scalar::new([
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
@@ -52,14 +50,6 @@ impl Scalar {
             let f2 = sub(f0, mul(f1, Self::unchecked_new(q)));
             f0 = f1;
             f1 = f2;
-        }
-    }
-    const fn sqrt(self) -> Option<Self> {
-        let result = self.pow(Self::SQRT_K);
-        if result.mul(result).eq(&self) {
-            Some(result)
-        } else {
-            None
         }
     }
     const fn y2(self) -> Self {
