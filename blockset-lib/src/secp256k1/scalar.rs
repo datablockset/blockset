@@ -10,6 +10,13 @@ const fn is_valid_private_key(key: U256) -> bool {
     u256x::less(&u256x::_0, &key) && is_valid(key)
 }
 
+pub trait Curve: Prime {
+    const GX: U256;
+    const GY: U256;
+    const A: U256;
+    const B: U256;
+}
+
 pub struct Secp256k1P();
 
 impl Prime for Secp256k1P {
@@ -19,23 +26,38 @@ impl Prime for Secp256k1P {
     );
 }
 
+impl Curve for Secp256k1P {
+    const GX: U256 = [
+        0x029BFCDB_2DCE28D9_59F2815B_16F81798,
+        0x79BE667E_F9DCBBAC_55A06295_CE870B07,
+    ];
+    const GY: U256 = [
+        0xFD17B448_A6855419_9C47D08F_FB10D4B8,
+        0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
+    ];
+    const A: U256 = u256x::_0;
+    const B: U256 = u256x::from_u128(7);
+}
+
 // https://en.bitcoin.it/wiki/Secp256k1
 pub type Scalar = Field<Secp256k1P>;
 
-impl Scalar {
+impl<P: Curve> Field<P> {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
-    pub const _7: Self = Self::n(7);
+    //pub const _7: Self = Self::n(7);
+    pub const A: Self = Self::n(0);
+    pub const B: Self = Self::n(7);
     // Gx
-    pub const GX: Scalar = Scalar::new([
+    pub const GX: Self = Self::new([
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
         0x79BE667E_F9DCBBAC_55A06295_CE870B07,
     ]);
-    pub const GY: Scalar = Scalar::new([
+    pub const GY: Self = Self::new([
         0xFD17B448_A6855419_9C47D08F_FB10D4B8,
         0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
     ]);
-    const fn reciprocal2(mut self) -> Vec2 {
+    const fn reciprocal2(mut self) -> Vec2<P> {
         assert!(!Self::_0.eq(&self));
         let mut a0 = Self::P;
         let mut f0 = [Self::_1, Self::_0];
@@ -53,20 +75,20 @@ impl Scalar {
         }
     }
     const fn y2(self) -> Self {
-        self.pow(Self::_3).add(Self::_7)
+        self.pow(Self::_3).add(self.mul(Self::A)).add(Self::B)
     }
     pub const fn y(self) -> Option<Self> {
         self.y2().sqrt()
     }
 }
 
-type Vec2 = [Scalar; 2];
+type Vec2<P> = [Field<P>; 2];
 
-const fn mul([x, y]: Vec2, a: Scalar) -> Vec2 {
+const fn mul<P: Prime>([x, y]: Vec2<P>, a: Field<P>) -> Vec2<P> {
     [x.mul(a), y.mul(a)]
 }
 
-const fn sub([x0, y0]: Vec2, [x1, y1]: Vec2) -> Vec2 {
+const fn sub<P: Prime>([x0, y0]: Vec2<P>, [x1, y1]: Vec2<P>) -> Vec2<P> {
     [x0.sub(x1), y0.sub(y1)]
 }
 
@@ -85,6 +107,8 @@ struct Uncompressed {
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
+
+    use crate::secp256k1::scalar::Secp256k1P;
 
     use super::{is_valid_private_key, Scalar, Vec2};
 
@@ -174,7 +198,7 @@ mod test {
     #[wasm_bindgen_test]
     fn test_pow() {
         let s2 = Scalar::new([2, 0]);
-        let s3 = Scalar::_3;
+        let s3 = Scalar::n(3);
         let s4 = Scalar::new([4, 0]);
         let s8 = Scalar::new([8, 0]);
         let s9 = Scalar::new([9, 0]);
@@ -204,9 +228,9 @@ mod test {
             Scalar::new([0, 0x8000_0000_0000_0000_0000_0000_0000_0000])
         );
         // 3
-        common(Scalar::_3);
-        assert_eq!(Scalar::_3.pow(s2), s9);
-        assert_eq!(Scalar::_3.pow(Scalar::_3), s27);
+        common(Scalar::n(3));
+        assert_eq!(Scalar::n(3).pow(s2), s9);
+        assert_eq!(Scalar::n(3).pow(Scalar::n(3)), s27);
         // Gx
         common(Scalar::GX);
         // MIDDLE
@@ -458,7 +482,7 @@ mod test {
             let v = s.reciprocal2();
             assert_eq!(v[1].mul(s), Scalar::_1);
         }
-        fn f(s: Scalar, v: Vec2) {
+        fn f(s: Scalar, v: Vec2<Secp256k1P>) {
             assert_eq!(s.reciprocal2(), v);
             assert_eq!(v[1].mul(s), Scalar::_1);
         }
