@@ -47,9 +47,8 @@ impl<P: Curve> Field<P> {
     pub const _3: Self = Self::n(3);
     pub const A: Self = Self::new(P::A);
     pub const B: Self = Self::new(P::B);
-    // Gx
-    pub const GX: Self = Self::new(P::GX);
-    pub const GY: Self = Self::new(P::GY);
+    // G
+    pub const G: [Self; 2] = [Self::new(P::GX), Self::new(P::GY)];
     const fn reciprocal2(mut self) -> Vec2<P> {
         assert!(!Self::_0.eq(&self));
         let mut a0 = Self::P;
@@ -113,8 +112,8 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_y() {
-        assert_eq!(Scalar::GX.y2(), Scalar::GY.mul(Scalar::GY));
-        assert_eq!(Scalar::GX.y().unwrap(), Scalar::GY);
+        assert_eq!(Scalar::G[0].y2(), Scalar::G[1].mul(Scalar::G[1]));
+        assert_eq!(Scalar::G[0].y().unwrap(), Scalar::G[1]);
         fn check(lo: u128, hi: u128, some: bool) {
             assert_eq!(Scalar::new([lo, hi]).y().is_some(), some);
         }
@@ -183,7 +182,7 @@ mod test {
         for i in 1..1000 {
             check(Scalar::new([i, 0]));
         }
-        check(Scalar::GX);
+        check(Scalar::G[0]);
         check(Scalar::MIDDLE);
     }
 
@@ -225,7 +224,7 @@ mod test {
         assert_eq!(Scalar::n(3).pow(s2), s9);
         assert_eq!(Scalar::n(3).pow(Scalar::n(3)), s27);
         // Gx
-        common(Scalar::GX);
+        common(Scalar::G[0]);
         // MIDDLE
         common(Scalar::MIDDLE);
         // MAX-1

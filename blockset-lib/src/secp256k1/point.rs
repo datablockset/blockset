@@ -2,18 +2,24 @@ use core::panic;
 
 use crate::uint::u256x;
 
-use super::{scalar::Scalar, Order};
+use super::{
+    field::Field,
+    scalar::{Curve, Scalar},
+    Order,
+};
+
+pub type PointT<C: Curve> = [Field<C>; 2];
 
 pub type Point = [Scalar; 2];
 
 const X: usize = 0;
 const Y: usize = 1;
 
-// [0, 0] is not on a curve so we can use it as an infinity point.
-// even more, when x = 0, y is not defined.
+// Note: [0, 0] should not be on a curve so we can use it as an infinity point.
+// `b != 0`.
 const O: Point = [Scalar::_0, Scalar::_0];
 
-pub const G: Point = [Scalar::GX, Scalar::GY];
+// pub const G: Point = [Scalar::GX, Scalar::GY];
 
 const fn eq(a: &Point, b: &Point) -> bool {
     a[X].eq(&b[X]) && a[Y].eq(&b[Y])
@@ -89,7 +95,7 @@ mod tests {
         Order,
     };
 
-    use super::{double, mul, Point, G, X};
+    use super::{double, mul, Point, X};
 
     const N: Order = unsafe { Order::unchecked_new(Order::P) };
 
@@ -158,6 +164,6 @@ mod tests {
         // g(Scalar::n(5));
         s(Scalar::n(6));
         // g(Scalar::n(7));
-        g(G);
+        g(Scalar::G);
     }
 }

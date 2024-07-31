@@ -4,7 +4,8 @@ mod point;
 mod scalar;
 
 use field::{Field, Prime};
-use point::{Point, G};
+use point::Point;
+use scalar::Scalar;
 
 use crate::uint::u256x::{self, U256};
 
@@ -23,11 +24,11 @@ type Signature = [Order; 2];
 
 impl Order {
     const fn public_key(self) -> Point {
-        point::mul(G, self)
+        point::mul(Scalar::G, self)
     }
     pub const fn sign(self, z: Order) -> Signature {
         let k = nonce::nonce(&self.0, &z.0);
-        let r = Order::new(point::mul(G, k)[0].0);
+        let r = Order::new(point::mul(Scalar::G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
     }
@@ -37,7 +38,7 @@ const fn verify(pub_key: Point, z: Order, [r, s]: Signature) -> bool {
     let si = s.reciprocal();
     let u1 = z.mul(si);
     let u2 = r.mul(si);
-    let p = Order::new(point::add(point::mul(G, u1), point::mul(pub_key, u2))[0].0);
+    let p = Order::new(point::add(point::mul(Scalar::G, u1), point::mul(pub_key, u2))[0].0);
     p.eq(&r)
 }
 
