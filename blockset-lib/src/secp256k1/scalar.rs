@@ -45,18 +45,11 @@ pub type Scalar = Field<Secp256k1P>;
 impl<P: Curve> Field<P> {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
-    //pub const _7: Self = Self::n(7);
-    pub const A: Self = Self::n(0);
-    pub const B: Self = Self::n(7);
+    pub const A: Self = Self::new(P::A);
+    pub const B: Self = Self::new(P::B);
     // Gx
-    pub const GX: Self = Self::new([
-        0x029BFCDB_2DCE28D9_59F2815B_16F81798,
-        0x79BE667E_F9DCBBAC_55A06295_CE870B07,
-    ]);
-    pub const GY: Self = Self::new([
-        0xFD17B448_A6855419_9C47D08F_FB10D4B8,
-        0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
-    ]);
+    pub const GX: Self = Self::new(P::GX);
+    pub const GY: Self = Self::new(P::GY);
     const fn reciprocal2(mut self) -> Vec2<P> {
         assert!(!Self::_0.eq(&self));
         let mut a0 = Self::P;
