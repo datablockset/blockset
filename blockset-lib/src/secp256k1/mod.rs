@@ -6,8 +6,6 @@ mod scalar;
 use field::Field;
 use point::{Point, G};
 
-use crate::sha2::be_chunk::BeChunk;
-
 type Order = Field<0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE>;
 
 type Signature = [Order; 2];
@@ -35,8 +33,6 @@ const fn verify(pub_key: Point, z: Order, [r, s]: Signature) -> bool {
 #[cfg(test)]
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
-
-    //use crate::hmac::hmac;
 
     use super::{verify, Order};
 

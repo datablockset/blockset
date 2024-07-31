@@ -69,11 +69,8 @@ mod tests {
 
     use crate::{
         secp256k1::nonce::nonce,
-        sha2::{be_chunk::BeChunk, sha256::SHA256, state::State},
-        uint::{
-            u256x::{self, U256},
-            u512x,
-        },
+        sha2::{sha256::SHA256, state::State},
+        uint::u256x::{self, U256},
     };
 
     #[test]

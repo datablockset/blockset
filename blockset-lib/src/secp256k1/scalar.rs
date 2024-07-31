@@ -14,11 +14,6 @@ const fn is_valid_private_key(key: U256) -> bool {
 pub type Scalar =
     Field<0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF>;
 
-// pub const N: U256 = [
-//    0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
-//    0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
-//];
-
 impl Scalar {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);

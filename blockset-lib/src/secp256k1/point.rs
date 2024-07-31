@@ -1,6 +1,6 @@
 use core::panic;
 
-use crate::uint::u256x::{self, U256};
+use crate::uint::u256x;
 
 use super::{scalar::Scalar, Order};
 
