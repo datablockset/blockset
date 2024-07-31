@@ -3,24 +3,9 @@ mod nonce;
 mod point;
 mod scalar;
 
-use field::{Field, Prime};
+use field::Field;
 use point::Point;
-use scalar::{Curve, CurveN, Scalar, Secp256k1P};
-
-use crate::uint::u256x::{self, U256};
-
-/*
-struct Secp256k1N();
-
-impl Prime for Secp256k1N {
-    const P: U256 = u256x::be(
-        0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
-        0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
-    );
-}
-
-type Order = Field<Secp256k1N>;
-*/
+use scalar::{Curve, CurveN};
 
 type Order<C: Curve> = Field<CurveN<C>>;
 
