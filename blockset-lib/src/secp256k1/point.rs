@@ -8,26 +8,18 @@ use super::{
     Order,
 };
 
-pub type PointT<C: Curve> = [Field<C>; 2];
-
-pub type Point = [Scalar; 2];
+pub type Point<C: Curve> = [Field<C>; 2];
 
 const X: usize = 0;
 const Y: usize = 1;
 
-// Note: [0, 0] should not be on a curve so we can use it as an infinity point.
-// `b != 0`.
-const O: Point = [Scalar::_0, Scalar::_0];
-
-// pub const G: Point = [Scalar::GX, Scalar::GY];
-
-const fn eq(a: &Point, b: &Point) -> bool {
+const fn eq<C: Curve>(a: &Point<C>, b: &Point<C>) -> bool {
     a[X].eq(&b[X]) && a[Y].eq(&b[Y])
 }
 
-const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
+// const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
 
-const fn from_m([x, y]: Point, pqx: Scalar, m: Scalar) -> Point {
+const fn from_m<C: Curve>([x, y]: Point<C>, pqx: Field<C>, m: Field<C>) -> Point<C> {
     let m2 = m.mul(m);
     let rx = m2.sub(pqx);
     let ry = m.mul(rx.sub(x)).add(y);
@@ -35,43 +27,43 @@ const fn from_m([x, y]: Point, pqx: Scalar, m: Scalar) -> Point {
     r
 }
 
-const fn neg([x, y]: Point) -> Point {
+const fn neg<C: Curve>([x, y]: Point<C>) -> Point<C> {
     [x, y.neg()]
 }
 
-const fn double(p: Point) -> Point {
+const fn double<C: Curve>(p: Point<C>) -> Point<C> {
     let [x, y] = p;
     // if y = 0, it means either the point is `O` or `m` is not defined.
-    if y.eq(&Scalar::_0) {
-        return O;
+    if y.eq(&Field::_0) {
+        return Field::O;
     }
-    from_m(p, x.mul(Scalar::_2), x.mul(x).div(y).mul(_3_DIV_2))
+    from_m(p, x.mul(Field::_2), x.mul(x).div(y).mul(Field::_3_DIV_2))
 }
 
-const fn from_x(x: Scalar) -> Point {
+const fn from_x<C: Curve>(x: Field<C>) -> Point<C> {
     if let Some(y) = x.y() {
         return [x, y];
     }
     panic!();
 }
 
-pub const fn add(p: Point, q: Point) -> Point {
+pub const fn add<C: Curve>(p: Point<C>, q: Point<C>) -> Point<C> {
     let [px, py] = p;
     let [qx, qy] = q;
     if px.eq(&qx) {
-        return if py.eq(&qy) { double(p) } else { O };
+        return if py.eq(&qy) { double(p) } else { Field::O };
     }
-    if eq(&p, &O) {
+    if eq(&p, &Field::O) {
         return q;
     }
-    if eq(&q, &O) {
+    if eq(&q, &Field::O) {
         return p;
     }
     from_m(p, px.add(qx), py.sub(qy).div(px.sub(qx)))
 }
 
-pub const fn mul(mut p: Point, mut n: Order) -> Point {
-    let mut r = O;
+pub const fn mul<C: Curve>(mut p: Point<C>, mut n: Order) -> Point<C> {
+    let mut r = Field::O;
     loop {
         if n.0[0] & 1 != 0 {
             r = add(r, p);
@@ -90,26 +82,26 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::secp256k1::{
-        point::{from_x, neg, O, Y},
-        scalar::Scalar,
+        point::{from_x, neg},
+        scalar::{Curve, Scalar},
         Order,
     };
 
-    use super::{double, mul, Point, X};
+    use super::{double, mul, Point};
 
-    const N: Order = unsafe { Order::unchecked_new(Order::P) };
+    const N: Order = Order::unchecked_new(Order::P);
 
     #[test]
     #[wasm_bindgen_test]
     fn test_mul_o() {
-        assert_eq!(mul(O, Order::_0), O);
-        assert_eq!(mul(O, Order::_1), O);
-        assert_eq!(mul(O, Order::n(2)), O);
-        assert_eq!(mul(O, Order::new([0, 1])), O);
-        assert_eq!(mul(O, N), O);
+        assert_eq!(mul(Scalar::O, Order::_0), Scalar::O);
+        assert_eq!(mul(Scalar::O, Order::_1), Scalar::O);
+        assert_eq!(mul(Scalar::O, Order::n(2)), Scalar::O);
+        assert_eq!(mul(Scalar::O, Order::new([0, 1])), Scalar::O);
+        assert_eq!(mul(Scalar::O, N), Scalar::O);
     }
 
-    fn check([x, y]: Point) {
+    fn check<P: Curve>([x, y]: Point<P>) {
         assert_eq!(x.y().unwrap().abs(), y.abs());
     }
 
@@ -127,9 +119,9 @@ mod tests {
     fn test_mul_1() {
         let g = |p| {
             let pn = neg(p);
-            assert_eq!(mul(p, Order::_0), O);
+            assert_eq!(mul(p, Order::_0), Scalar::O);
             assert_eq!(mul(p, Order::_1), p);
-            assert_eq!(mul(p, N), O);
+            assert_eq!(mul(p, N), Scalar::O);
             assert_eq!(mul(p, N.sub(Order::_1)), pn);
             //
             let f = |s| {
@@ -137,10 +129,10 @@ mod tests {
                 check(r);
                 let rn = mul(pn, s);
                 check(rn);
-                assert_ne!(r, O);
+                assert_ne!(r, Scalar::O);
                 assert_ne!(r, p);
                 assert_ne!(r, pn);
-                assert_ne!(rn, O);
+                assert_ne!(rn, Scalar::O);
                 assert_ne!(rn, p);
                 assert_ne!(rn, pn);
                 assert_ne!(r, rn);

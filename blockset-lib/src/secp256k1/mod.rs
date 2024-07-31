@@ -5,7 +5,7 @@ mod scalar;
 
 use field::{Field, Prime};
 use point::Point;
-use scalar::Scalar;
+use scalar::{Curve, Scalar, Secp256k1P};
 
 use crate::uint::u256x::{self, U256};
 
@@ -23,7 +23,7 @@ type Order = Field<Secp256k1N>;
 type Signature = [Order; 2];
 
 impl Order {
-    const fn public_key(self) -> Point {
+    const fn public_key(self) -> Point<Secp256k1P> {
         point::mul(Scalar::G, self)
     }
     pub const fn sign(self, z: Order) -> Signature {
@@ -34,7 +34,7 @@ impl Order {
     }
 }
 
-const fn verify(pub_key: Point, z: Order, [r, s]: Signature) -> bool {
+const fn verify(pub_key: Point<Secp256k1P>, z: Order, [r, s]: Signature) -> bool {
     let si = s.reciprocal();
     let u1 = z.mul(si);
     let u2 = r.mul(si);
