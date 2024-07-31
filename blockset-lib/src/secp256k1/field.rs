@@ -1,21 +1,39 @@
+use core::fmt;
+use std::marker::PhantomData;
+
 use crate::uint::{
     u256x::{self, U256},
     u512x,
 };
 
-#[derive(PartialEq, Debug)]
-pub struct Field<const P0: u128, const P1: u128>(pub U256);
+pub trait Prime {
+    const P: U256;
+}
 
-impl<const P0: u128, const P1: u128> Clone for Field<P0, P1> {
+pub struct Field<P: Prime>(pub U256, PhantomData<P>);
+
+impl<P: Prime> Clone for Field<P> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        Self::unchecked_new(self.0)
     }
 }
 
-impl<const P0: u128, const P1: u128> Copy for Field<P0, P1> {}
+impl<P: Prime> PartialEq for Field<P> {
+    fn eq(&self, other: &Self) -> bool {
+        self.eq(other)
+    }
+}
 
-impl<const P0: u128, const P1: u128> Field<P0, P1> {
-    pub const P: U256 = [P0, P1];
+impl<P: Prime> fmt::Debug for Field<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<P: Prime> Copy for Field<P> {}
+
+impl<P: Prime> Field<P> {
+    pub const P: U256 = P::P;
     pub const OFFSET: u32 = u256x::leading_zeros(Self::P);
     pub const OFFSET8: u32 = Self::OFFSET >> 3 << 3;
     pub const _0: Self = Self::n(0);
@@ -27,8 +45,8 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
     }
     //
     #[inline(always)]
-    pub const unsafe fn unchecked_new(num: U256) -> Self {
-        Self(num)
+    pub const fn unchecked_new(num: U256) -> Self {
+        Self(num, PhantomData)
     }
     #[inline(always)]
     pub const fn new(mut num: U256) -> Self {
@@ -37,7 +55,7 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
         } else {
             u256x::wsub(num, Self::P)
         };
-        Self(num)
+        Self::unchecked_new(num)
     }
     #[inline(always)]
     pub const fn n(num: u128) -> Self {
@@ -53,7 +71,7 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
         if b {
             result = u256x::wadd(result, Self::P)
         }
-        Self(result)
+        Self::unchecked_new(result)
     }
     #[inline(always)]
     pub const fn neg(self) -> Self {
@@ -76,7 +94,7 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
     }
     //
     pub const fn mul(self, b: Self) -> Self {
-        Self(u512x::div_rem(u256x::mul(self.0, b.0), [Self::P, u256x::_0])[1][0])
+        Self::unchecked_new(u512x::div_rem(u256x::mul(self.0, b.0), [Self::P, u256x::_0])[1][0])
     }
     pub const fn reciprocal(mut self) -> Self {
         assert!(!Self::_0.eq(&self));
@@ -89,8 +107,8 @@ impl<const P0: u128, const P1: u128> Field<P0, P1> {
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
             a0 = self.0;
-            self = Self(a2);
-            let f2 = f0.sub(f1.mul(Self(q)));
+            self = Self::unchecked_new(a2);
+            let f2 = f0.sub(f1.mul(Self::unchecked_new(q)));
             f0 = f1;
             f1 = f2;
         }

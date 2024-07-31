@@ -6,22 +6,22 @@ use crate::{
     uint::u256x::{self, U256},
 };
 
-use super::field::Field;
+use super::field::{Field, Prime};
 
 struct VK {
     v: U256,
     k: U256,
 }
 
-pub const fn nonce<const A0: u128, const A1: u128>(pk: &U256, m: &U256) -> Field<A0, A1> {
-    let p = Field::<A0, A1>::P;
-    let offset = Field::<A0, A1>::OFFSET as i32;
-    const fn c<const A0: u128, const A1: u128>(mut v: U256) -> BeChunk {
-        let p = Field::<A0, A1>::P;
+pub const fn nonce<P: Prime>(pk: &U256, m: &U256) -> Field<P> {
+    let p = Field::<P>::P;
+    let offset = Field::<P>::OFFSET as i32;
+    const fn c<P: Prime>(mut v: U256) -> BeChunk {
+        let p = Field::<P>::P;
         if !u256x::less(&v, &p) {
             v = u256x::wsub(v, p);
         }
-        let offset8 = Field::<A0, A1>::OFFSET8;
+        let offset8 = Field::<P>::OFFSET8;
         BeChunk::new(
             [u256x::_0, u256x::shl(&v, offset8 as i32)],
             256 - offset8 as u16,
@@ -48,15 +48,15 @@ pub const fn nonce<const A0: u128, const A1: u128>(pk: &U256, m: &U256) -> Field
         vk.v = g(&vk);
         vk
     }
-    let pkc = c::<A0, A1>(*pk);
-    let mc = c::<A0, A1>(*m);
+    let pkc = c::<P>(*pk);
+    let mc = c::<P>(*m);
     vk = f(&pkc, &mc, vk, 0x00);
     vk = f(&pkc, &mc, vk, 0x01);
     loop {
         vk.v = g(&vk);
         let k = u256x::shr(&vk.v, offset);
         if u256x::less(&k, &p) {
-            return Field::<A0, A1>::new(k);
+            return Field::<P>::new(k);
         }
         vk.k = s(&vk, 0x00).end();
         vk.v = g(&vk);
@@ -68,10 +68,16 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        secp256k1::nonce::nonce,
+        secp256k1::{field::Prime, nonce::nonce},
         sha2::{sha256::SHA256, state::State},
         uint::u256x::{self, U256},
     };
+
+    struct Sect163k1();
+
+    impl Prime for Sect163k1 {
+        const P: U256 = u256x::be(0x04_00000000, 0x00000000_00020108_A2E0CC0D_99F8A5EF);
+    }
 
     #[test]
     #[wasm_bindgen_test]
@@ -91,7 +97,7 @@ mod tests {
         const LEN: u16 = 163;
         const I: i32 = 256 - LEN as i32;
         h1 = u256x::shr(&h1, I);
-        let n = nonce::<0x00000000_00020108_A2E0CC0D_99F8A5EF, 0x4_00000000>(&X, &h1);
+        let n = nonce::<Sect163k1>(&X, &h1);
         assert_eq!(
             n.0,
             u256x::be(0x02_3AF4074C, 0x90A02B3F_E61D286D_5C87F425_E6BDD81B)

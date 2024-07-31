@@ -3,10 +3,21 @@ mod nonce;
 mod point;
 mod scalar;
 
-use field::Field;
+use field::{Field, Prime};
 use point::{Point, G};
 
-type Order = Field<0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE>;
+use crate::uint::u256x::{self, U256};
+
+struct Secp256k1N();
+
+impl Prime for Secp256k1N {
+    const P: U256 = u256x::be(
+        0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
+        0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
+    );
+}
+
+type Order = Field<Secp256k1N>;
 
 type Signature = [Order; 2];
 

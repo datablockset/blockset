@@ -1,6 +1,6 @@
 use crate::uint::u256x::{self, U256};
 
-use super::field::Field;
+use super::field::{Field, Prime};
 
 const fn is_valid(key: U256) -> bool {
     u256x::less(&key, &Scalar::P)
@@ -10,9 +10,17 @@ const fn is_valid_private_key(key: U256) -> bool {
     u256x::less(&u256x::_0, &key) && is_valid(key)
 }
 
+pub struct Secp256k1P();
+
+impl Prime for Secp256k1P {
+    const P: U256 = u256x::be(
+        0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF,
+        0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F,
+    );
+}
+
 // https://en.bitcoin.it/wiki/Secp256k1
-pub type Scalar =
-    Field<0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F, 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF>;
+pub type Scalar = Field<Secp256k1P>;
 
 impl Scalar {
     pub const _2: Self = Self::n(2);
@@ -40,8 +48,8 @@ impl Scalar {
             }
             let [q, a2] = u256x::div_rem(a0, self.0);
             a0 = self.0;
-            self = Self(a2);
-            let f2 = sub(f0, mul(f1, Self(q)));
+            self = Self::unchecked_new(a2);
+            let f2 = sub(f0, mul(f1, Self::unchecked_new(q)));
             f0 = f1;
             f1 = f2;
         }
