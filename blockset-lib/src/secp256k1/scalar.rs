@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::{field::prime::Prime, uint::u256x::{self, U256}};
-
-use super::field::PrimeField;
+use crate::{
+    field::{prime::Prime, prime_field::PrimeField},
+    uint::u256x::{self, U256},
+};
 
 const fn is_valid(key: U256) -> bool {
     u256x::less(&key, &Scalar::P)

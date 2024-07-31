@@ -1,10 +1,11 @@
 // RFC6979 https://www.rfc-editor.org/rfc/rfc6979
 
 use crate::{
-    field::prime::Prime, hmac::HmacSha256, sha2::be_chunk::BeChunk, uint::u256x::{self, U256}
+    field::{prime::Prime, prime_field::PrimeField},
+    hmac::HmacSha256,
+    sha2::be_chunk::BeChunk,
+    uint::u256x::{self, U256},
 };
-
-use super::field::PrimeField;
 
 struct VK {
     v: U256,
@@ -66,7 +67,10 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        field::prime::Prime, secp256k1::nonce::nonce, sha2::{sha256::SHA256, state::State}, uint::u256x::{self, U256}
+        field::prime::Prime,
+        secp256k1::nonce::nonce,
+        sha2::{sha256::SHA256, state::State},
+        uint::u256x::{self, U256},
     };
 
     struct Sect163k1();

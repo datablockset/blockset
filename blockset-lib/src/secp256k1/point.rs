@@ -1,12 +1,8 @@
 use core::panic;
 
-use crate::uint::u256x;
+use crate::{field::prime_field::PrimeField, uint::u256x};
 
-use super::{
-    field::PrimeField,
-    scalar::{Curve, Scalar},
-    Order,
-};
+use super::{scalar::Curve, Order};
 
 pub type Point<C: Curve> = [PrimeField<C>; 2];
 
@@ -37,7 +33,11 @@ const fn double<C: Curve>(p: Point<C>) -> Point<C> {
     if y.eq(&PrimeField::_0) {
         return PrimeField::O;
     }
-    from_m(p, x.mul(PrimeField::_2), x.mul(x).div(y).mul(PrimeField::_3_DIV_2))
+    from_m(
+        p,
+        x.mul(PrimeField::_2),
+        x.mul(x).div(y).mul(PrimeField::_3_DIV_2),
+    )
 }
 
 const fn from_x<C: Curve>(x: PrimeField<C>) -> Point<C> {

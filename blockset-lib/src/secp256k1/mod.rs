@@ -3,9 +3,10 @@ mod nonce;
 mod point;
 mod scalar;
 
-use field::PrimeField;
 use point::Point;
 use scalar::{Curve, CurveN};
+
+use crate::field::prime_field::PrimeField;
 
 type Order<C: Curve> = PrimeField<CurveN<C>>;
 
