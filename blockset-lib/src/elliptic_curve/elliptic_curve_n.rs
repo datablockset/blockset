@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use crate::uint::u256x::U256;
+use crate::{field::prime::Prime, uint::u256x::U256};
 
-use super::{elliptic_curve::EllipticCurve, prime::Prime};
+use super::EllipticCurve;
 
 pub struct EllipticCurveN<C: EllipticCurve>(PhantomData<C>);
 

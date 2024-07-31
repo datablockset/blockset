@@ -1,6 +1,7 @@
 mod app;
 mod cdt;
 mod common;
+mod elliptic_curve;
 mod field;
 mod forest;
 mod hmac;

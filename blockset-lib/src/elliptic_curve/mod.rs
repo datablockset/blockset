@@ -1,6 +1,6 @@
-use crate::uint::u256x::U256;
+pub mod elliptic_curve_n;
 
-use super::prime::Prime;
+use crate::{field::prime::Prime, uint::u256x::U256};
 
 pub trait EllipticCurve: Prime {
     const GX: U256;

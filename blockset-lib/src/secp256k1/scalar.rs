@@ -1,8 +1,6 @@
 use crate::{
-    field::{
-        elliptic_curve::EllipticCurve, prime::Prime,
-        prime_field_scalar::PrimeFieldScalar,
-    },
+    elliptic_curve::EllipticCurve,
+    field::{prime::Prime, prime_field_scalar::PrimeFieldScalar},
     uint::u256x::{self, U256},
 };
 

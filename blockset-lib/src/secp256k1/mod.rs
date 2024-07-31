@@ -4,7 +4,10 @@ mod scalar;
 
 use point::Point;
 
-use crate::field::{elliptic_curve::EllipticCurve, elliptic_curve_n::EllipticCurveN, prime_field_scalar::PrimeFieldScalar};
+use crate::{
+    elliptic_curve::{elliptic_curve_n::EllipticCurveN, EllipticCurve},
+    field::prime_field_scalar::PrimeFieldScalar,
+};
 
 type Order<C: EllipticCurve> = PrimeFieldScalar<EllipticCurveN<C>>;
 
@@ -26,7 +29,8 @@ const fn verify<C: EllipticCurve>(pub_key: Point<C>, z: Order<C>, [r, s]: Signat
     let si = s.reciprocal();
     let u1 = z.mul(si);
     let u2 = r.mul(si);
-    let p = Order::new(point::add(point::mul(PrimeFieldScalar::G, u1), point::mul(pub_key, u2))[0].0);
+    let p =
+        Order::new(point::add(point::mul(PrimeFieldScalar::G, u1), point::mul(pub_key, u2))[0].0);
     p.eq(&r)
 }
 

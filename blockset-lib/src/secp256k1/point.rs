@@ -1,8 +1,7 @@
 use core::panic;
 
 use crate::{
-    field::{elliptic_curve::EllipticCurve, prime_field_scalar::PrimeFieldScalar},
-    uint::u256x,
+    elliptic_curve::EllipticCurve, field::prime_field_scalar::PrimeFieldScalar, uint::u256x,
 };
 
 use super::Order;
@@ -18,7 +17,11 @@ const fn eq<C: EllipticCurve>(a: &Point<C>, b: &Point<C>) -> bool {
 
 // const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
 
-const fn from_m<C: EllipticCurve>([x, y]: Point<C>, pqx: PrimeFieldScalar<C>, m: PrimeFieldScalar<C>) -> Point<C> {
+const fn from_m<C: EllipticCurve>(
+    [x, y]: Point<C>,
+    pqx: PrimeFieldScalar<C>,
+    m: PrimeFieldScalar<C>,
+) -> Point<C> {
     let m2 = m.mul(m);
     let rx = m2.sub(pqx);
     let ry = m.mul(rx.sub(x)).add(y);
@@ -54,7 +57,11 @@ pub const fn add<C: EllipticCurve>(p: Point<C>, q: Point<C>) -> Point<C> {
     let [px, py] = p;
     let [qx, qy] = q;
     if px.eq(&qx) {
-        return if py.eq(&qy) { double(p) } else { PrimeFieldScalar::O };
+        return if py.eq(&qy) {
+            double(p)
+        } else {
+            PrimeFieldScalar::O
+        };
     }
     if eq(&p, &PrimeFieldScalar::O) {
         return q;
@@ -85,7 +92,7 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        field::elliptic_curve::EllipticCurve,
+        elliptic_curve::EllipticCurve,
         secp256k1::{
             point::{from_x, neg},
             scalar::{Scalar, Secp256k1P},
