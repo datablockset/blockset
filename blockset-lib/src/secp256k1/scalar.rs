@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::uint::u256x::{self, U256};
 
 use super::field::{Field, Prime};
@@ -10,11 +12,22 @@ const fn is_valid_private_key(key: U256) -> bool {
     u256x::less(&u256x::_0, &key) && is_valid(key)
 }
 
+pub trait Order: Prime {}
+
+struct CurveN<C: Curve>(PhantomData<C>);
+
+impl<C: Curve> Prime for CurveN<C> {
+    const P: U256 = C::N;
+}
+
+impl<C: Curve> Order for CurveN<C> {}
+
 pub trait Curve: Prime {
     const GX: U256;
     const GY: U256;
     const A: U256;
     const B: U256;
+    const N: U256;
 }
 
 pub struct Secp256k1P();
@@ -27,16 +40,20 @@ impl Prime for Secp256k1P {
 }
 
 impl Curve for Secp256k1P {
-    const GX: U256 = [
-        0x029BFCDB_2DCE28D9_59F2815B_16F81798,
+    const GX: U256 = u256x::be(
         0x79BE667E_F9DCBBAC_55A06295_CE870B07,
-    ];
-    const GY: U256 = [
-        0xFD17B448_A6855419_9C47D08F_FB10D4B8,
+        0x029BFCDB_2DCE28D9_59F2815B_16F81798,
+    );
+    const GY: U256 = u256x::be(
         0x483ADA77_26A3C465_5DA4FBFC_0E1108A8,
-    ];
+        0xFD17B448_A6855419_9C47D08F_FB10D4B8,
+    );
     const A: U256 = u256x::_0;
     const B: U256 = u256x::from_u128(7);
+    const N: U256 = u256x::be(
+        0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE,
+        0xBAAEDCE6_AF48A03B_BFD25E8C_D0364141,
+    );
 }
 
 // https://en.bitcoin.it/wiki/Secp256k1
