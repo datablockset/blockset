@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use crate::uint::u256x::{self, U256};
+use crate::{field::prime::Prime, uint::u256x::{self, U256}};
 
-use super::field::{Field, Prime};
+use super::field::PrimeField;
 
 const fn is_valid(key: U256) -> bool {
     u256x::less(&key, &Scalar::P)
@@ -57,9 +57,9 @@ impl Curve for Secp256k1P {
 }
 
 // https://en.bitcoin.it/wiki/Secp256k1
-pub type Scalar = Field<Secp256k1P>;
+pub type Scalar = PrimeField<Secp256k1P>;
 
-impl<P: Curve> Field<P> {
+impl<P: Curve> PrimeField<P> {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
     pub const _3_DIV_2: Self = Self::_3.div(Self::_2);
@@ -96,9 +96,9 @@ impl<P: Curve> Field<P> {
     }
 }
 
-type Vec2<P> = [Field<P>; 2];
+type Vec2<P> = [PrimeField<P>; 2];
 
-const fn mul<P: Prime>([x, y]: Vec2<P>, a: Field<P>) -> Vec2<P> {
+const fn mul<P: Prime>([x, y]: Vec2<P>, a: PrimeField<P>) -> Vec2<P> {
     [x.mul(a), y.mul(a)]
 }
 

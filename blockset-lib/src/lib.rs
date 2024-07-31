@@ -7,5 +7,6 @@ mod info;
 mod secp256k1;
 mod sha2;
 mod uint;
+mod field;
 
 pub use app::run;

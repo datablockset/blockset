@@ -3,21 +3,21 @@ mod nonce;
 mod point;
 mod scalar;
 
-use field::Field;
+use field::PrimeField;
 use point::Point;
 use scalar::{Curve, CurveN};
 
-type Order<C: Curve> = Field<CurveN<C>>;
+type Order<C: Curve> = PrimeField<CurveN<C>>;
 
-type Signature<C: Curve> = [Field<CurveN<C>>; 2];
+type Signature<C: Curve> = [PrimeField<CurveN<C>>; 2];
 
 impl<C: Curve> Order<C> {
     const fn public_key(self) -> Point<C> {
-        point::mul(Field::G, self)
+        point::mul(PrimeField::G, self)
     }
     pub const fn sign(self, z: Self) -> Signature<C> {
         let k = nonce::nonce(&self.0, &z.0);
-        let r = Self::new(point::mul(Field::G, k)[0].0);
+        let r = Self::new(point::mul(PrimeField::G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
     }
@@ -27,7 +27,7 @@ const fn verify<C: Curve>(pub_key: Point<C>, z: Order<C>, [r, s]: Signature<C>) 
     let si = s.reciprocal();
     let u1 = z.mul(si);
     let u2 = r.mul(si);
-    let p = Order::new(point::add(point::mul(Field::G, u1), point::mul(pub_key, u2))[0].0);
+    let p = Order::new(point::add(point::mul(PrimeField::G, u1), point::mul(pub_key, u2))[0].0);
     p.eq(&r)
 }
 

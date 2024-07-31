@@ -3,12 +3,12 @@ use core::panic;
 use crate::uint::u256x;
 
 use super::{
-    field::Field,
+    field::PrimeField,
     scalar::{Curve, Scalar},
     Order,
 };
 
-pub type Point<C: Curve> = [Field<C>; 2];
+pub type Point<C: Curve> = [PrimeField<C>; 2];
 
 const X: usize = 0;
 const Y: usize = 1;
@@ -19,7 +19,7 @@ const fn eq<C: Curve>(a: &Point<C>, b: &Point<C>) -> bool {
 
 // const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
 
-const fn from_m<C: Curve>([x, y]: Point<C>, pqx: Field<C>, m: Field<C>) -> Point<C> {
+const fn from_m<C: Curve>([x, y]: Point<C>, pqx: PrimeField<C>, m: PrimeField<C>) -> Point<C> {
     let m2 = m.mul(m);
     let rx = m2.sub(pqx);
     let ry = m.mul(rx.sub(x)).add(y);
@@ -34,13 +34,13 @@ const fn neg<C: Curve>([x, y]: Point<C>) -> Point<C> {
 const fn double<C: Curve>(p: Point<C>) -> Point<C> {
     let [x, y] = p;
     // if y = 0, it means either the point is `O` or `m` is not defined.
-    if y.eq(&Field::_0) {
-        return Field::O;
+    if y.eq(&PrimeField::_0) {
+        return PrimeField::O;
     }
-    from_m(p, x.mul(Field::_2), x.mul(x).div(y).mul(Field::_3_DIV_2))
+    from_m(p, x.mul(PrimeField::_2), x.mul(x).div(y).mul(PrimeField::_3_DIV_2))
 }
 
-const fn from_x<C: Curve>(x: Field<C>) -> Point<C> {
+const fn from_x<C: Curve>(x: PrimeField<C>) -> Point<C> {
     if let Some(y) = x.y() {
         return [x, y];
     }
@@ -51,19 +51,19 @@ pub const fn add<C: Curve>(p: Point<C>, q: Point<C>) -> Point<C> {
     let [px, py] = p;
     let [qx, qy] = q;
     if px.eq(&qx) {
-        return if py.eq(&qy) { double(p) } else { Field::O };
+        return if py.eq(&qy) { double(p) } else { PrimeField::O };
     }
-    if eq(&p, &Field::O) {
+    if eq(&p, &PrimeField::O) {
         return q;
     }
-    if eq(&q, &Field::O) {
+    if eq(&q, &PrimeField::O) {
         return p;
     }
     from_m(p, px.add(qx), py.sub(qy).div(px.sub(qx)))
 }
 
 pub const fn mul<C: Curve>(mut p: Point<C>, mut n: Order<C>) -> Point<C> {
-    let mut r = Field::O;
+    let mut r = PrimeField::O;
     loop {
         if n.0[0] & 1 != 0 {
             r = add(r, p);
