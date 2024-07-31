@@ -5,10 +5,11 @@ mod scalar;
 
 use field::{Field, Prime};
 use point::Point;
-use scalar::{Curve, Scalar, Secp256k1P};
+use scalar::{Curve, CurveN, Scalar, Secp256k1P};
 
 use crate::uint::u256x::{self, U256};
 
+/*
 struct Secp256k1N();
 
 impl Prime for Secp256k1N {
@@ -19,32 +20,37 @@ impl Prime for Secp256k1N {
 }
 
 type Order = Field<Secp256k1N>;
+*/
 
-type Signature = [Order; 2];
+type Order<C: Curve> = Field<CurveN<C>>;
 
-impl Order {
-    const fn public_key(self) -> Point<Secp256k1P> {
-        point::mul(Scalar::G, self)
+type Signature<C: Curve> = [Field<CurveN<C>>; 2];
+
+impl<C: Curve> Order<C> {
+    const fn public_key(self) -> Point<C> {
+        point::mul(Field::G, self)
     }
-    pub const fn sign(self, z: Order) -> Signature {
+    pub const fn sign(self, z: Self) -> Signature<C> {
         let k = nonce::nonce(&self.0, &z.0);
-        let r = Order::new(point::mul(Scalar::G, k)[0].0);
+        let r = Self::new(point::mul(Field::G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
     }
 }
 
-const fn verify(pub_key: Point<Secp256k1P>, z: Order, [r, s]: Signature) -> bool {
+const fn verify<C: Curve>(pub_key: Point<C>, z: Order<C>, [r, s]: Signature<C>) -> bool {
     let si = s.reciprocal();
     let u1 = z.mul(si);
     let u2 = r.mul(si);
-    let p = Order::new(point::add(point::mul(Scalar::G, u1), point::mul(pub_key, u2))[0].0);
+    let p = Order::new(point::add(point::mul(Field::G, u1), point::mul(pub_key, u2))[0].0);
     p.eq(&r)
 }
 
 #[cfg(test)]
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
+
+    use crate::secp256k1::scalar::Secp256k1P;
 
     use super::{verify, Order};
 
@@ -53,7 +59,7 @@ mod tests {
     fn test() {
         let f = |p, h| {
             // Alice
-            let private_key = Order::new(p);
+            let private_key = Order::<Secp256k1P>::new(p);
             let public_key = private_key.public_key();
             let hash = Order::new(h);
             let signature = private_key.sign(hash);

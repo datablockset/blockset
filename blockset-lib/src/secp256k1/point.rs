@@ -62,7 +62,7 @@ pub const fn add<C: Curve>(p: Point<C>, q: Point<C>) -> Point<C> {
     from_m(p, px.add(qx), py.sub(qy).div(px.sub(qx)))
 }
 
-pub const fn mul<C: Curve>(mut p: Point<C>, mut n: Order) -> Point<C> {
+pub const fn mul<C: Curve>(mut p: Point<C>, mut n: Order<C>) -> Point<C> {
     let mut r = Field::O;
     loop {
         if n.0[0] & 1 != 0 {
@@ -83,13 +83,13 @@ mod tests {
 
     use crate::secp256k1::{
         point::{from_x, neg},
-        scalar::{Curve, Scalar},
+        scalar::{Curve, Scalar, Secp256k1P},
         Order,
     };
 
     use super::{double, mul, Point};
 
-    const N: Order = Order::unchecked_new(Order::P);
+    const N: Order<Secp256k1P> = Order::unchecked_new(Order::<Secp256k1P>::P);
 
     #[test]
     #[wasm_bindgen_test]

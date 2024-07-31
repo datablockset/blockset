@@ -14,7 +14,7 @@ const fn is_valid_private_key(key: U256) -> bool {
 
 pub trait Order: Prime {}
 
-struct CurveN<C: Curve>(PhantomData<C>);
+pub struct CurveN<C: Curve>(PhantomData<C>);
 
 impl<C: Curve> Prime for CurveN<C> {
     const P: U256 = C::N;
