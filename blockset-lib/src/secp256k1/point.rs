@@ -15,8 +15,6 @@ const fn eq<C: EllipticCurve>(a: &Point<C>, b: &Point<C>) -> bool {
     a[X].eq(&b[X]) && a[Y].eq(&b[Y])
 }
 
-// const _3_DIV_2: Scalar = Scalar::_3.div(Scalar::_2);
-
 const fn from_m<C: EllipticCurve>(
     [x, y]: Point<C>,
     pqx: PrimeFieldScalar<C>,

@@ -1,12 +1,12 @@
 use core::fmt;
 use std::marker::PhantomData;
 
-use crate::uint::{
+use crate::{field::vec2, uint::{
     u256x::{self, U256},
     u512x,
-};
+}};
 
-use super::prime::Prime;
+use super::{prime::Prime, vec2::Vec2};
 
 pub struct PrimeFieldScalar<P: Prime>(pub U256, PhantomData<P>);
 
@@ -95,6 +95,23 @@ impl<P: Prime> PrimeFieldScalar<P> {
     //
     pub const fn mul(self, b: Self) -> Self {
         Self::unchecked_new(u512x::div_rem(u256x::mul(self.0, b.0), [Self::P, u256x::_0])[1][0])
+    }
+    pub const fn reciprocal2(mut self) -> Vec2<P> {
+        assert!(!Self::_0.eq(&self));
+        let mut a0 = Self::P;
+        let mut f0 = [Self::_1, Self::_0];
+        let mut f1 = [Self::_0, Self::_1];
+        loop {
+            if Self::_1.eq(&self) {
+                return f1;
+            }
+            let [q, a2] = u256x::div_rem(a0, self.0);
+            a0 = self.0;
+            self = Self::unchecked_new(a2);
+            let f2 = vec2::sub(f0, vec2::mul(f1, Self::unchecked_new(q)));
+            f0 = f1;
+            f1 = f2;
+        }
     }
     pub const fn reciprocal(mut self) -> Self {
         assert!(!Self::_0.eq(&self));

@@ -1,4 +1,5 @@
 pub mod elliptic_curve_n;
+pub mod scalar;
 
 use crate::{field::prime::Prime, uint::u256x::U256};
 

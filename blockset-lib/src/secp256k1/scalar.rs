@@ -4,14 +4,6 @@ use crate::{
     uint::u256x::{self, U256},
 };
 
-const fn is_valid(key: U256) -> bool {
-    u256x::less(&key, &Scalar::P)
-}
-
-const fn is_valid_private_key(key: U256) -> bool {
-    u256x::less(&u256x::_0, &key) && is_valid(key)
-}
-
 pub struct Secp256k1P();
 
 impl Prime for Secp256k1P {
@@ -41,53 +33,6 @@ impl EllipticCurve for Secp256k1P {
 // https://en.bitcoin.it/wiki/Secp256k1
 pub type Scalar = PrimeFieldScalar<Secp256k1P>;
 
-impl<P: EllipticCurve> PrimeFieldScalar<P> {
-    pub const _2: Self = Self::n(2);
-    pub const _3: Self = Self::n(3);
-    pub const _3_DIV_2: Self = Self::_3.div(Self::_2);
-    pub const A: Self = Self::new(P::A);
-    pub const B: Self = Self::new(P::B);
-    // Points:
-    pub const G: [Self; 2] = [Self::new(P::GX), Self::new(P::GY)];
-    // Note: [0, 0] should not be on a curve so we can use it as an infinity point.
-    // `b != 0`.
-    pub const O: [Self; 2] = [Self::_0, Self::_0];
-    //
-    const fn reciprocal2(mut self) -> Vec2<P> {
-        assert!(!Self::_0.eq(&self));
-        let mut a0 = Self::P;
-        let mut f0 = [Self::_1, Self::_0];
-        let mut f1 = [Self::_0, Self::_1];
-        loop {
-            if Self::_1.eq(&self) {
-                return f1;
-            }
-            let [q, a2] = u256x::div_rem(a0, self.0);
-            a0 = self.0;
-            self = Self::unchecked_new(a2);
-            let f2 = sub(f0, mul(f1, Self::unchecked_new(q)));
-            f0 = f1;
-            f1 = f2;
-        }
-    }
-    const fn y2(self) -> Self {
-        self.pow(Self::_3).add(self.mul(Self::A)).add(Self::B)
-    }
-    pub const fn y(self) -> Option<Self> {
-        self.y2().sqrt()
-    }
-}
-
-type Vec2<P> = [PrimeFieldScalar<P>; 2];
-
-const fn mul<P: Prime>([x, y]: Vec2<P>, a: PrimeFieldScalar<P>) -> Vec2<P> {
-    [x.mul(a), y.mul(a)]
-}
-
-const fn sub<P: Prime>([x0, y0]: Vec2<P>, [x1, y1]: Vec2<P>) -> Vec2<P> {
-    [x0.sub(x1), y0.sub(y1)]
-}
-
 const B: U256 = u256x::from_u128(7);
 
 struct Compressed {
@@ -104,9 +49,17 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::secp256k1::scalar::Secp256k1P;
+    use crate::{field::vec2::Vec2, secp256k1::scalar::Secp256k1P, uint::u256x::{self, U256}};
 
-    use super::{is_valid_private_key, Scalar, Vec2};
+    use super::Scalar;
+
+    const fn is_valid(key: U256) -> bool {
+        u256x::less(&key, &Scalar::P)
+    }
+
+    const fn is_valid_private_key(key: U256) -> bool {
+        u256x::less(&u256x::_0, &key) && is_valid(key)
+    }
 
     const Q2: Scalar = Scalar::new([
         25454351255596125846892804522787951607,
