@@ -51,7 +51,7 @@ mod test {
 
     use crate::{
         field::vec2::Vec2,
-        secp256k1::scalar::Secp256k1P,
+        sec::scalar::Secp256k1P,
         uint::u256x::{self, U256},
     };
 
