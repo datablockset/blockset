@@ -1,3 +1,3 @@
 pub mod prime;
-pub mod prime_field_scalar;
+pub mod scalar;
 pub mod vec2;

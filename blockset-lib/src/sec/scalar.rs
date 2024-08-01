@@ -1,6 +1,6 @@
 use crate::{
     elliptic_curve::EllipticCurve,
-    field::{prime::Prime, prime_field_scalar::PrimeFieldScalar},
+    prime_field::{prime::Prime, scalar::Scalar},
     uint::u256x::{self, U256},
 };
 
@@ -31,7 +31,7 @@ impl EllipticCurve for Secp256k1P {
 }
 
 // https://en.bitcoin.it/wiki/Secp256k1
-pub type Scalar = PrimeFieldScalar<Secp256k1P>;
+// pub type Scalar = Scalar<Secp256k1P>;
 
 const B: U256 = u256x::from_u128(7);
 
@@ -50,12 +50,12 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        field::vec2::Vec2,
+        prime_field::vec2::Vec2,
         sec::scalar::Secp256k1P,
         uint::u256x::{self, U256},
     };
 
-    use super::Scalar;
+    type Scalar = super::Scalar<Secp256k1P>;
 
     const fn is_valid(key: U256) -> bool {
         u256x::less(&key, &Scalar::P)

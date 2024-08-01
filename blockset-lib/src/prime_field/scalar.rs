@@ -2,7 +2,7 @@ use core::fmt;
 use std::marker::PhantomData;
 
 use crate::{
-    field::vec2,
+    prime_field::vec2,
     uint::{
         u256x::{self, U256},
         u512x,
@@ -11,29 +11,29 @@ use crate::{
 
 use super::{prime::Prime, vec2::Vec2};
 
-pub struct PrimeFieldScalar<P: Prime>(pub U256, PhantomData<P>);
+pub struct Scalar<P: Prime>(pub U256, PhantomData<P>);
 
-impl<P: Prime> Clone for PrimeFieldScalar<P> {
+impl<P: Prime> Clone for Scalar<P> {
     fn clone(&self) -> Self {
         Self::unchecked_new(self.0)
     }
 }
 
-impl<P: Prime> PartialEq for PrimeFieldScalar<P> {
+impl<P: Prime> PartialEq for Scalar<P> {
     fn eq(&self, other: &Self) -> bool {
         self.eq(other)
     }
 }
 
-impl<P: Prime> fmt::Debug for PrimeFieldScalar<P> {
+impl<P: Prime> fmt::Debug for Scalar<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl<P: Prime> Copy for PrimeFieldScalar<P> {}
+impl<P: Prime> Copy for Scalar<P> {}
 
-impl<P: Prime> PrimeFieldScalar<P> {
+impl<P: Prime> Scalar<P> {
     pub const P: U256 = P::P;
     pub const OFFSET: u32 = u256x::leading_zeros(Self::P);
     pub const OFFSET8: u32 = Self::OFFSET >> 3 << 3;

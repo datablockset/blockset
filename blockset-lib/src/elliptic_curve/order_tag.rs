@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{field::prime::Prime, uint::u256x::U256};
+use crate::{prime_field::prime::Prime, uint::u256x::U256};
 
 use super::EllipticCurve;
 

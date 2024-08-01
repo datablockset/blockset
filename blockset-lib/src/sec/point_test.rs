@@ -8,8 +8,11 @@ mod tests {
             point::{double, from_x, mul, neg, Point},
             EllipticCurve,
         },
-        sec::scalar::{Scalar, Secp256k1P},
+        prime_field::scalar,
+        sec::scalar::Secp256k1P,
     };
+
+    type Scalar = scalar::Scalar<Secp256k1P>;
 
     const N: Order<Secp256k1P> = Order::unchecked_new(Order::<Secp256k1P>::P);
 

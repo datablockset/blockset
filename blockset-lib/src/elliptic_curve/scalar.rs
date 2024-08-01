@@ -1,8 +1,8 @@
-use crate::field::prime_field_scalar::PrimeFieldScalar;
+use crate::prime_field::scalar::Scalar;
 
 use super::EllipticCurve;
 
-impl<P: EllipticCurve> PrimeFieldScalar<P> {
+impl<P: EllipticCurve> Scalar<P> {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
     pub const _3_DIV_2: Self = Self::_3.div(Self::_2);
