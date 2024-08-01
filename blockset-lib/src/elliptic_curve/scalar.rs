@@ -1,4 +1,7 @@
-use crate::{field::{prime::Prime, prime_field_scalar::PrimeFieldScalar}, uint::u256x};
+use crate::{
+    field::{prime::Prime, prime_field_scalar::PrimeFieldScalar},
+    uint::u256x,
+};
 
 use super::EllipticCurve;
 

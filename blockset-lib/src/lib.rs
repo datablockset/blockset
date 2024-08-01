@@ -6,9 +6,9 @@ mod field;
 mod forest;
 mod hmac;
 mod info;
+mod nonce;
 mod secp256k1;
 mod sha2;
 mod uint;
-mod nonce;
 
 pub use app::run;

@@ -1,10 +1,13 @@
 use core::fmt;
 use std::marker::PhantomData;
 
-use crate::{field::vec2, uint::{
-    u256x::{self, U256},
-    u512x,
-}};
+use crate::{
+    field::vec2,
+    uint::{
+        u256x::{self, U256},
+        u512x,
+    },
+};
 
 use super::{prime::Prime, vec2::Vec2};
 

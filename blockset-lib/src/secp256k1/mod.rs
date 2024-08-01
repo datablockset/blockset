@@ -1,45 +1,14 @@
 mod point;
 mod scalar;
 
-use point::Point;
-
-use crate::{
-    elliptic_curve::{elliptic_curve_n::EllipticCurveN, EllipticCurve},
-    field::prime_field_scalar::PrimeFieldScalar, nonce::nonce,
-};
-
-type Order<C: EllipticCurve> = PrimeFieldScalar<EllipticCurveN<C>>;
-
-type Signature<C: EllipticCurve> = [PrimeFieldScalar<EllipticCurveN<C>>; 2];
-
-impl<C: EllipticCurve> Order<C> {
-    const fn public_key(self) -> Point<C> {
-        point::mul(PrimeFieldScalar::G, self)
-    }
-    pub const fn sign(self, z: Self) -> Signature<C> {
-        let k = nonce(&self.0, &z.0);
-        let r = Self::new(point::mul(PrimeFieldScalar::G, k)[0].0);
-        let s = z.add(r.mul(self)).div(k);
-        [r, s]
-    }
-}
-
-const fn verify<C: EllipticCurve>(pub_key: Point<C>, z: Order<C>, [r, s]: Signature<C>) -> bool {
-    let si = s.reciprocal();
-    let u1 = z.mul(si);
-    let u2 = r.mul(si);
-    let p =
-        Order::new(point::add(point::mul(PrimeFieldScalar::G, u1), point::mul(pub_key, u2))[0].0);
-    p.eq(&r)
-}
-
 #[cfg(test)]
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::secp256k1::scalar::Secp256k1P;
-
-    use super::{verify, Order};
+    use crate::{
+        elliptic_curve::order::{verify, Order},
+        secp256k1::scalar::Secp256k1P,
+    };
 
     #[test]
     #[wasm_bindgen_test]

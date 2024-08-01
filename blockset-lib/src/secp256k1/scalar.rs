@@ -49,7 +49,11 @@ struct Uncompressed {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{field::vec2::Vec2, secp256k1::scalar::Secp256k1P, uint::u256x::{self, U256}};
+    use crate::{
+        field::vec2::Vec2,
+        secp256k1::scalar::Secp256k1P,
+        uint::u256x::{self, U256},
+    };
 
     use super::Scalar;
 

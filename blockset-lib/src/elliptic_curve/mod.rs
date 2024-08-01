@@ -1,4 +1,6 @@
-pub mod elliptic_curve_n;
+pub mod order;
+pub mod order_tag;
+pub mod point;
 pub mod scalar;
 
 use crate::{field::prime::Prime, uint::u256x::U256};
