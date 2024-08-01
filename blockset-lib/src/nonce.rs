@@ -67,10 +67,7 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        field::prime::Prime,
-        secp256k1::nonce::nonce,
-        sha2::{sha256::SHA256, state::State},
-        uint::u256x::{self, U256},
+        field::prime::Prime, nonce::nonce, sha2::{sha256::SHA256, state::State}, uint::u256x::{self, U256}
     };
 
     struct Sect163k1();

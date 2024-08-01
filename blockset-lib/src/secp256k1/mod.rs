@@ -1,4 +1,3 @@
-mod nonce;
 mod point;
 mod scalar;
 
@@ -6,7 +5,7 @@ use point::Point;
 
 use crate::{
     elliptic_curve::{elliptic_curve_n::EllipticCurveN, EllipticCurve},
-    field::prime_field_scalar::PrimeFieldScalar,
+    field::prime_field_scalar::PrimeFieldScalar, nonce::nonce,
 };
 
 type Order<C: EllipticCurve> = PrimeFieldScalar<EllipticCurveN<C>>;
@@ -18,7 +17,7 @@ impl<C: EllipticCurve> Order<C> {
         point::mul(PrimeFieldScalar::G, self)
     }
     pub const fn sign(self, z: Self) -> Signature<C> {
-        let k = nonce::nonce(&self.0, &z.0);
+        let k = nonce(&self.0, &z.0);
         let r = Self::new(point::mul(PrimeFieldScalar::G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
