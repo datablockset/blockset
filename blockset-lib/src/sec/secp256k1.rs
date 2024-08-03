@@ -1,19 +1,19 @@
 use crate::{
     elliptic_curve::EllipticCurve,
-    prime_field::{prime::Prime, scalar::Scalar},
+    prime_field::prime::Prime,
     uint::u256x::{self, U256},
 };
 
-pub struct Secp256k1P();
+pub struct Secp256k1();
 
-impl Prime for Secp256k1P {
+impl Prime for Secp256k1 {
     const P: U256 = u256x::be(
         0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF,
         0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F,
     );
 }
 
-impl EllipticCurve for Secp256k1P {
+impl EllipticCurve for Secp256k1 {
     const GX: U256 = u256x::be(
         0x79BE667E_F9DCBBAC_55A06295_CE870B07,
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
@@ -50,12 +50,10 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        prime_field::vec2::Vec2,
-        sec::scalar::Secp256k1P,
-        uint::u256x::{self, U256},
+        elliptic_curve::{order::Order, point::{double, from_x, mul, neg, Point}, EllipticCurve}, prime_field::{self, vec2::Vec2}, sec::secp256k1::Secp256k1, uint::u256x::{self, U256}
     };
 
-    type Scalar = super::Scalar<Secp256k1P>;
+    type Scalar = prime_field::scalar::Scalar<Secp256k1>;
 
     const fn is_valid(key: U256) -> bool {
         u256x::less(&key, &Scalar::P)
@@ -435,7 +433,7 @@ mod test {
             let v = s.reciprocal2();
             assert_eq!(v[1].mul(s), Scalar::_1);
         }
-        fn f(s: Scalar, v: Vec2<Secp256k1P>) {
+        fn f(s: Scalar, v: Vec2<Secp256k1>) {
             assert_eq!(s.reciprocal2(), v);
             assert_eq!(v[1].mul(s), Scalar::_1);
         }
@@ -451,5 +449,75 @@ mod test {
         x(Scalar::new([7, 3]));
         x(Scalar::new([8, u128::MAX]));
         x(Scalar::new([Scalar::P[0] - 9, u128::MAX]));
+    }
+
+    const N: Order<Secp256k1> = Order::unchecked_new(Order::<Secp256k1>::P);
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_mul_o() {
+        assert_eq!(mul(Scalar::O, Order::_0), Scalar::O);
+        assert_eq!(mul(Scalar::O, Order::_1), Scalar::O);
+        assert_eq!(mul(Scalar::O, Order::n(2)), Scalar::O);
+        assert_eq!(mul(Scalar::O, Order::new([0, 1])), Scalar::O);
+        assert_eq!(mul(Scalar::O, N), Scalar::O);
+    }
+
+    fn check<P: EllipticCurve>([x, y]: Point<P>) {
+        assert_eq!(x.y().unwrap().abs(), y.abs());
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_double() {
+        let p = from_x(Scalar::_1);
+        let p1 = double(p);
+        let p2 = double(p1);
+        let p3 = double(p2);
+    }
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_mul_1() {
+        let g = |p| {
+            let pn = neg(p);
+            assert_eq!(mul(p, Order::_0), Scalar::O);
+            assert_eq!(mul(p, Order::_1), p);
+            assert_eq!(mul(p, N), Scalar::O);
+            assert_eq!(mul(p, N.sub(Order::_1)), pn);
+            //
+            let f = |s| {
+                let r = mul(p, s);
+                check(r);
+                let rn = mul(pn, s);
+                check(rn);
+                assert_ne!(r, Scalar::O);
+                assert_ne!(r, p);
+                assert_ne!(r, pn);
+                assert_ne!(rn, Scalar::O);
+                assert_ne!(rn, p);
+                assert_ne!(rn, pn);
+                assert_ne!(r, rn);
+                assert_eq!(r, neg(rn));
+            };
+            f(Order::n(2));
+            f(Order::new([3, 0]));
+            f(Order::new([0, 1]));
+            f(Order::new([1, 1]));
+            f(Order::new([0, 2]));
+            f(Order::new([2, 2]));
+            f(Order::new([0, 3]));
+            f(Order::new([3, 3]));
+        };
+        let s = |x| g(from_x(x));
+        // s(Scalar::_0);
+        s(Scalar::_1);
+        s(Scalar::_2);
+        s(Scalar::_3);
+        s(Scalar::n(4));
+        // g(Scalar::n(5));
+        s(Scalar::n(6));
+        // g(Scalar::n(7));
+        g(Scalar::G);
     }
 }
