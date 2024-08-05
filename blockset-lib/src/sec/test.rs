@@ -3,7 +3,7 @@
 use crate::{
     elliptic_curve::{
         order::Order,
-        point::{double, from_x, mul},
+        point::{double, from_x, mul, neg, Point},
         EllipticCurve,
     },
     prime_field::{scalar::Scalar, vec2::Vec2},
@@ -161,6 +161,41 @@ pub fn gen_test_double<C: EllipticCurve>(x: Scalar<C>) {
     let p3 = double(p2);
 }
 
+pub fn point_check<P: EllipticCurve>([x, y]: Point<P>) {
+    assert_eq!(x.y().unwrap().abs(), y.abs());
+}
+
+pub fn test_point_mul<C: EllipticCurve>(p: Point<C>) {
+    let pn = neg(p);
+    assert_eq!(mul(p, Order::_0), Scalar::O);
+    assert_eq!(mul(p, Order::_1), p);
+    assert_eq!(mul(p, n()), Scalar::O);
+    assert_eq!(mul(p, n().sub(Order::_1)), pn);
+    //
+    let f = |s| {
+        let r = mul(p, s);
+        point_check(r);
+        let rn = mul(pn, s);
+        point_check(rn);
+        assert_ne!(r, Scalar::O);
+        assert_ne!(r, p);
+        assert_ne!(r, pn);
+        assert_ne!(rn, Scalar::O);
+        assert_ne!(rn, p);
+        assert_ne!(rn, pn);
+        assert_ne!(r, rn);
+        assert_eq!(r, neg(rn));
+    };
+    f(Order::n(2));
+    f(Order::new([3, 0]));
+    f(Order::new([0, 1]));
+    f(Order::new([1, 1]));
+    f(Order::new([0, 2]));
+    f(Order::new([2, 2]));
+    f(Order::new([0, 3]));
+    f(Order::new([3, 3]));
+}
+
 pub fn gen_test<C: EllipticCurve>() {
     assert_eq!(Scalar::<C>::G[0].y2(), Scalar::G[1].mul(Scalar::G[1]));
     assert_eq!(Scalar::<C>::G[0].y().unwrap(), Scalar::G[1]);
@@ -180,4 +215,5 @@ pub fn gen_test<C: EllipticCurve>() {
     // point
     test_mul_o::<C>();
     gen_test_double::<C>(Scalar::<C>::G[0]);
+    //test_point_mul(Scalar::<C>::G);
 }

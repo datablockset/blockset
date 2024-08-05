@@ -45,7 +45,7 @@ mod test {
         prime_field::{self, vec2::Vec2},
         sec::{
             p256k1::P256k1,
-            test::{gen_test, gen_test_double},
+            test::{gen_test, gen_test_double, point_check, test_point_mul},
         },
         uint::u256x::{self, U256},
     };
@@ -319,10 +319,6 @@ mod test {
 
     const N: Order<P256k1> = Order::unchecked_new(Order::<P256k1>::P);
 
-    fn check<P: EllipticCurve>([x, y]: Point<P>) {
-        assert_eq!(x.y().unwrap().abs(), y.abs());
-    }
-
     #[test]
     #[wasm_bindgen_test]
     fn test_double() {
@@ -332,37 +328,7 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_mul_1() {
-        let g = |p| {
-            let pn = neg(p);
-            assert_eq!(mul(p, Order::_0), Scalar::O);
-            assert_eq!(mul(p, Order::_1), p);
-            assert_eq!(mul(p, N), Scalar::O);
-            assert_eq!(mul(p, N.sub(Order::_1)), pn);
-            //
-            let f = |s| {
-                let r = mul(p, s);
-                check(r);
-                let rn = mul(pn, s);
-                check(rn);
-                assert_ne!(r, Scalar::O);
-                assert_ne!(r, p);
-                assert_ne!(r, pn);
-                assert_ne!(rn, Scalar::O);
-                assert_ne!(rn, p);
-                assert_ne!(rn, pn);
-                assert_ne!(r, rn);
-                assert_eq!(r, neg(rn));
-            };
-            f(Order::n(2));
-            f(Order::new([3, 0]));
-            f(Order::new([0, 1]));
-            f(Order::new([1, 1]));
-            f(Order::new([0, 2]));
-            f(Order::new([2, 2]));
-            f(Order::new([0, 3]));
-            f(Order::new([3, 3]));
-        };
-        let s = |x| g(from_x(x));
+        let s = |x| test_point_mul(from_x(x));
         // s(Scalar::_0);
         s(Scalar::_1);
         s(Scalar::_2);
@@ -371,6 +337,6 @@ mod test {
         // g(Scalar::n(5));
         s(Scalar::n(6));
         // g(Scalar::n(7));
-        g(Scalar::G);
+        test_point_mul(Scalar::G);
     }
 }
