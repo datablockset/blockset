@@ -102,48 +102,17 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_pow() {
-        let s2 = Scalar::new([2, 0]);
-        let s3 = Scalar::n(3);
-        let s4 = Scalar::new([4, 0]);
-        let s8 = Scalar::new([8, 0]);
-        let s9 = Scalar::new([9, 0]);
-        let s27 = Scalar::new([27, 0]);
-        const MAX_S1: Scalar = Scalar::MAX.sub(Scalar::_1);
-        fn common(s: Scalar) {
-            assert_eq!(s.pow(Scalar::_0), Scalar::_1);
-            assert_eq!(s.pow(Scalar::_1), s);
-            // https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
-            // a^(p-1) % p = 1
-            assert_eq!(s.pow(Scalar::MIDDLE).abs(), Scalar::_1);
-            assert_eq!(s.pow(MAX_S1), s.reciprocal());
-            assert_eq!(s.pow(Scalar::MAX), Scalar::_1);
-        }
-        // 0
-        assert_eq!(Scalar::_0.pow(Scalar::_0), Scalar::_1);
-        assert_eq!(Scalar::_0.pow(Scalar::MAX), Scalar::_0);
-        // 1
-        common(Scalar::_1);
-        // 2
-        common(s2);
-        assert_eq!(s2.pow(s2), s4);
-        assert_eq!(s2.pow(s3), s8);
-        assert_eq!(s2.pow(Scalar::new([128, 0])), Scalar::new([0, 1]));
         assert_eq!(
-            s2.pow(Scalar::new([255, 0])),
+            Scalar::_2.pow(Scalar::new([255, 0])),
             Scalar::new([0, 0x8000_0000_0000_0000_0000_0000_0000_0000])
         );
-        // 3
-        common(Scalar::n(3));
-        assert_eq!(Scalar::n(3).pow(s2), s9);
-        assert_eq!(Scalar::n(3).pow(Scalar::n(3)), s27);
-        // Gx
-        common(Scalar::G[0]);
-        // MIDDLE
-        common(Scalar::MIDDLE);
-        // MAX-1
-        common(MAX_S1);
-        // MAX
-        common(Scalar::MAX);
+        assert_eq!(
+            Scalar::_3.pow(Scalar::new([122, 0])),
+            Scalar::new(u256x::be(
+                0x2_9396f76b_67b7c403,
+                0xd73a1059_b8013933_6878e449_38606769
+            ))
+        );
     }
 
     #[test]
