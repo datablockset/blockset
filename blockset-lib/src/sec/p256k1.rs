@@ -38,9 +38,7 @@ mod test {
 
     use crate::{
         elliptic_curve::{
-            order::Order,
-            point::{double, from_x, mul, neg, Point},
-            EllipticCurve,
+            order::Order, point::{double, from_x, mul, neg, Point}, scalar, EllipticCurve
         },
         prime_field::{self, vec2::Vec2},
         sec::p256k1::P256k1,
