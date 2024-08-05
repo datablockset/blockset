@@ -4,16 +4,18 @@ use crate::{
     uint::u256x::{self, U256},
 };
 
-pub struct Secp256k1();
+// https://en.bitcoin.it/wiki/Secp256k1
+// https://neuromancer.sk/std/secg/secp256k1
+pub struct P256k1();
 
-impl Prime for Secp256k1 {
+impl Prime for P256k1 {
     const P: U256 = u256x::be(
         0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF,
         0xFFFFFFFF_FFFFFFFF_FFFFFFFE_FFFFFC2F,
     );
 }
 
-impl EllipticCurve for Secp256k1 {
+impl EllipticCurve for P256k1 {
     const GX: U256 = u256x::be(
         0x79BE667E_F9DCBBAC_55A06295_CE870B07,
         0x029BFCDB_2DCE28D9_59F2815B_16F81798,
@@ -30,30 +32,22 @@ impl EllipticCurve for Secp256k1 {
     );
 }
 
-// https://en.bitcoin.it/wiki/Secp256k1
-// pub type Scalar = Scalar<Secp256k1P>;
-
-const B: U256 = u256x::from_u128(7);
-
-struct Compressed {
-    parity: bool,
-    x: U256,
-}
-
-struct Uncompressed {
-    x: U256,
-    y: U256,
-}
-
 #[cfg(test)]
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        elliptic_curve::{order::Order, point::{double, from_x, mul, neg, Point}, EllipticCurve}, prime_field::{self, vec2::Vec2}, sec::secp256k1::Secp256k1, uint::u256x::{self, U256}
+        elliptic_curve::{
+            order::Order,
+            point::{double, from_x, mul, neg, Point},
+            EllipticCurve,
+        },
+        prime_field::{self, vec2::Vec2},
+        sec::p256k1::P256k1,
+        uint::u256x::{self, U256},
     };
 
-    type Scalar = prime_field::scalar::Scalar<Secp256k1>;
+    type Scalar = prime_field::scalar::Scalar<P256k1>;
 
     const fn is_valid(key: U256) -> bool {
         u256x::less(&key, &Scalar::P)
@@ -433,7 +427,7 @@ mod test {
             let v = s.reciprocal2();
             assert_eq!(v[1].mul(s), Scalar::_1);
         }
-        fn f(s: Scalar, v: Vec2<Secp256k1>) {
+        fn f(s: Scalar, v: Vec2<P256k1>) {
             assert_eq!(s.reciprocal2(), v);
             assert_eq!(v[1].mul(s), Scalar::_1);
         }
@@ -451,7 +445,7 @@ mod test {
         x(Scalar::new([Scalar::P[0] - 9, u128::MAX]));
     }
 
-    const N: Order<Secp256k1> = Order::unchecked_new(Order::<Secp256k1>::P);
+    const N: Order<P256k1> = Order::unchecked_new(Order::<P256k1>::P);
 
     #[test]
     #[wasm_bindgen_test]

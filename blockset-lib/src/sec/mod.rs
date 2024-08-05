@@ -8,7 +8,8 @@ use crate::{
     prime_field::scalar::Scalar,
 };
 
-mod secp256k1;
+mod p192r1;
+mod p256k1;
 
 type Signature<C> = [Order<C>; 2];
 
@@ -42,7 +43,7 @@ mod tests {
 
     use crate::{
         elliptic_curve::order::Order,
-        sec::{secp256k1::Secp256k1, verify},
+        sec::{p256k1::P256k1, verify},
     };
 
     #[test]
@@ -50,7 +51,7 @@ mod tests {
     fn test() {
         let f = |p, h| {
             // Alice
-            let private_key = Order::<Secp256k1>::new(p);
+            let private_key = Order::<P256k1>::new(p);
             let public_key = private_key.public_key();
             let hash = Order::new(h);
             let signature = private_key.sign(hash);
