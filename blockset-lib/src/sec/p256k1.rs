@@ -41,7 +41,7 @@ mod test {
             order::Order, point::{double, from_x, mul, neg, Point}, scalar, EllipticCurve
         },
         prime_field::{self, vec2::Vec2},
-        sec::p256k1::P256k1,
+        sec::{p256k1::P256k1, test::gen_test},
         uint::u256x::{self, U256},
     };
 
@@ -63,8 +63,7 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_y() {
-        assert_eq!(Scalar::G[0].y2(), Scalar::G[1].mul(Scalar::G[1]));
-        assert_eq!(Scalar::G[0].y().unwrap(), Scalar::G[1]);
+        gen_test::<P256k1>();
         fn check(lo: u128, hi: u128, some: bool) {
             assert_eq!(Scalar::new([lo, hi]).y().is_some(), some);
         }
@@ -91,50 +90,13 @@ mod test {
     #[test]
     #[wasm_bindgen_test]
     fn test_sqrt() {
-        assert_eq!(Scalar::_1.sqrt(), Some(Scalar::_1));
         assert_eq!(Scalar::n(2).sqrt(), Some(Q2));
         assert_eq!(Scalar::n(3).sqrt(), None);
-        assert_eq!(Scalar::n(4).sqrt(), Some(Scalar::n(2)));
         assert_eq!(Scalar::n(5).sqrt(), None);
         assert_eq!(Scalar::n(6).sqrt(), None);
         // So $y^2 = x^3 + 7$ is not defined when $x = 0$.
         assert_eq!(Scalar::n(7).sqrt(), None);
         assert_eq!(Scalar::new([8, 0]).sqrt(), Some(Q2.mul(Scalar::n(2))));
-        assert_eq!(Scalar::n(9).sqrt(), Some(Scalar::n(3).neg()));
-        assert_eq!(Scalar::new([16, 0]).sqrt(), Some(Scalar::new([4, 0])));
-        assert_eq!(Scalar::new([25, 0]).sqrt(), Some(Scalar::new([5, 0]).neg()));
-        assert_eq!(Scalar::new([36, 0]).sqrt(), Some(Scalar::new([6, 0]).neg()));
-        assert_eq!(Scalar::new([49, 0]).sqrt(), Some(Scalar::new([7, 0]).neg()));
-        assert_eq!(Scalar::new([64, 0]).sqrt(), Some(Scalar::new([8, 0])));
-        assert_eq!(Scalar::new([81, 0]).sqrt(), Some(Scalar::new([9, 0])));
-        assert_eq!(
-            Scalar::new([100, 0]).sqrt(),
-            Some(Scalar::new([10, 0]).neg())
-        );
-        assert_eq!(Scalar::new([121, 0]).sqrt(), Some(Scalar::new([11, 0])));
-        assert_eq!(
-            Scalar::new([144, 0]).sqrt(),
-            Some(Scalar::new([12, 0]).neg())
-        );
-        assert_eq!(
-            Scalar::new([169, 0]).sqrt(),
-            Some(Scalar::new([13, 0]).neg())
-        );
-        assert_eq!(
-            Scalar::new([196, 0]).sqrt(),
-            Some(Scalar::new([14, 0]).neg())
-        );
-        assert_eq!(Scalar::new([225, 0]).sqrt(), Some(Scalar::new([15, 0])));
-        fn check(c: Scalar) {
-            let c2 = c.mul(c);
-            let s = c2.sqrt().unwrap();
-            assert_eq!(c, s.abs());
-        }
-        for i in 1..1000 {
-            check(Scalar::new([i, 0]));
-        }
-        check(Scalar::G[0]);
-        check(Scalar::MIDDLE);
     }
 
     #[test]

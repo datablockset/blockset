@@ -39,14 +39,9 @@ impl EllipticCurve for P192r1 {
 mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{elliptic_curve::EllipticCurve, prime_field::scalar::Scalar};
+    use crate::sec::test::gen_test;
 
     use super::P192r1;
-
-    fn gen_test<C: EllipticCurve>() {
-        assert_eq!(Scalar::<C>::G[0].y2(), Scalar::G[1].mul(Scalar::G[1]));
-        assert_eq!(Scalar::<C>::G[0].y().unwrap(), Scalar::G[1]);
-    }
 
     #[test]
     #[wasm_bindgen_test]
