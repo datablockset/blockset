@@ -12,17 +12,17 @@ struct VK {
     k: U256,
 }
 
-pub const fn nonce<P: Prime>(pk: &U256, m: &U256) -> Scalar<P> {
+pub const fn nonce<P: Prime>(pk: &Scalar<P>, m: &Scalar<P>) -> Scalar<P> {
     let p = Scalar::<P>::P;
     let offset = Scalar::<P>::OFFSET as i32;
-    const fn c<P: Prime>(mut v: U256) -> BeChunk {
-        let p = Scalar::<P>::P;
-        if !u256x::less(&v, &p) {
-            v = u256x::wsub(v, p);
-        }
+    const fn c<P: Prime>(v: &Scalar<P>) -> BeChunk {
+        //let p = Scalar::<P>::P;
+        //if !u256x::less(&v, &p) {
+        //    v = u256x::wsub(v, p);
+        //}
         let offset8 = Scalar::<P>::OFFSET8;
         BeChunk::new(
-            [u256x::_0, u256x::shl(&v, offset8 as i32)],
+            [u256x::_0, u256x::shl(&v.0, offset8 as i32)],
             256 - offset8 as u16,
         )
     }
@@ -47,8 +47,8 @@ pub const fn nonce<P: Prime>(pk: &U256, m: &U256) -> Scalar<P> {
         vk.v = g(&vk);
         vk
     }
-    let pkc = c::<P>(*pk);
-    let mc = c::<P>(*m);
+    let pkc = c::<P>(pk);
+    let mc = c::<P>(m);
     vk = f(&pkc, &mc, vk, 0x00);
     vk = f(&pkc, &mc, vk, 0x01);
     loop {
@@ -68,7 +68,7 @@ mod tests {
 
     use crate::{
         nonce::nonce,
-        prime_field::prime::Prime,
+        prime_field::{prime::Prime, scalar::Scalar},
         sha2::{sha256::SHA256, state::State},
         uint::u256x::{self, U256},
     };
@@ -86,7 +86,7 @@ mod tests {
         const X: U256 = u256x::be(0x00_9A4D6792, 0x295A7F73_0FC3F2B4_9CBC0F62_E862272F);
         const UX: U256 = u256x::be(0x07_9AEE090D, 0xB05EC252_D5CB4452_F356BE19_8A4FF96F);
         const UY: U256 = u256x::be(0x07_82E29634, 0xDDC9A31E_F40386E8_96BAA18B_53AFA5A3);
-        let mut h1 = State::new(SHA256).push_array(b"sample").end();
+        let h1 = State::new(SHA256).push_array(b"sample").end();
         assert_eq!(
             h1,
             u256x::be(
@@ -94,10 +94,7 @@ mod tests {
                 0x1A831D02_68E98915_62113D8A_62ADD1BF
             )
         );
-        const LEN: u16 = 163;
-        const I: i32 = 256 - LEN as i32;
-        h1 = u256x::shr(&h1, I);
-        let n = nonce::<Sect163k1>(&X, &h1);
+        let n = nonce::<Sect163k1>(&Scalar::new(X), &Scalar::from_be(h1));
         assert_eq!(
             n.0,
             u256x::be(0x02_3AF4074C, 0x90A02B3F_E61D286D_5C87F425_E6BDD81B)

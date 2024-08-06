@@ -329,14 +329,10 @@ mod test {
     #[wasm_bindgen_test]
     fn test_mul_1() {
         let s = |x| test_point_mul(from_x(x));
-        // s(Scalar::_0);
         s(Scalar::_1);
         s(Scalar::_2);
         s(Scalar::_3);
         s(Scalar::n(4));
-        // g(Scalar::n(5));
         s(Scalar::n(6));
-        // g(Scalar::n(7));
-        //test_point_mul(Scalar::G);
     }
 }

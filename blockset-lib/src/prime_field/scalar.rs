@@ -60,6 +60,9 @@ impl<P: Prime> Scalar<P> {
         };
         Self::unchecked_new(num)
     }
+    pub const fn from_be(num: U256) -> Self {
+        Self::new(u256x::shr(&num, Self::OFFSET as i32))
+    }
     #[inline(always)]
     pub const fn n(num: u128) -> Self {
         Self::new([num, 0])

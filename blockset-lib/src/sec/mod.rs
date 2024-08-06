@@ -19,7 +19,7 @@ impl<C: EllipticCurve> Order<C> {
         point::mul(Scalar::G, self)
     }
     pub const fn sign(self, z: Self) -> Signature<C> {
-        let k = nonce(&self.0, &z.0);
+        let k = nonce(&self, &z);
         let r = Self::new(point::mul(Scalar::G, k)[0].0);
         let s = z.add(r.mul(self)).div(k);
         [r, s]
