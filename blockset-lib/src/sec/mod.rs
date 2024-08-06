@@ -44,8 +44,35 @@ mod tests {
 
     use crate::{
         elliptic_curve::order::Order,
+        prime_field::scalar::Scalar,
         sec::{p256k1::P256k1, verify},
+        uint::u256x,
     };
+
+    use super::p192r1::P192r1;
+
+    #[test]
+    #[wasm_bindgen_test]
+    fn test_x() {
+        let x = Order::<P192r1>::new(u256x::be(
+            0x6FAB0349_34E4C0FC,
+            0x9AE67F5B_5659A9D7_D1FEFD18_7EE09FD4,
+        ));
+        let public_key = x.public_key();
+        assert_eq!(
+            public_key,
+            [
+                Scalar::new(u256x::be(
+                    0xAC2C77F5_29F91689,
+                    0xFEA0EA5E_FEC7F210_D8EEA0B9_E047ED56
+                )),
+                Scalar::new(u256x::be(
+                    0x3BC723E5_7670BD48,
+                    0x87EBC732C523063D0A7C957BC97C1C43
+                ))
+            ]
+        );
+    }
 
     #[test]
     #[wasm_bindgen_test]
