@@ -16,10 +16,6 @@ pub const fn nonce<P: Prime>(pk: &Scalar<P>, m: &Scalar<P>) -> Scalar<P> {
     let p = Scalar::<P>::P;
     let offset = Scalar::<P>::OFFSET as i32;
     const fn c<P: Prime>(v: &Scalar<P>) -> BeChunk {
-        //let p = Scalar::<P>::P;
-        //if !u256x::less(&v, &p) {
-        //    v = u256x::wsub(v, p);
-        //}
         let offset8 = Scalar::<P>::OFFSET8;
         BeChunk::new(
             [u256x::_0, u256x::shl(&v.0, offset8 as i32)],
