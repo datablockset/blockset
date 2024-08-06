@@ -47,7 +47,7 @@ mod tests {
         elliptic_curve::{order::Order, EllipticCurve},
         nonce::nonce,
         prime_field::scalar::Scalar,
-        sec::{p256k1::P256k1, verify},
+        sec::{p224r1::P224r1, p256k1::P256k1, verify},
         sha2::{sha256::SHA256, state::State},
         uint::u256x::{self, U256},
     };
@@ -92,6 +92,44 @@ mod tests {
             u256x::be(0x5C4CE89C_F56D9E7C, 0x77C85853_39B006B9_7B5F0680_B4306C6C),
             u256x::be(0x3A718BD8_B4926C3B, 0x52EE6BBE_67EF79B1_8CB6EB62_B1AD97AE),
             u256x::be(0x5662E684_8A4A19B1, 0xF1AE2F72_ACD4B8BB_E50F1EAC_65D9124F),
+        );
+        g::<P224r1>(
+            u256x::be(
+                0xF220266E_1105BFE3_083E03EC,
+                0x7A3A6546_51F45E37_167E8860_0BF257C1,
+            ),
+            u256x::be(
+                0x00CF08DA_5AD719E4_2707FA43,
+                0x1292DEA1_1244D64F_C51610D9_4B130D6C,
+            ),
+            u256x::be(
+                0xEEAB6F3D_EBE455E3_DBF85416,
+                0xF7030CBD_94F34F2D_6F232C69_F3C1385A,
+            ),
+            u256x::be(
+                0xAD3029E0_278F8064_3DE33917,
+                0xCE6908C7_0A8FF50A_411F06E4_1DEDFCDC,
+            ),
+            u256x::be(
+                0x61AA3DA0_10E8E840_6C656BC4,
+                0x77A7A718_9895E7E8_40CDFE8F_F42307BA,
+            ),
+            u256x::be(
+                0xBC814050_DAB5D237_70879494,
+                0xF9E0A680_DC1AF716_1991BDE6_92B10101,
+            ),
+            u256x::be(
+                0xFF86F579_24DA248D_6E44E815,
+                0x4EB69F0A_E2AEBAEE_9931D0B5_A969F904,
+            ),
+            u256x::be(
+                0xAD04DDE8_7B84747A_243A631E,
+                0xA47A1BA6_D1FAA059_149AD244_0DE6FBA6,
+            ),
+            u256x::be(
+                0x178D49B1_AE90E3D8_B629BE3D,
+                0xB5683915_F4E8C99F_DF6E666C_F37ADCFD,
+            ),
         );
     }
 
