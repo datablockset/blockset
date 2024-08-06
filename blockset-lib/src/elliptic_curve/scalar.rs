@@ -5,7 +5,6 @@ use super::EllipticCurve;
 impl<P: EllipticCurve> Scalar<P> {
     pub const _2: Self = Self::n(2);
     pub const _3: Self = Self::n(3);
-    pub const _3_DIV_2: Self = Self::_3.div(Self::_2);
     pub const A: Self = Self::new(P::A);
     pub const B: Self = Self::new(P::B);
     // Points:

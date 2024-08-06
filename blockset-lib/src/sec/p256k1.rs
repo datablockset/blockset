@@ -337,6 +337,6 @@ mod test {
         // g(Scalar::n(5));
         s(Scalar::n(6));
         // g(Scalar::n(7));
-        test_point_mul(Scalar::G);
+        //test_point_mul(Scalar::G);
     }
 }

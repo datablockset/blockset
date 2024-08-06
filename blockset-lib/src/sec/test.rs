@@ -215,5 +215,6 @@ pub fn gen_test<C: EllipticCurve>() {
     // point
     test_mul_o::<C>();
     gen_test_double::<C>(Scalar::<C>::G[0]);
-    //test_point_mul(Scalar::<C>::G);
+    test_point_mul(Scalar::<C>::G);
+    test_point_mul(Scalar::<C>::G)
 }

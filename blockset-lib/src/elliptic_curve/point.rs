@@ -29,7 +29,14 @@ pub const fn double<C: EllipticCurve>(p: Point<C>) -> Point<C> {
     if y.eq(&Scalar::_0) {
         return Scalar::O;
     }
-    from_m(p, x.mul(Scalar::_2), x.mul(x).div(y).mul(Scalar::_3_DIV_2))
+    from_m(
+        p,
+        x.mul(Scalar::_2),
+        x.mul(x)
+            .mul(Scalar::_3)
+            .add(Scalar::A)
+            .div(y.mul(Scalar::_2)),
+    )
 }
 
 pub const fn from_x<C: EllipticCurve>(x: Scalar<C>) -> Point<C> {
