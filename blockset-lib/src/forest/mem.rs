@@ -1,7 +1,7 @@
 #![cfg(test)]
 use std::{collections::BTreeMap, io};
 
-use crate::uint::u224::U224;
+use crate::uint::u224x::U224;
 
 use super::{node_id::ForestNodeId, Forest};
 
