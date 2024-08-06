@@ -48,7 +48,7 @@ impl HmacSha256 {
 mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::uint::{u256x, u512x};
+    use crate::uint::u512x;
 
     use super::HmacSha256;
 

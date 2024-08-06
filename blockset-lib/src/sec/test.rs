@@ -154,15 +154,18 @@ fn test_mul_o<C: EllipticCurve>() {
     assert_eq!(mul(Scalar::<C>::O, n()), Scalar::O);
 }
 
-pub fn gen_test_double<C: EllipticCurve>(x: Scalar<C>) {
-    let p = from_x(x);
+pub fn gen_test_double2<C: EllipticCurve>(p: Point<C>) {
     let p1 = double(p);
     let p2 = double(p1);
     let p3 = double(p2);
 }
 
+pub fn gen_test_double<C: EllipticCurve>(x: Scalar<C>) {
+    gen_test_double2(from_x(x));
+}
+
 pub fn point_check<P: EllipticCurve>([x, y]: Point<P>) {
-    assert_eq!(x.y().unwrap().abs(), y.abs());
+    assert_eq!(x.y2(), y.mul(y));
 }
 
 pub fn test_point_mul<C: EllipticCurve>(p: Point<C>) {
@@ -196,8 +199,7 @@ pub fn test_point_mul<C: EllipticCurve>(p: Point<C>) {
     f(Order::new([3, 3]));
 }
 
-pub fn gen_test<C: EllipticCurve>() {
-    assert_eq!(Scalar::<C>::G[0].y2(), Scalar::G[1].mul(Scalar::G[1]));
+fn gen_test3<C: EllipticCurve>() {
     assert_eq!(Scalar::<C>::G[0].y().unwrap(), Scalar::G[1]);
     // SQRT
     for i in 1..1000 {
@@ -205,6 +207,11 @@ pub fn gen_test<C: EllipticCurve>() {
     }
     sqrt_test(Scalar::<C>::G[0]);
     sqrt_test(Scalar::<C>::MIDDLE);
+    gen_test_double::<C>(Scalar::<C>::G[0]);
+}
+
+pub fn gen_test1<C: EllipticCurve>() {
+    assert_eq!(Scalar::<C>::G[0].y2(), Scalar::G[1].mul(Scalar::G[1]));
     // pow
     pow_test::<C>();
     // mul
@@ -214,7 +221,12 @@ pub fn gen_test<C: EllipticCurve>() {
     test_reciprocal2::<C>();
     // point
     test_mul_o::<C>();
-    gen_test_double::<C>(Scalar::<C>::G[0]);
+    gen_test_double2::<C>(Scalar::<C>::G);
     test_point_mul(Scalar::<C>::G);
-    test_point_mul(Scalar::<C>::G)
+    test_point_mul(neg(Scalar::<C>::G));
+}
+
+pub fn gen_test<C: EllipticCurve>() {
+    gen_test1::<C>();
+    gen_test3::<C>();
 }
