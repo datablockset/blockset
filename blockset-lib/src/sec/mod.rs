@@ -76,9 +76,11 @@ mod tests {
                 let h1 = Scalar::from_be(State::new(SHA256).push_array(a).end());
                 let k = nonce(&x, &h1);
                 assert_eq!(k.0, ke);
-                let [r, s] = x.sign(h1);
+                let rs = x.sign(h1);
+                let [r, s] = rs;
                 assert_eq!(r.0, re);
                 assert_eq!(s.0, se);
+                assert!(verify(public_key, h1, rs));
             };
             f(b"sample", k0, r0, s0);
             f(b"test", k1, r1, s1);
