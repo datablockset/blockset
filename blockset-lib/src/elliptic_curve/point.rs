@@ -2,7 +2,7 @@ use crate::{prime_field::scalar::Scalar, uint::u256x};
 
 use super::{order::Order, EllipticCurve};
 
-pub type Point<C: EllipticCurve> = [Scalar<C>; 2];
+pub type Point<C> = [Scalar<C>; 2];
 
 const X: usize = 0;
 const Y: usize = 1;

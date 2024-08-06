@@ -11,6 +11,7 @@ use crate::{
 mod p192r1;
 mod p224r1;
 mod p256k1;
+mod p256r1;
 mod test;
 
 type Signature<C> = [Order<C>; 2];
