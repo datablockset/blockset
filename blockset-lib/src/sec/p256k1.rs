@@ -37,15 +37,11 @@ mod test {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        elliptic_curve::{
-            order::Order,
-            point::{double, from_x, mul, neg, Point},
-            scalar, EllipticCurve,
-        },
-        prime_field::{self, vec2::Vec2},
+        elliptic_curve::{order::Order, point::from_x},
+        prime_field,
         sec::{
             p256k1::P256k1,
-            test::{gen_test, gen_test_double, point_check, test_point_mul},
+            test::{gen_test, gen_test_double, test_point_mul},
         },
         uint::u256x::{self, U256},
     };

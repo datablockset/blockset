@@ -44,12 +44,12 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::{
-        elliptic_curve::order::Order,
+        elliptic_curve::{order::Order, EllipticCurve},
         nonce::nonce,
         prime_field::scalar::Scalar,
         sec::{p256k1::P256k1, verify},
         sha2::{sha256::SHA256, state::State},
-        uint::u256x,
+        uint::u256x::{self, U256},
     };
 
     use super::p192r1::P192r1;
@@ -57,40 +57,38 @@ mod tests {
     #[test]
     #[wasm_bindgen_test]
     fn test_192() {
-        let x = Order::<P192r1>::new(u256x::be(
-            0x6FAB0349_34E4C0FC,
-            0x9AE67F5B_5659A9D7_D1FEFD18_7EE09FD4,
-        ));
-        let public_key = x.public_key();
-        assert_eq!(
-            public_key,
-            [
-                Scalar::new(u256x::be(
-                    0xAC2C77F5_29F91689,
-                    0xFEA0EA5E_FEC7F210_D8EEA0B9_E047ED56
-                )),
-                Scalar::new(u256x::be(
-                    0x3BC723E5_7670BD48,
-                    0x87EBC732C523063D0A7C957BC97C1C43
-                ))
-            ]
-        );
-        let f = |a, ke, re, se| {
-            let h1 = Scalar::from_be(State::new(SHA256).push_array(a).end());
-            let k = nonce(&x, &h1);
-            assert_eq!(k.0, ke);
-            let [r, s] = x.sign(h1);
-            assert_eq!(r.0, re);
-            assert_eq!(s.0, se);
-        };
-        f(
-            b"sample",
+        fn g<C: EllipticCurve>(
+            xe: U256,
+            px: U256,
+            py: U256,
+            k0: U256,
+            r0: U256,
+            s0: U256,
+            k1: U256,
+            r1: U256,
+            s1: U256,
+        ) {
+            let x = Order::<C>::new(xe);
+            let public_key = x.public_key();
+            assert_eq!(public_key, [Scalar::new(px), Scalar::new(py)]);
+            let f = |a, ke, re, se| {
+                let h1 = Scalar::from_be(State::new(SHA256).push_array(a).end());
+                let k = nonce(&x, &h1);
+                assert_eq!(k.0, ke);
+                let [r, s] = x.sign(h1);
+                assert_eq!(r.0, re);
+                assert_eq!(s.0, se);
+            };
+            f(b"sample", k0, r0, s0);
+            f(b"test", k1, r1, s1);
+        }
+        g::<P192r1>(
+            u256x::be(0x6FAB0349_34E4C0FC, 0x9AE67F5B_5659A9D7_D1FEFD18_7EE09FD4),
+            u256x::be(0xAC2C77F5_29F91689, 0xFEA0EA5E_FEC7F210_D8EEA0B9_E047ED56),
+            u256x::be(0x3BC723E5_7670BD48, 0x87EBC732_C523063D_0A7C957B_C97C1C43),
             u256x::be(0x32B1B6D7_D42A05CB, 0x44906572_7A84804F_B1A3E34D_8F261496),
             u256x::be(0x4B0B8CE9_8A92866A, 0x2820E20A_A6B75B56_382E0F9B_FD5ECB55),
             u256x::be(0xCCDB0069_26EA9565, 0xCBADC840_829D8C38_4E06DE1F_1E381B85),
-        );
-        f(
-            b"test",
             u256x::be(0x5C4CE89C_F56D9E7C, 0x77C85853_39B006B9_7B5F0680_B4306C6C),
             u256x::be(0x3A718BD8_B4926C3B, 0x52EE6BBE_67EF79B1_8CB6EB62_B1AD97AE),
             u256x::be(0x5662E684_8A4A19B1, 0xF1AE2F72_ACD4B8BB_E50F1EAC_65D9124F),
