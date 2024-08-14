@@ -23,7 +23,7 @@ fn get_len(v: &[u8]) -> Option<usize> {
     }
 }
 
-fn get_size(v: &Vec<u8>, len: usize, size: f64) -> (usize, f64) {
+fn get_size(v: &[u8], len: usize, size: f64) -> (usize, f64) {
     let i = v.len();
     assert_eq!((i - len) % 28, 0);
     (i, size / ((i - len) / 28) as f64)
@@ -60,7 +60,12 @@ pub trait Forest {
         let mut progress_b = 0;
         let mut t = id.node_type;
         progress(0, 0.0)?;
-        fn push_keys(len: usize, (mut i, size): (usize, f64), v: &Vec<u8>, keys: &mut Vec<([u32; 7], f64)>) {
+        fn push_keys(
+            len: usize,
+            (mut i, size): (usize, f64),
+            v: &[u8],
+            keys: &mut Vec<([u32; 7], f64)>,
+        ) {
             while len + 28 <= i {
                 let mut kn = U224::default();
                 i -= 28;
