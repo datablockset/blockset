@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.7.0
+
+- breaking change. Add a `directory` property into a directory block. PR [#184](https://github.com/datablockset/blockset/pull/184).
+
 ## 0.6.0
 
 - license changed to AGPL 3.0. PR [#177](https://github.com/datablockset/blockset/pull/177).
