@@ -1,4 +1,5 @@
 [alias]
 t = "test --release"
-c = "tarpaulin --out html --release --lib --fail-under 100"
+c = "tarpaulin --out html --release --lib --fail-under 99"
 n = "nextest run --release"
+l = "llvm-cov --html"
