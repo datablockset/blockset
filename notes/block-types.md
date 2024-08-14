@@ -13,10 +13,10 @@ type SignatureTag = {
 }
 type Signature = {
   publicKey: string
-  dataAddress: Address
-  timeStamp?: Time 
-  signature: string 
+  message: Address | AddressAndTimeStamp
+  signature: string
 }
+type AddressAndTimeStamp = string
 ```
 
 ## Revision (Version)
@@ -38,7 +38,7 @@ type DirectoryTag = {
   directory: Directory
 }
 type Directory = {
-  [path in Path]: DataAddress 
+  [path in Path]: DataAddress
 }
 // a path using `/` as a separator.
 type Path = string
