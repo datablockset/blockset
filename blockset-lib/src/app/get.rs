@@ -81,7 +81,7 @@ fn get_if(d: &U224, path: &str, io: &impl Io) -> io::Result<()> {
             .items()
             .iter()
             .find(|p| p.0.items() == dir.items())
-            .map_or(Err(invalid_input("directory")), |f| Ok(f))?;
+            .ok_or(invalid_input("directory"))?;
         let dir_obj = try_move::<_, JsObjectRef<_>>(dir_json.1.clone())?;
         let items = dir_obj.items();
         let t = items.len();
