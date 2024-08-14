@@ -23,6 +23,12 @@ fn get_len(v: &[u8]) -> Option<usize> {
     }
 }
 
+fn get_size(v: &Vec<u8>, len: usize, size: f64) -> (usize, f64) {
+    let i = v.len();
+    assert_eq!((i - len) % 28, 0);
+    (i, size / ((i - len) / 28) as f64)
+}
+
 pub trait Forest {
     fn has_block(&self, id: &ForestNodeId) -> bool;
     fn get_block(&self, id: &ForestNodeId) -> io::Result<Vec<u8>>;
@@ -54,6 +60,20 @@ pub trait Forest {
         let mut progress_b = 0;
         let mut t = id.node_type;
         progress(0, 0.0)?;
+        fn push_keys(len: usize, (mut i, size): (usize, f64), v: &Vec<u8>, keys: &mut Vec<([u32; 7], f64)>) {
+            while len + 28 <= i {
+                let mut kn = U224::default();
+                i -= 28;
+                let mut j = i;
+                for ki in &mut kn {
+                    let n = j + 4;
+                    let slice = &v[j..n];
+                    *ki = from_u8x4(slice.try_into().unwrap());
+                    j = n;
+                }
+                keys.push((kn, size));
+            }
+        }
         while let Some((key, size)) = keys.pop() {
             let v = self.get_block(&ForestNodeId::new(t, &key))?;
             if let Some(len) = get_len(&v) {
@@ -61,21 +81,7 @@ pub trait Forest {
                     //assert!(tail.is_empty());
                     tail = v[1..len].to_vec();
                 }
-                let mut i = v.len();
-                assert_eq!((i - len) % 28, 0);
-                let size = size / ((i - len) / 28) as f64;
-                while len + 28 <= i {
-                    let mut kn = U224::default();
-                    i -= 28;
-                    let mut j = i;
-                    for ki in &mut kn {
-                        let n = j + 4;
-                        let slice = &v[j..n];
-                        *ki = from_u8x4(slice.try_into().unwrap());
-                        j = n;
-                    }
-                    keys.push((kn, size));
-                }
+                push_keys(len, get_size(&v, len, size), &v, &mut keys);
             } else {
                 let buf = &v[1..];
                 w.write_all(buf)?;
