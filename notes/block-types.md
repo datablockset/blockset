@@ -5,7 +5,7 @@
 type DataAddress = string
 ```
 
-## Digital Signature
+## Digital Signature and Trusted Time Stamp
 
 ```ts
 type SignatureTag = {
@@ -13,7 +13,8 @@ type SignatureTag = {
 }
 type Signature = {
   publicKey: string
-  dataAddress: DataAddress
+  dataAddress: Address
+  timeStamp?: Time 
   signature: string 
 }
 ```
