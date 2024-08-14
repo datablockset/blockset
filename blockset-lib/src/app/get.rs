@@ -16,7 +16,10 @@ use crate::{
     uint::u224::U224,
 };
 
-use super::{add::posix_path, get_hash, invalid_input, js_string_to_string, str_to_hash, try_move};
+use super::{
+    add::{directory_js, posix_path},
+    get_hash, invalid_input, js_string_to_string, str_to_hash, try_move,
+};
 
 pub fn restore(
     io: &impl Io,
@@ -73,7 +76,14 @@ fn get_if(d: &U224, path: &str, io: &impl Io) -> io::Result<()> {
         let mut w = Cursor::new(&mut buffer);
         restore(io, d, &mut w, &mut |_, _| Ok(()))?;
         let json = try_move::<_, JsObjectRef<_>>(parse_json(io, GLOBAL, buffer)?)?;
-        let items = json.items();
+        let dir = directory_js(GLOBAL);
+        let dir_json = json
+            .items()
+            .iter()
+            .find(|p| p.0.items() == dir.items())
+            .map_or(Err(invalid_input("directory")), |f| Ok(f))?;
+        let dir_obj = try_move::<_, JsObjectRef<_>>(dir_json.1.clone())?;
+        let items = dir_obj.items();
         let t = items.len();
         let mut b = 0;
         for (offset, (k, v)) in items.iter().enumerate() {

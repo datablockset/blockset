@@ -66,11 +66,19 @@ fn property<M: Manager>(
     )
 }
 
+pub fn directory_js<M: Manager>(m: M) -> JsStringRef<M::Dealloc> {
+    let directory16 = "directory".encode_utf16().collect::<Vec<_>>();
+    new_string(m, directory16).to_ref()
+}
+
 fn dir_to_json<M: Manager>(
     m: M,
     list: impl ExactSizeIterator<Item = Property<M::Dealloc>>,
 ) -> io::Result<String> {
-    to_json(m.new_js_object(list)).map_err(|_| invalid_input("to_json"))
+    let dir = m.new_js_object(list);
+    let property = (directory_js(m), dir);
+    let block = m.new_js_object([property]);
+    to_json(block).map_err(|_| invalid_input("to_json"))
 }
 
 fn calculate_len(files: &[(String, u64)], state: &mut State) {
