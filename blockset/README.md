@@ -14,8 +14,9 @@ The `blockset` application is a command line program that can store and retrieve
   ```
 - add content of a file or a directory to the local storage `cdt0/`:
   ```console
-  blockset add ./README.md
-  blockset add ./src/ --to-posix-eol
+  >blockset add ./README.md
+  ngd7zembwj6f2tsh4gyxrcyx26h221e3f2wdgfbtq87nd
+  >blockset add ./src/ --to-posix-eol
   ```
 - get a file or a directory by a content hash
   ```console
