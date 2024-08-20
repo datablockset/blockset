@@ -1,4 +1,5 @@
 mod app;
+mod asn1;
 mod cdt;
 mod common;
 mod elliptic_curve;
