@@ -1,14 +1,11 @@
-use nanvm_lib::common::cast::Cast;
-
-// it should be replaced by JsInt in the future.
-struct Integer(Vec<u8>);
+use nanvm_lib::{big_numbers::big_int::BigInt, common::cast::Cast};
 
 struct OctetString(Vec<u8>);
 
 struct ObjectIdentifier {
     a0: u8,
     a1: u8,
-    a2: Vec<Integer>,
+    a2: Vec<BigInt>,
 }
 
 struct BitString {
@@ -20,7 +17,7 @@ struct Sequence(Vec<Any>);
 
 enum Any {
     Bool(bool),
-    Integer(Integer),
+    Integer(BigInt),
     OctetString(OctetString),
     ObjectIdentifier(ObjectIdentifier),
     BitString(BitString),
