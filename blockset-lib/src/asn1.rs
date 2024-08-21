@@ -1,3 +1,5 @@
+use core::ops::Deref;
+
 use nanvm_lib::common::cast::Cast;
 
 struct OctetString(Vec<u8>);
@@ -46,12 +48,33 @@ impl Any {
             _ => todo!(),
         }
     }
+    fn deserialize(a: &[u8]) -> Any {
+        if a.len() == 0 {
+            return Any::Bool(false)
+        }
+        match a[0] {
+            1 => {
+                /*
+                let a = &a[1..];
+                let len = a[0] as usize;
+                let a = &a[1..];
+                let (len, a) = if len < 0x80 {
+                    (len, a)
+                } else {
+                    i128::deserialize(&a[..len]) as usize
+                };
+                */
+                Any::Bool(bool::deserialize(a.into_iter().map(|x| *x)))
+            }
+            _ => todo!()
+        }
+    }
 }
 
 trait Serialize {
     const TAG: u8;
     fn serialize(self) -> Vec<u8>;
-    fn deserialize(a: &[u8]) -> Self;
+    fn deserialize(a: impl IntoIterator<Item = u8>) -> Self;
 }
 
 impl Serialize for bool {
@@ -59,8 +82,12 @@ impl Serialize for bool {
     fn serialize(self) -> Vec<u8> {
         [if self { 0xFF } else { 0 }].cast()
     }
-    fn deserialize(a: &[u8]) -> Self {
-        a.len() > 0 && a[0] != 0
+    fn deserialize(a: impl IntoIterator<Item = u8>) -> Self {
+        if let Some(v) = a.into_iter().next() {
+            v != 0
+        } else {
+            false
+        }
     }
 }
 
@@ -86,15 +113,23 @@ impl Serialize for i128 {
     fn serialize(self) -> Vec<u8> {
         write_int(self, true)
     }
-    fn deserialize(a: &[u8]) -> Self {
-        if a.len() == 0 {
-            return 0;
+    fn deserialize(a: impl IntoIterator<Item = u8>) -> Self {
+        let mut i = a.into_iter();
+        if let Some(first) = i.next() {
+            let mut v = first as u128;
+            let mut result = 0u128.wrapping_sub(v >> 7);
+            loop {
+                result = (result << 8) | v;
+                if let Some(iv) = i.next() {
+                    v = iv as u128;
+                } else {
+                    break
+                }
+            }
+            result as i128
+        } else {
+            0
         }
-        let mut result = 0u128.wrapping_sub((a[0] >> 7) as u128);
-        for &i in a {
-            result = (result << 8) | (i as u128);
-        }
-        result as i128
     }
 }
 
@@ -114,7 +149,7 @@ mod test {
     }
 
     fn f<T: Serialize + PartialEq + fmt::Debug>(v: T, a: &[u8]) {
-        assert_eq!(T::deserialize(a), v);
+        assert_eq!(T::deserialize(a.into_iter().map(|x| *x)), v);
         assert_eq!(v.serialize(), a);
     }
 
