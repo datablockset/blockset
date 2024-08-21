@@ -1,6 +1,4 @@
-use std::io::Read;
-
-use nanvm_lib::{big_numbers::big_int::BigInt, common::cast::Cast};
+use nanvm_lib::common::cast::Cast;
 
 struct OctetString(Vec<u8>);
 
@@ -28,11 +26,28 @@ enum Any {
 
 impl Any {
     fn serialize(self) -> Vec<u8> {
-        match self {
-            Any::Bool(v) => {
-                let v = v.serialize();
-                [bool::TAG, v.len() as u8].into_iter().chain(v).collect()
+        fn f<T: Serialize>(v: T) -> Vec<u8> {
+            let mut v = v.serialize();
+            let len = v.len() as u64;
+            let mut result = [T::TAG].cast();
+            if len < 0x80 {
+                result.push(len as u8);
+            } else {
+                // 0 => 8, 1 => 8, ..., 7 => 8
+                // 8 => 7
+                // ...
+                // 56 => 1, 57 => 1, ..., 63 => 1
+                // 64 => 0
+                let len_len = 8 - (len.leading_zeros() >> 3);
+                result.push(len_len as u8 | 0x80);
+                write_int(&mut result, len as i128, len_len as usize);
             }
+            result.append(&mut v);
+            result
+        }
+        match self {
+            Any::Bool(v) => f(v),
+            Any::Integer(v) => f(v),
             _ => todo!(),
         }
     }
@@ -54,27 +69,31 @@ impl Serialize for bool {
     }
 }
 
+fn write_int(result: &mut Vec<u8>, n: i128, len: usize) {
+    let max = len - 1;
+    for i in 0..len {
+        result.push((n >> ((max - i) << 3)) as u8);
+    }
+}
+
 impl Serialize for i128 {
     const TAG: u8 = 2;
     fn serialize(self) -> Vec<u8> {
-        let neg = self.is_negative();
-        let u = self as u128;
-        let led = if neg {
-            u.leading_ones()
-        } else {
-            u.leading_zeros()
-        };
         // 1 => 16, ... 7 => 16, 8 => 16,
         // 9 => 15,
         // ...
         // 113 => 2, ... 120 => 2
         // 121 => 1, ... 128 => 1
-        let len = (16 - ((led - 1) >> 3)) as usize;
+        let len = {
+            let leading = if self.is_negative() {
+                self.leading_ones()
+            } else {
+                self.leading_zeros()
+            };
+            (16 - ((leading - 1) >> 3)) as usize
+        };
         let mut result = Vec::with_capacity(len);
-        let max = len - 1;
-        for i in 0..len {
-            result.push((u >> ((max - i) << 3)) as u8);
-        }
+        write_int(&mut result, self, len);
         result
     }
     fn deserialize(a: &[u8]) -> Self {
@@ -95,7 +114,7 @@ mod test {
 
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::Serialize;
+    use super::{Any, Serialize};
 
     #[wasm_bindgen_test]
     #[test]
@@ -141,6 +160,17 @@ mod test {
         f(
             i128::MIN,
             &[0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        );
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn any_test() {
+        assert_eq!(Any::Bool(true).serialize(), [1, 1, 0xFF]);
+        assert_eq!(Any::Bool(false).serialize(), [1, 1, 0]);
+        assert_eq!(
+            Any::Integer(i128::MIN).serialize(),
+            [2, 16, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         );
     }
 }
