@@ -28,19 +28,14 @@ impl Any {
     fn serialize(self) -> Vec<u8> {
         fn f<T: Serialize>(v: T) -> Vec<u8> {
             let mut v = v.serialize();
-            let len = v.len() as u64;
+            let len = v.len() as i128;
             let mut result = [T::TAG].cast();
             if len < 0x80 {
                 result.push(len as u8);
             } else {
-                // 0 => 8, 1 => 8, ..., 7 => 8
-                // 8 => 7
-                // ...
-                // 56 => 1, 57 => 1, ..., 63 => 1
-                // 64 => 0
-                let len_len = 8 - (len.leading_zeros() >> 3);
-                result.push(len_len as u8 | 0x80);
-                write_int(&mut result, len as i128, len_len as usize);
+                let mut int = write_int(len, len.leading_zeros());
+                result.push(int.len() as u8 | 0x80);
+                result.append(&mut int);
             }
             result.append(&mut v);
             result
@@ -69,11 +64,14 @@ impl Serialize for bool {
     }
 }
 
-fn write_int(result: &mut Vec<u8>, n: i128, len: usize) {
+fn write_int(n: i128, leading_zeros: u32) -> Vec<u8> {
+    let len = 16 - (leading_zeros >> 3);
     let max = len - 1;
+    let mut result = Vec::with_capacity(len as usize);
     for i in 0..len {
         result.push((n >> ((max - i) << 3)) as u8);
     }
+    result
 }
 
 impl Serialize for i128 {
@@ -84,17 +82,12 @@ impl Serialize for i128 {
         // ...
         // 113 => 2, ... 120 => 2
         // 121 => 1, ... 128 => 1
-        let len = {
-            let leading = if self.is_negative() {
-                self.leading_ones()
-            } else {
-                self.leading_zeros()
-            };
-            (16 - ((leading - 1) >> 3)) as usize
+        let leading = if self.is_negative() {
+            self.leading_ones()
+        } else {
+            self.leading_zeros()
         };
-        let mut result = Vec::with_capacity(len);
-        write_int(&mut result, self, len);
-        result
+        write_int(self, leading - 1)
     }
     fn deserialize(a: &[u8]) -> Self {
         if a.len() == 0 {
