@@ -1,15 +1,18 @@
-use core::ops::Deref;
+use core::{iter::empty, ops::Deref};
 
 use nanvm_lib::common::cast::Cast;
 
+#[derive(PartialEq, Debug)]
 struct OctetString(Vec<u8>);
 
+#[derive(PartialEq, Debug)]
 struct ObjectIdentifier {
     a0: u8,
     a1: u8,
     a2: Vec<i128>,
 }
 
+#[derive(PartialEq, Debug)]
 struct BitString {
     padding: u8,
     value: Vec<u8>,
@@ -17,6 +20,7 @@ struct BitString {
 
 struct Sequence(Vec<Any>);
 
+#[derive(PartialEq, Debug)]
 enum Any {
     Bool(bool),
     Integer(i128),
@@ -48,25 +52,19 @@ impl Any {
             _ => todo!(),
         }
     }
-    fn deserialize(a: &[u8]) -> Any {
-        if a.len() == 0 {
-            return Any::Bool(false)
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Any {
+        fn f<T: Serialize>(a: &mut impl Iterator<Item = u8>) -> T {
+            let len = if let Some(len) = a.next() { len } else { 0 };
+            T::deserialize(&mut a.take(len as usize))
         }
-        match a[0] {
-            1 => {
-                /*
-                let a = &a[1..];
-                let len = a[0] as usize;
-                let a = &a[1..];
-                let (len, a) = if len < 0x80 {
-                    (len, a)
-                } else {
-                    i128::deserialize(&a[..len]) as usize
-                };
-                */
-                Any::Bool(bool::deserialize(a.into_iter().map(|x| *x)))
+        if let Some(tag) = a.next() {
+            match tag {
+                bool::TAG => Any::Bool(f(a)),
+                i128::TAG => Any::Integer(f(a)),
+                _ => todo!(),
             }
-            _ => todo!()
+        } else {
+            Any::Bool(false)
         }
     }
 }
@@ -74,7 +72,7 @@ impl Any {
 trait Serialize {
     const TAG: u8;
     fn serialize(self) -> Vec<u8>;
-    fn deserialize(a: impl IntoIterator<Item = u8>) -> Self;
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self;
 }
 
 impl Serialize for bool {
@@ -82,8 +80,8 @@ impl Serialize for bool {
     fn serialize(self) -> Vec<u8> {
         [if self { 0xFF } else { 0 }].cast()
     }
-    fn deserialize(a: impl IntoIterator<Item = u8>) -> Self {
-        if let Some(v) = a.into_iter().next() {
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self {
+        if let Some(v) = a.next() {
             v != 0
         } else {
             false
@@ -102,7 +100,9 @@ fn write_int(n: i128, signed: bool) -> Vec<u8> {
     let mut i = len - 1;
     loop {
         result.push((n >> (i << 3)) as u8);
-        if i == 0 { break }
+        if i == 0 {
+            break;
+        }
         i -= 1;
     }
     result
@@ -113,23 +113,17 @@ impl Serialize for i128 {
     fn serialize(self) -> Vec<u8> {
         write_int(self, true)
     }
-    fn deserialize(a: impl IntoIterator<Item = u8>) -> Self {
-        let mut i = a.into_iter();
-        if let Some(first) = i.next() {
-            let mut v = first as u128;
-            let mut result = 0u128.wrapping_sub(v >> 7);
-            loop {
-                result = (result << 8) | v;
-                if let Some(iv) = i.next() {
-                    v = iv as u128;
-                } else {
-                    break
-                }
-            }
-            result as i128
-        } else {
-            0
+    fn deserialize(i: &mut impl Iterator<Item = u8>) -> Self {
+        let mut result = 0;
+        let mut c = 0;
+        for v in i {
+            result = (result << 8) | (v as i128);
+            c += 8;
         }
+        if result >> (c - 1) == 1 {
+            result |= -1 << c
+        }
+        result
     }
 }
 
@@ -149,7 +143,7 @@ mod test {
     }
 
     fn f<T: Serialize + PartialEq + fmt::Debug>(v: T, a: &[u8]) {
-        assert_eq!(T::deserialize(a.into_iter().map(|x| *x)), v);
+        assert_eq!(T::deserialize(&mut a.into_iter().map(|x| *x)), v);
         assert_eq!(v.serialize(), a);
     }
 
@@ -188,14 +182,23 @@ mod test {
         );
     }
 
+    fn any_f(v: Any, a: &[u8]) {
+        assert_eq!(Any::deserialize(&mut a.into_iter().map(|x| *x)), v);
+        assert_eq!(v.serialize(), a);
+    }
+
     #[wasm_bindgen_test]
     #[test]
     fn any_test() {
-        assert_eq!(Any::Bool(true).serialize(), [1, 1, 0xFF]);
-        assert_eq!(Any::Bool(false).serialize(), [1, 1, 0]);
-        assert_eq!(
-            Any::Integer(i128::MIN).serialize(),
-            [2, 16, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        any_f(Any::Bool(true), &[1, 1, 0xFF]);
+        any_f(Any::Bool(false), &[1, 1, 0]);
+        any_f(
+            Any::Integer(i128::MIN),
+            &[2, 16, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        );
+        any_f(
+            Any::Integer(i128::MIN + 1),
+            &[2, 16, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         );
     }
 }
