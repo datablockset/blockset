@@ -33,7 +33,7 @@ impl Any {
             if len < 0x80 {
                 result.push(len as u8);
             } else {
-                let mut int = write_int(len, len.leading_zeros());
+                let mut int = write_int(len, false);
                 result.push(int.len() as u8 | 0x80);
                 result.append(&mut int);
             }
@@ -64,12 +64,19 @@ impl Serialize for bool {
     }
 }
 
-fn write_int(n: i128, leading_zeros: u32) -> Vec<u8> {
-    let len = 16 - (leading_zeros >> 3);
-    let max = len - 1;
+fn write_int(n: i128, signed: bool) -> Vec<u8> {
+    let leading = if n.is_negative() {
+        n.leading_ones()
+    } else {
+        n.leading_zeros()
+    } - signed as u32;
+    let len = 16 - (leading >> 3);
     let mut result = Vec::with_capacity(len as usize);
-    for i in 0..len {
-        result.push((n >> ((max - i) << 3)) as u8);
+    let mut i = len - 1;
+    loop {
+        result.push((n >> (i << 3)) as u8);
+        if i == 0 { break }
+        i -= 1;
     }
     result
 }
@@ -77,17 +84,7 @@ fn write_int(n: i128, leading_zeros: u32) -> Vec<u8> {
 impl Serialize for i128 {
     const TAG: u8 = 2;
     fn serialize(self) -> Vec<u8> {
-        // 1 => 16, ... 7 => 16, 8 => 16,
-        // 9 => 15,
-        // ...
-        // 113 => 2, ... 120 => 2
-        // 121 => 1, ... 128 => 1
-        let leading = if self.is_negative() {
-            self.leading_ones()
-        } else {
-            self.leading_zeros()
-        };
-        write_int(self, leading - 1)
+        write_int(self, true)
     }
     fn deserialize(a: &[u8]) -> Self {
         if a.len() == 0 {
