@@ -1,4 +1,4 @@
-use core::{iter::empty, ops::Deref};
+use core::{iter::empty, ops::Deref, ptr::read_unaligned};
 
 use nanvm_lib::common::cast::Cast;
 
@@ -54,8 +54,16 @@ impl Any {
     }
     fn deserialize(a: &mut impl Iterator<Item = u8>) -> Any {
         fn f<T: Serialize>(a: &mut impl Iterator<Item = u8>) -> T {
-            let len = if let Some(len) = a.next() { len } else { 0 };
-            T::deserialize(&mut a.take(len as usize))
+            let len = if let Some(len) = a.next() {
+                if len < 0x80 {
+                    len as usize
+                } else {
+                    read_uint(a).0 as usize
+                }
+            } else {
+                0
+            };
+            T::deserialize(&mut a.take(len))
         }
         if let Some(tag) = a.next() {
             match tag {
@@ -108,22 +116,27 @@ fn write_int(n: i128, signed: bool) -> Vec<u8> {
     result
 }
 
+fn read_uint(i: &mut impl Iterator<Item = u8>) -> (u128, i32) {
+    let mut result = 0;
+    let mut bits = 0;
+    for v in i {
+        result = (result << 8) | (v as u128);
+        bits += 8;
+    }
+    (result, bits)
+}
+
 impl Serialize for i128 {
     const TAG: u8 = 2;
     fn serialize(self) -> Vec<u8> {
         write_int(self, true)
     }
     fn deserialize(i: &mut impl Iterator<Item = u8>) -> Self {
-        let mut result = 0;
-        let mut c = 0;
-        for v in i {
-            result = (result << 8) | (v as i128);
-            c += 8;
+        let (mut result, c) = read_uint(i);
+        if result >> (c - 1) == 1 && c < 128 {
+            result |= u128::MAX << c
         }
-        if result >> (c - 1) == 1 {
-            result |= -1 << c
-        }
-        result
+        result as i128
     }
 }
 
@@ -143,7 +156,8 @@ mod test {
     }
 
     fn f<T: Serialize + PartialEq + fmt::Debug>(v: T, a: &[u8]) {
-        assert_eq!(T::deserialize(&mut a.into_iter().map(|x| *x)), v);
+        let m = T::deserialize(&mut a.into_iter().map(|x| *x));
+        assert_eq!(m, v);
         assert_eq!(v.serialize(), a);
     }
 
