@@ -1,5 +1,3 @@
-use core::{iter::empty, ops::Deref, ptr::read_unaligned};
-
 use nanvm_lib::common::cast::Cast;
 
 #[derive(PartialEq, Debug)]
@@ -9,7 +7,7 @@ struct OctetString(Vec<u8>);
 struct ObjectIdentifier {
     a0: u8,
     a1: u8,
-    a2: Vec<i128>,
+    a2: Vec<u128>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -39,7 +37,7 @@ impl Any {
             if len < 0x80 {
                 result.push(len as u8);
             } else {
-                let mut int = write_int(len, false);
+                let mut int = write_i128(len, false);
                 result.push(int.len() as u8 | 0x80);
                 result.append(&mut int);
             }
@@ -58,7 +56,7 @@ impl Any {
                 if len < 0x80 {
                     len as usize
                 } else {
-                    read_uint(a).0 as usize
+                    read_u128(a).0 as usize
                 }
             } else {
                 0
@@ -97,7 +95,7 @@ impl Serialize for bool {
     }
 }
 
-fn write_int(n: i128, signed: bool) -> Vec<u8> {
+fn write_i128(n: i128, signed: bool) -> Vec<u8> {
     let leading = if n.is_negative() {
         n.leading_ones()
     } else {
@@ -116,7 +114,7 @@ fn write_int(n: i128, signed: bool) -> Vec<u8> {
     result
 }
 
-fn read_uint(i: &mut impl Iterator<Item = u8>) -> (u128, i32) {
+fn read_u128(i: &mut impl Iterator<Item = u8>) -> (u128, i32) {
     let mut result = 0;
     let mut bits = 0;
     for v in i {
@@ -129,10 +127,10 @@ fn read_uint(i: &mut impl Iterator<Item = u8>) -> (u128, i32) {
 impl Serialize for i128 {
     const TAG: u8 = 2;
     fn serialize(self) -> Vec<u8> {
-        write_int(self, true)
+        write_i128(self, true)
     }
     fn deserialize(i: &mut impl Iterator<Item = u8>) -> Self {
-        let (mut result, c) = read_uint(i);
+        let (mut result, c) = read_u128(i);
         if result >> (c - 1) == 1 && c < 128 {
             result |= u128::MAX << c
         }
