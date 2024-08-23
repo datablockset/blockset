@@ -1,4 +1,4 @@
-use crate::{cdt::node_type::NodeType, uint::u224::U224};
+use crate::{cdt::node_type::NodeType, uint::u224x::U224};
 
 pub struct ForestNodeId {
     pub node_type: NodeType,

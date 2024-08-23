@@ -2,7 +2,7 @@ use std::io::{self, Write};
 
 use crate::{
     cdt::{node_id::root, node_type::NodeType},
-    uint::{u224::U224, u32::from_u8x4},
+    uint::{u224x::U224, u32x::from_u8x4},
 };
 
 use self::node_id::ForestNodeId;
