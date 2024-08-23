@@ -144,15 +144,15 @@ impl Serialize for ObjectIdentifier {
     const TAG: u8 = 6;
     fn serialize(self) -> Vec<u8> {
         let mut result = [self.a0 * OI + self.a1].cast();
-        for mut a in self.a2 {
+        for a in self.a2 {
+            let mut len = 1.max(((128 + 6) - a.leading_zeros()) / 7) - 1;
             loop {
-                let v = (a as u8) & 0b0111_1111;
-                a >>= 7;
-                if a == 0 {
-                    result.push(v);
+                let f = len > 0;
+                result.push(((a >> (len * 7)) as u8 & 0x7F) | ((f as u8) << 7));
+                if !f {
                     break;
                 }
-                result.push(0x80 | v);
+                len -= 1;
             }
         }
         result
@@ -165,7 +165,7 @@ impl Serialize for ObjectIdentifier {
             loop {
                 x |= (v & 0x7F) as u128;
                 if v >> 7 == 0 {
-                    break
+                    break;
                 }
                 x <<= 7;
                 v = a.next().unwrap_or_default();
@@ -264,8 +264,37 @@ mod test {
     #[wasm_bindgen_test]
     #[test]
     fn oi_test() {
-        f(ObjectIdentifier { a0: 0, a1: 3, a2: default() }, &[3]);
-        f(ObjectIdentifier { a0: 1, a1: 2, a2: default() }, &[42]);
-        f(ObjectIdentifier { a0: 2, a1: 17, a2: [127, 5, 0x89].cast() }, &[97, 127, 5, 0x81, 9]);
+        f(
+            ObjectIdentifier {
+                a0: 0,
+                a1: 3,
+                a2: default(),
+            },
+            &[3],
+        );
+        f(
+            ObjectIdentifier {
+                a0: 1,
+                a1: 2,
+                a2: default(),
+            },
+            &[42],
+        );
+        f(
+            ObjectIdentifier {
+                a0: 2,
+                a1: 17,
+                a2: [127, 5, 0x89].cast(),
+            },
+            &[97, 127, 5, 0x81, 9],
+        );
+        f(
+            ObjectIdentifier {
+                a0: 3,
+                a1: 39,
+                a2: [0x82, 0x4345, 0x26789A].cast(),
+            },
+            &[159, 0x81, 2, 0x81, 0x86, 0x45, 0x81, 0x99, 0xF1, 0x1A],
+        );
     }
 }
