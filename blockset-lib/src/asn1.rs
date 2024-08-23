@@ -1,7 +1,8 @@
+use core::iter::once;
+
 use nanvm_lib::common::{cast::Cast, default::default};
 
-#[derive(PartialEq, Debug)]
-struct OctetString(Vec<u8>);
+type OctetString = Vec<u8>;
 
 #[derive(PartialEq, Debug)]
 struct ObjectIdentifier {
@@ -16,16 +17,30 @@ struct BitString {
     value: Vec<u8>,
 }
 
+#[derive(PartialEq, Debug)]
 struct Sequence(Vec<Any>);
 
 #[derive(PartialEq, Debug)]
 enum Any {
     Bool(bool),
     Integer(i128),
-    OctetString(OctetString),
+    OctetString(Vec<u8>),
     ObjectIdentifier(ObjectIdentifier),
     BitString(BitString),
-    Sequence(Vec<Any>),
+    Sequence(Sequence),
+}
+
+fn d<T: Serialize>(a: &mut impl Iterator<Item = u8>) -> T {
+    let len = if let Some(len) = a.next() {
+        if len < 0x80 {
+            len as usize
+        } else {
+            read_u128(&mut a.take(len as usize & 0x78)).0 as usize
+        }
+    } else {
+        0
+    };
+    T::deserialize(&mut a.take(len))
 }
 
 impl Any {
@@ -47,37 +62,30 @@ impl Any {
         match self {
             Any::Bool(v) => f(v),
             Any::Integer(v) => f(v),
+            Any::OctetString(v) => f(v),
+            Any::BitString(v) => f(v),
             Any::ObjectIdentifier(v) => f(v),
-            _ => todo!(),
+            Any::Sequence(v) => f(v),
         }
     }
-    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Any {
-        fn f<T: Serialize>(a: &mut impl Iterator<Item = u8>) -> T {
-            let len = if let Some(len) = a.next() {
-                if len < 0x80 {
-                    len as usize
-                } else {
-                    read_u128(&mut a.take(len as usize & 0x78)).0 as usize
-                }
-            } else {
-                0
-            };
-            T::deserialize(&mut a.take(len))
-        }
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Option<Any> {
         if let Some(tag) = a.next() {
             match tag {
-                bool::TAG => Any::Bool(f(a)),
-                i128::TAG => Any::Integer(f(a)),
-                ObjectIdentifier::TAG => Any::ObjectIdentifier(f(a)),
-                _ => todo!(),
+                bool::TAG => Some(Any::Bool(d(a))),
+                i128::TAG => Some(Any::Integer(d(a))),
+                OctetString::TAG => Some(Any::OctetString(d(a))),
+                BitString::TAG => Some(Any::BitString(d(a))),
+                ObjectIdentifier::TAG => Some(Any::ObjectIdentifier(d(a))),
+                Sequence::TAG => Some(Any::Sequence(d(a))),
+                _ => None,
             }
         } else {
-            Any::Bool(false)
+            None
         }
     }
 }
 
-trait Serialize {
+trait Serialize: Sized {
     const TAG: u8;
     fn serialize(self) -> Vec<u8>;
     fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self;
@@ -140,6 +148,46 @@ impl Serialize for i128 {
     }
 }
 
+impl Serialize for BitString {
+    const TAG: u8 = 3;
+    fn serialize(self) -> Vec<u8> {
+        once(self.padding).chain(self.value).collect()
+    }
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self {
+        let padding = a.next().unwrap_or_default();
+        Self {
+            padding,
+            value: a.collect(),
+        }
+    }
+}
+
+impl Serialize for OctetString {
+    const TAG: u8 = 4;
+    fn serialize(self) -> Vec<u8> {
+        self
+    }
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self {
+        a.collect()
+    }
+}
+
+impl Serialize for Sequence {
+    const TAG: u8 = 0x30;
+    fn serialize(self) -> Vec<u8> {
+        let mut result = Vec::default();
+        for a in self.0 {
+            result.append(&mut a.serialize())
+        }
+        result
+    }
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self {
+        let mut result: Vec<_> = default();
+        while let Some(v) = Any::deserialize(a) { result.push(v) }
+        Self(result)
+    }
+}
+
 const OI: u8 = 40;
 
 impl Serialize for ObjectIdentifier {
@@ -189,7 +237,7 @@ mod test {
     use nanvm_lib::common::{cast::Cast, default::default};
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::{Any, ObjectIdentifier, Serialize};
+    use super::{Any, BitString, ObjectIdentifier, Serialize};
 
     #[wasm_bindgen_test]
     #[test]
@@ -243,7 +291,7 @@ mod test {
 
     fn any_f(v: Any, a: &[u8]) {
         let mut i = a.into_iter().map(|x| *x);
-        assert_eq!(Any::deserialize(&mut i), v);
+        assert_eq!(Any::deserialize(&mut i).unwrap(), v);
         assert_eq!(i.next(), None);
         assert_eq!(v.serialize(), a);
     }
@@ -269,6 +317,21 @@ mod test {
             }),
             &[6, 4, 80, 1, 0x81, 0x6b],
         );
+        any_f(
+            Any::OctetString([123, 45, 67, 89].cast()),
+            &[4, 4, 123, 45, 67, 89],
+        );
+        any_f(
+            Any::BitString(BitString {
+                padding: 3,
+                value: [98, 76, 54, 32, 10].cast(),
+            }),
+            &[3, 6, 3, 98, 76, 54, 32, 10],
+        );
+        //any_f(
+        //    Any::Sequence([].cast()),
+        //    &[0x30, 0]
+        //);
     }
 
     #[wasm_bindgen_test]
