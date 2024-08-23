@@ -1,4 +1,4 @@
-use nanvm_lib::common::cast::Cast;
+use nanvm_lib::common::{cast::Cast, default::default};
 
 #[derive(PartialEq, Debug)]
 struct OctetString(Vec<u8>);
@@ -56,7 +56,7 @@ impl Any {
                 if len < 0x80 {
                     len as usize
                 } else {
-                    read_u128(a).0 as usize
+                    read_u128(&mut a.take(len as usize & 0x78)).0 as usize
                 }
             } else {
                 0
@@ -138,13 +138,56 @@ impl Serialize for i128 {
     }
 }
 
+const OI: u8 = 40;
+
+impl Serialize for ObjectIdentifier {
+    const TAG: u8 = 6;
+    fn serialize(self) -> Vec<u8> {
+        let mut result = [self.a0 * OI + self.a1].cast();
+        for mut a in self.a2 {
+            loop {
+                let v = (a as u8) & 0b0111_1111;
+                a >>= 7;
+                if a == 0 {
+                    result.push(v);
+                    break;
+                }
+                result.push(0x80 | v);
+            }
+        }
+        result
+    }
+    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self {
+        let a01 = a.next().unwrap_or_default();
+        let mut a2: Vec<u128> = default();
+        while let Some(mut v) = a.next() {
+            let mut x = 0;
+            loop {
+                x |= (v & 0x7F) as u128;
+                if v >> 7 == 0 {
+                    break
+                }
+                x <<= 7;
+                v = a.next().unwrap_or_default();
+            }
+            a2.push(x);
+        }
+        Self {
+            a0: a01 / OI,
+            a1: a01 % OI,
+            a2,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use core::fmt;
 
+    use nanvm_lib::common::{cast::Cast, default::default};
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use super::{Any, Serialize};
+    use super::{Any, ObjectIdentifier, Serialize};
 
     #[wasm_bindgen_test]
     #[test]
@@ -154,7 +197,9 @@ mod test {
     }
 
     fn f<T: Serialize + PartialEq + fmt::Debug>(v: T, a: &[u8]) {
-        let m = T::deserialize(&mut a.into_iter().map(|x| *x));
+        let i = &mut a.into_iter().map(|x| *x);
+        let m = T::deserialize(i);
+        assert_eq!(i.next(), None);
         assert_eq!(m, v);
         assert_eq!(v.serialize(), a);
     }
@@ -195,7 +240,9 @@ mod test {
     }
 
     fn any_f(v: Any, a: &[u8]) {
-        assert_eq!(Any::deserialize(&mut a.into_iter().map(|x| *x)), v);
+        let mut i = a.into_iter().map(|x| *x);
+        assert_eq!(Any::deserialize(&mut i), v);
+        assert_eq!(i.next(), None);
         assert_eq!(v.serialize(), a);
     }
 
@@ -212,5 +259,13 @@ mod test {
             Any::Integer(i128::MIN + 1),
             &[2, 16, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         );
+    }
+
+    #[wasm_bindgen_test]
+    #[test]
+    fn oi_test() {
+        f(ObjectIdentifier { a0: 0, a1: 3, a2: default() }, &[3]);
+        f(ObjectIdentifier { a0: 1, a1: 2, a2: default() }, &[42]);
+        f(ObjectIdentifier { a0: 2, a1: 17, a2: [127, 5, 0x89].cast() }, &[97, 127, 5, 0x81, 9]);
     }
 }
