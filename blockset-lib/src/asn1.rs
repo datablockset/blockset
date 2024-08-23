@@ -47,6 +47,7 @@ impl Any {
         match self {
             Any::Bool(v) => f(v),
             Any::Integer(v) => f(v),
+            Any::ObjectIdentifier(v) => f(v),
             _ => todo!(),
         }
     }
@@ -67,6 +68,7 @@ impl Any {
             match tag {
                 bool::TAG => Any::Bool(f(a)),
                 i128::TAG => Any::Integer(f(a)),
+                ObjectIdentifier::TAG => Any::ObjectIdentifier(f(a)),
                 _ => todo!(),
             }
         } else {
@@ -258,6 +260,14 @@ mod test {
         any_f(
             Any::Integer(i128::MIN + 1),
             &[2, 16, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        );
+        any_f(
+            Any::ObjectIdentifier(ObjectIdentifier {
+                a0: 2,
+                a1: 0,
+                a2: [1, 235].cast(),
+            }),
+            &[6, 4, 80, 1, 0x81, 0x6b],
         );
     }
 
