@@ -30,7 +30,7 @@ enum Any {
     Sequence(Sequence),
 }
 
-fn d<T: Serialize>(a: &mut impl Iterator<Item = u8>) -> T {
+fn d<T: Serialize>(a: &mut dyn Iterator<Item = u8>) -> T {
     let len = if let Some(len) = a.next() {
         if len < 0x80 {
             len as usize
@@ -68,7 +68,7 @@ impl Any {
             Any::Sequence(v) => f(v),
         }
     }
-    fn deserialize(a: &mut impl Iterator<Item = u8>) -> Option<Any> {
+    fn deserialize(a: &mut dyn Iterator<Item = u8>) -> Option<Any> {
         if let Some(tag) = a.next() {
             match tag {
                 bool::TAG => Some(Any::Bool(d(a))),
