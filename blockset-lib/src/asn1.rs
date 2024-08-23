@@ -17,8 +17,7 @@ struct BitString {
     value: Vec<u8>,
 }
 
-#[derive(PartialEq, Debug)]
-struct Sequence(Vec<Any>);
+type Sequence = Vec<Any>;
 
 #[derive(PartialEq, Debug)]
 enum Any {
@@ -176,15 +175,15 @@ impl Serialize for Sequence {
     const TAG: u8 = 0x30;
     fn serialize(self) -> Vec<u8> {
         let mut result = Vec::default();
-        for a in self.0 {
+        for a in self {
             result.append(&mut a.serialize())
         }
         result
     }
     fn deserialize(a: &mut impl Iterator<Item = u8>) -> Self {
-        let mut result: Vec<_> = default();
+        let mut result: Self = default();
         while let Some(v) = Any::deserialize(a) { result.push(v) }
-        Self(result)
+        result
     }
 }
 
@@ -328,10 +327,25 @@ mod test {
             }),
             &[3, 6, 3, 98, 76, 54, 32, 10],
         );
-        //any_f(
-        //    Any::Sequence([].cast()),
-        //    &[0x30, 0]
-        //);
+        any_f(
+            Any::Sequence([].cast()),
+            &[0x30, 0]
+        );
+        any_f(
+            Any::Sequence([Any::Bool(false)].cast()),
+            &[0x30, 3, 1, 1, 0]
+        );
+        any_f(
+            Any::Sequence([Any::Integer(126), Any::Bool(true)].cast()),
+            &[
+                //
+                0x30, 6,
+                // Integer(126)
+                2, 1, 126,
+                // Bool(true)
+                1, 1, 255
+            ]
+        );
     }
 
     #[wasm_bindgen_test]
