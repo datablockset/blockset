@@ -4,7 +4,7 @@ The `blockset` application is a command line program that can store and retrieve
 
 Articles:
 - [BLOCKSET v0.6](https://medium.com/@sergeyshandar/blockset-0-6-working-with-directories-and-sync-by-copy-9c25bd52d3cb?sk=d39a14d4804e4e8308f6b81eced68ab9),
-- [Content Dependent Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415).
+- [Content Dependent Tree](https://medium.com/@sergeyshandar/content-dependent-hash-tree-9e0f60859415?sk=b8fd2af2979fc8dd3b58ab024d589057).
 
 ## Prerequisites
 
