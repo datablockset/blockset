@@ -24,7 +24,7 @@ use crate::{
     },
     forest::{file::FileForest, tree_add::ForestTreeAdd},
     info::calculate_total,
-    uint::u224::U224,
+    uint::u224x::U224,
 };
 
 fn set_progress(
@@ -170,7 +170,7 @@ mod test {
     use std::io::Write;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::{cdt::node_id::root, common::base32::ToBase32, run, uint::u256::U256};
+    use crate::{cdt::node_id::root, common::base32::ToBase32, run, uint::u256x::U256};
 
     #[wasm_bindgen_test]
     #[test]
